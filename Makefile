@@ -53,6 +53,7 @@ clean:
 	@echo "-- cleaning all targets"
 	rm -f ${PKG_CLASS_ALL}
 	rm -rf work/
+	rm -f webapps/EXAMPLESD/WEB-INF/lib/*.jar
 install: all
 	@echo !!!INTALLATION NOTICE!!!
 	@echo package installed at ${WORK_PATH}/${PKG_FILENAME}.jar
@@ -64,21 +65,38 @@ install: all
 	mkdir -p  ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/lib
 	mkdir -p  ${WORK_PATH}/webapps/rubmaster.ru/WEB-INF/lib
 	mkdir -p  ${WORK_PATH}/webapps/boatswain.org/WEB-INF/lib
+	mkdir -p  ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT/WEB-INF/lib
+	# development version of EXAMPLESD
+	${INSTALL} contrib/core-3.4.0.jar webapps/EXAMPLESD/WEB-INF/lib/
+	${INSTALL} work/QREdit.jar webapps/EXAMPLESD/WEB-INF/lib/
+	#Contracts-1.0-SNAPSHOT
+	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/WEB-INF/web.xml ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT/WEB-INF/
+	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/members.jsp ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT
+	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/productstable.jsp ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT
+	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/productview.jsp ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT
+	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/ranges.jsp ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT
+	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/update.jsp ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT
+	mkdir -p ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT/css/
+	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/css/webcss.css ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT/css/
+	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/css/head.css ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT/css/
+	${INSTALL} contrib/core-3.4.0.jar ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT/WEB-INF/lib/
+	${INSTALL} work/QREdit.jar ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT/WEB-INF/lib/
 	#EXAMPLESD
-	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/WEB-INF/web.xml ${WORK_PATH}/webapps/EXAMPLESD/WEB-INF/
-	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/members.jsp ${WORK_PATH}/webapps/EXAMPLESD
-	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/productstable.jsp ${WORK_PATH}/webapps/EXAMPLESD
-	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/productview.jsp ${WORK_PATH}/webapps/EXAMPLESD
-	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/ranges.jsp ${WORK_PATH}/webapps/EXAMPLESD
-	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/update.jsp ${WORK_PATH}/webapps/EXAMPLESD
+	${INSTALL} webapps/EXAMPLESD/WEB-INF/web.xml ${WORK_PATH}/webapps/EXAMPLESD/WEB-INF/
+	${INSTALL} webapps/EXAMPLESD/index.jsp ${WORK_PATH}/webapps/EXAMPLESD
+	${INSTALL} webapps/EXAMPLESD/test.jsp ${WORK_PATH}/webapps/EXAMPLESD
+	${INSTALL} webapps/EXAMPLESD/members.jsp ${WORK_PATH}/webapps/EXAMPLESD
+	${INSTALL} webapps/EXAMPLESD/productstable.jsp ${WORK_PATH}/webapps/EXAMPLESD
+	${INSTALL} webapps/EXAMPLESD/productview.jsp ${WORK_PATH}/webapps/EXAMPLESD
+	${INSTALL} webapps/EXAMPLESD/ranges.jsp ${WORK_PATH}/webapps/EXAMPLESD
+	${INSTALL} webapps/EXAMPLESD/update.jsp ${WORK_PATH}/webapps/EXAMPLESD
 	mkdir -p ${WORK_PATH}/webapps/EXAMPLESD/css/
-	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/css/webcss.css ${WORK_PATH}/webapps/EXAMPLESD/css/
-	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/css/head.css ${WORK_PATH}/webapps/EXAMPLESD/css/
+	${INSTALL} webapps/EXAMPLESD/css/webcss.css ${WORK_PATH}/webapps/EXAMPLESD/css/
+	${INSTALL} webapps/EXAMPLESD/css/head.css ${WORK_PATH}/webapps/EXAMPLESD/css/
 	${INSTALL} contrib/core-3.4.0.jar ${WORK_PATH}/webapps/EXAMPLESD/WEB-INF/lib/
-	${INSTALL} contrib/javax.servlet-api-4.0.1.jar ${WORK_PATH}/webapps/EXAMPLESD/WEB-INF/lib/
 	${INSTALL} work/QREdit.jar ${WORK_PATH}/webapps/EXAMPLESD/WEB-INF/lib/
 
 run:
 	${JAVA} -cp ${SERVLET_CLASSPATH}:${WORK_PATH}/${PKG_FILENAME}.jar ${RUN_CLASS}
 wc:
-	@wc -l Makefile ${PKG_SRC_ALL} webapps/Contracts-1.0-SNAPSHOT/*jsp
+	@wc -l Makefile ${PKG_SRC_ALL} webapps/EXAMPLESD/*jsp
