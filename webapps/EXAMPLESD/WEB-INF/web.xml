@@ -4,11 +4,16 @@
            xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 		  http://java.sun.com/xml/ns/javaee/web-app_4_0.xsd"
            version="4.0">
+    <context-param>
+     <param-name>QRDB_PATH</param-name>
+     <param-value>/s/www/qr.qxyz.ru/db/members/</param-value>
+    </context-param>
+
 
     <display-name>Test</display-name>
 
     <welcome-file-list>
-        <welcome-file>members.jsp</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
     <servlet>
