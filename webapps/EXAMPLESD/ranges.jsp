@@ -1,6 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java"%>
 <%@ page import="java.io.*" %>
 <%@ page import="org.eustrosoft.contractpkg.Controller.RangesController" %>
+<%
+String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
+if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
+String range = null; try{ range=(String)request.getAttribute("range"); } catch(Exception e){}
+%>
 <html>
 <head>
 
@@ -13,13 +18,8 @@
 <body>
 <ul>
     <li>
-        <a href="members.jsp">
+        <a href="./">
             Назад
-        </a>
-    </li>
-    <li>
-        <a href="productstable.jsp?member=<%=f%>&range=<%="0100D"%>">
-            <%="0100D"%>
         </a>
     </li>
 </ul>
@@ -29,5 +29,22 @@
         String s = rController.getInfo();
     %>
     <%=s%>
+<table>
+ <tbody>
+  <tr>
+   <th>Диапазон</th>
+   <th>Описание</th>
+  </tr>
+  <tr>
+   <td><a href="<%= CGI_NAME %>?cmd=il&member=<%=f%>&range=<%="0100D"%>">0100D</a></td>
+   <td>Примеры на основе первых проданных двигателей TDME</td>
+  </tr>
+  <tr>
+   <td><a href="<%= CGI_NAME %>?cmd=il&member=<%=f%>&range=<%="0100E"%>">0100E</a></td>
+   <td>(для отладки) несуществующий диапазон</td>
+  </tr>
+ </tbody>
+</table>
+
 </body>
 </html>

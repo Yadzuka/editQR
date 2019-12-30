@@ -3,6 +3,10 @@
 <%@ page import="java.io.OutputStream" %>
 <%@ page import="java.io.InputStream" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
+if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
+%>
 <html>
 <head>
 	<title>
@@ -15,7 +19,7 @@
 
 
 	<%
-		Members.setWayToDB("/s/www/qr.qxyz.ru/db/members/");
+	//	Members.setWayToDB("/s/www/qr.qxyz.ru/db/members/");
 	%>
 	<table class="memberstable" border="3">
 		<tr>
@@ -32,7 +36,7 @@
 	%>
 		<tr>
 			<td>
-				<a href="ranges.jsp?member=<%=allRegisteredMembers[i]%>">
+				<a href="<%= CGI_NAME %>?cmd=rl&member=<%=allRegisteredMembers[i]%>">
 					<%= allRegisteredMembers[i] %>
 				</a>
 			</td>

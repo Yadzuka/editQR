@@ -52,6 +52,10 @@
 	// Massive of all qr links
 	ArrayList<String> allInaccessibleLinks;
 %>
+<%
+String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
+if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
+%>
 <html>
 <head>
 	<title>
@@ -119,10 +123,10 @@
 		bufferToShowModel.setZOID(request.getParameter("zoid"));
 
 		if(SZ_NULL.equals(bufferToShowModel.getZOID()) || bufferToShowModel.getZOID() == null )
-			response.sendRedirect("productstable.jsp?member="+memberParam+"&range="
+			response.sendRedirect(CGI_NAME+"?cmd=il&member="+memberParam+"&range="
 					+rangeParam);
 		else
-			response.sendRedirect("productview.jsp?member="+memberParam+"&range="
+			response.sendRedirect(CGI_NAME +"?cmd=iv&member="+memberParam+"&range="
 					+rangeParam+"&zoid="+parsedContractParam);
 
 	}
@@ -130,10 +134,10 @@
 		bufferToShowModel.setZOID(request.getParameter("zoid"));
 
 		if(SZ_NULL.equals(bufferToShowModel.getZOID()) || bufferToShowModel.getZOID() == null )
-			response.sendRedirect("update.jsp?member="+memberParam+
+			response.sendRedirect(CGI_NAME +"?cmd=ie&member="+memberParam+
 					"&range="+rangeParam+"&action="+ACTION_CREATE);
 		else
-			response.sendRedirect("update.jsp?member="+memberParam+
+			response.sendRedirect(CGI_NAME +"?cmd=ie&member="+memberParam+
 					"&range="+rangeParam+"&zoid="+parsedContractParam);
 	}
 	if (ACTION_EDIT.equals(action)) {
@@ -208,7 +212,7 @@
 		bufferToShowModel.setZVER((++numberOfSecondProductVersion).toString());
 		bufferToShowModel.createRecordInDB(bufferToShowModel.toString());
 
-		response.sendRedirect("productview.jsp?member=" + memberParam + "&range="
+		response.sendRedirect(CGI_NAME + "?cmd=iv&member=" + memberParam + "&range="
 				+ rangeParam + "&zoid=" + (contractsArray.size()));
 	}
 
@@ -218,11 +222,11 @@
 %>
 <body>
 <ul>
-	<li><a href="/Contracts_1_0_SNAPSHOT_war/">go home</a></li>
-	<li><a href="productstable.jsp?member=<%=memberParam%>&range=<%=rangeParam%>">Назад к списку контрактов</a></li>
+	<li><a href="<%= CGI_NAME %>">go home</a></li>
+	<li><a href="<%= CGI_NAME %>?cmd=il&member=<%=memberParam%>&range=<%=rangeParam%>">Назад к списку контрактов</a></li>
 </ul>
 <br/>
-<form action="update.jsp?member=<%=memberParam%>&range=<%=rangeParam%>&zoid=<%=zoidParam%>&action=<%=action%>" method="POST">
+<form action="<%= CGI_NAME %>?cmd=ie&member=<%=memberParam%>&range=<%=rangeParam%>&zoid=<%=zoidParam%>&action=<%=action%>" method="POST">
 
 	<input type="submit" name="cancel" value="Отмена">
 	<input type="submit" name="refresh" value="Обновить">

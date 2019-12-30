@@ -3,6 +3,10 @@
 <%@ page import="org.eustrosoft.contractpkg.Model.Contract" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.text.ParseException" %>
+<%
+String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
+if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
+%>
 <html>
 <head>
     <title>Product viewing</title>
@@ -24,9 +28,9 @@
 	Contract bufferToShowModel = contractController.getContract(parsedContractParam);
 %>
 <ul>
-	<li><a href="productstable.jsp?member=<%=memberParam%>&range=<%=rangeParam%>">
+	<li><a href="<%= CGI_NAME %>?cmd=il&member=<%=memberParam%>&range=<%=rangeParam%>">
 		Назад</a></li>&nbsp;
-	<li><a href="update.jsp?member=<%=memberParam%>&range=<%=rangeParam%>&zoid=<%=contractParam%>&action=edit">
+	<li><a href="<%= CGI_NAME %>?cmd=ie&member=<%=memberParam%>&range=<%=rangeParam%>&zoid=<%=contractParam%>&action=edit">
 		Изменить запись</a></li>
 </ul>
 		<table>

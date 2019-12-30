@@ -2,6 +2,12 @@
 <%@ page import="org.eustrosoft.contractpkg.Model.*" %>
 <%@ page import="org.eustrosoft.contractpkg.Controller.*" %>
 <%@ page import="java.util.ArrayList" %>
+<%
+String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
+if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
+String range = null; try{ range=(String)request.getParameter("range"); } catch(Exception e){}
+String member = null; try{ member=(String)request.getParameter("member"); } catch(Exception e){}
+%>
 <html>
 <head>
     <title>Starting table</title>
@@ -12,14 +18,13 @@
 	<%
 		ControllerContracts contractController = new ControllerContracts();
 		ArrayList<Contract> availableContracts = contractController.getContracts();
-		String member = request.getParameter("member");
 		Contract bufferToPrintProperties;
 		Contract bufferForComparison;
 	%>
 
 	<ul>
-		<li><a href="ranges.jsp?member=<%=member%>">Назад</a></li>
-		<li><a href="update.jsp?member=<%=member%>&range=<%=request.getParameter("range")%>&action=create">Создать новую запись</a></li>
+		<li><a href="<%= CGI_NAME %>?cmd=lr&member=<%=member%>">Назад</a></li>
+		<li><a href="<%= CGI_NAME %>?cmd=ie&member=<%=member%>&range=<%=range%>&action=create">Создать новую запись</a></li>
 	</ul>
 
 	<table class="memberstable" border="2" width="60%">
@@ -70,8 +75,7 @@
 		
    		<tr>
    			<td>
-   				<a href="productview.jsp?member=<%=request.getParameter("member")%>
-   				&range=<%=request.getParameter("range")%>&zoid=<%=i%>">
+   				<a href="<%= CGI_NAME %>?cmd=iv&member=<%=member%>&range=<%=range%>&zoid=<%=i%>">
    					Просмотр
    				</a><br>
 				Удалить запись
