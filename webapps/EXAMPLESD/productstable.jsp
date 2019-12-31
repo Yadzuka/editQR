@@ -2,6 +2,12 @@
 <%@ page import="org.eustrosoft.contractpkg.Model.*" %>
 <%@ page import="org.eustrosoft.contractpkg.Controller.*" %>
 <%@ page import="java.util.ArrayList" %>
+<%!
+public int str2int(String str){
+int i=-1; try{i=Integer.parseInt(str);}catch(java.lang.NumberFormatException nfe){}
+return(i);
+}
+%>
 <%
 String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
 if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
@@ -16,7 +22,7 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 </head>
 <body>
 	<%
-		ControllerContracts contractController = new ControllerContracts();
+		ControllerContracts contractController = new ControllerContracts(member,range);
 		ArrayList<Contract> availableContracts = contractController.getContracts();
 		Contract bufferToPrintProperties;
 		Contract bufferForComparison;
@@ -46,6 +52,7 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 			int firstCompositor;
 			int secondCompositor;
 			// Prints only last version of object
+if(availableContracts != null) {
 			for(int i = availableContracts.size()-1; i >= 0; i--){
 
 				bufferToPrintProperties = availableContracts.get(i);
@@ -53,22 +60,22 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 
 				// Works with all ZOID objects
 				for(int j = 0; j < availableContracts.size();j++){
-					firstCompositor = Integer.parseInt(bufferToPrintProperties.getZOID());
-					secondCompositor = Integer.parseInt(availableContracts.get(j).getZOID());
+					firstCompositor = str2int(bufferToPrintProperties.getZOID());
+					secondCompositor = str2int(availableContracts.get(j).getZOID());
 
 					if(firstCompositor != secondCompositor)
 						continue;
 
-					firstCompositor = Integer.parseInt(bufferToPrintProperties.getZVER());
-					secondCompositor = Integer.parseInt(availableContracts.get(j).getZVER());
+					firstCompositor = str2int(bufferToPrintProperties.getZVER());
+					secondCompositor = str2int(availableContracts.get(j).getZVER());
 
 					if(firstCompositor < secondCompositor) {
 						bufferToPrintProperties = availableContracts.get(j);
 					}
 				}
 
-				firstCompositor = Integer.parseInt(bufferForComparison.getZVER());
-				secondCompositor = Integer.parseInt(bufferToPrintProperties.getZVER());
+				firstCompositor = str2int(bufferForComparison.getZVER());
+				secondCompositor = str2int(bufferToPrintProperties.getZVER());
 				if(firstCompositor < secondCompositor)
 					continue;
 		%>
@@ -99,6 +106,7 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
    		</tr>
 		<%
 			}
+} //if
 		%>
   	</table>
 </body>
