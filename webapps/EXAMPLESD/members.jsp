@@ -21,6 +21,9 @@ if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>")
 	<%
 	//	Members.setWayToDB("/s/www/qr.qxyz.ru/db/members/");
 	%>
+		<form action="<%= CGI_NAME %>?cmd=publish" method="POST">
+			<input type="submit" value="Опубликовать Все" name="publish">
+		</form>
 	<table class="memberstable" border="3">
 		<tr>
 			<td>Organization names</td>
@@ -42,11 +45,6 @@ if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>")
 			</td>
 		</tr>
 	<% } %>
-		<form>
-			<input type="submit" name="Опубликовать" value="Enter">
-
-
-		</form>
 	</table>
 </body>
 </html>
