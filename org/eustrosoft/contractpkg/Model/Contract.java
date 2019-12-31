@@ -12,48 +12,64 @@ public class Contract {
 
     // Global parameters for initialize form
     String[] productProperties;
-    BufferedReader reader;
-    String pathToDBFile;
+    //BufferedReader reader; //SIC! зачем глобально! зачем глобально!
+    String pathToDBFile = null;
+    String member;
+    String range;
+    public String getFilePath(){ return(pathToDBFile); }
 
-    public static Contract InitNewRecordInDB(String comingString, char splitter,String ZOID, String ZVER,
+    public  Contract InitNewRecordInDB(String comingString, char splitter,String ZOID, String ZVER,
 			String ZUID, String ZSTA){
-	    return new Contract(comingString, splitter,ZOID, ZVER,
+	    return buildContract(comingString, splitter,ZOID, ZVER,
 				ZUID, ZSTA);
     }
 
     // Private constructors to init class inside
     public Contract(){
-    	pathToDBFile = Members.getWayToDB() + "/EXAMPLESD/0100D/master.list.csv";
+    	//pathToDBFile = Members.getWayToDB() + "/" + "EXAMPLED" + "/" + "0100D" + "/master.list.csv";
+    	//setProductPropertiesLength(pathToDBFile);
+}
+    public Contract(String member, String range){
+        this.member = member;
+        this.range = range;
+    	pathToDBFile = Members.getWayToDB() + "/" + member + "/" + range + "/master.list.csv";
     	setProductPropertiesLength(pathToDBFile);
 	}
 
-    private Contract(String inputStringToDB,char splitter,String ZOID, String ZVER,
+    private Contract buildContract(String inputStringToDB,char splitter,String ZOID, String ZVER,
 			String ZUID, String ZSTA){
-        this();
-        splitComingString(inputStringToDB,splitter,ZOID,ZVER,
+        Contract c = new Contract(member,range);
+        c.splitComingString(inputStringToDB,splitter,ZOID,ZVER,
     			ZUID,ZSTA);
+	return(c);
     }
 
-    private Contract(String[] initialProps){
-    	this();
-    	readFromDBFile(initialProps);
-    	matchPropertiesWithMassive(productProperties);
+    private Contract buildContract(String[] initialProps){
+    	//this();
+        Contract c = new Contract(member,range);
+    	c.readFromDBFile(initialProps);
+    	c.matchPropertiesWithMassive(c.productProperties);
+        return(c);
 	}
-
+/*
 	private Contract(String[] str, String pathToFile) {
     	this();
 		setProductPropertiesLength(pathToFile);
 	}
+*/
 
+/*
     private Contract(String pathToFile) {
     	this();
         setProductPropertiesLength(pathToFile);
     }
+*/
 
     // Get length of parameters || MAY BE USED TO INITIALIZE ANOTHER DB || (FUTURE)
     private void setProductPropertiesLength(String pathToDBFile) {
         String sBufferToGetProps;
         int finalLengthOfProps = 0;
+        BufferedReader reader = null; //SIC! Здесь ему место
         try {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(pathToDBFile),
                                                             StandardCharsets.UTF_8)/*new FileReader(pathToDBFile)*/);
@@ -64,7 +80,7 @@ public class Contract {
             ex.printStackTrace();
         }finally {
         	try{
-        	    reader.close();
+        	    if(reader != null) reader.close(); //!SIC
         	}catch (IOException ex){
         		ex.printStackTrace();
 			}
@@ -73,8 +89,9 @@ public class Contract {
 
     // Fill starting array list with existing records in file
     public ArrayList<Contract> fillProductPropertiesInStart() 
-    		throws NumberFormatException, IOException {
+    	{ //	throws NumberFormatException, IOException {
         ArrayList<Contract> startingList = new ArrayList<>();
+        BufferedReader reader = null; //SIC! Здесь ему место
 
 		try {
 			reader = new BufferedReader(new InputStreamReader(new FileInputStream(pathToDBFile),
@@ -84,21 +101,21 @@ public class Contract {
 				if (stringForLine.startsWith("#") || startingList.equals(""))
 					continue;
 				else {
-					startingList.add(new Contract(stringForLine.split(";")));
+					startingList.add(buildContract(stringForLine.split(";")));
 				}
 			}
-			return startingList;
 		}
+		catch (IOException ex){ ex.printStackTrace(); }
         finally {
 			try{
-				reader.close();
-			}catch (IOException ex){
-				ex.printStackTrace();
-			}
+				if(reader != null) reader.close(); //!SIC
+			}catch (IOException ex){ ex.printStackTrace(); }
 		}
+			return startingList;
     }
 
     private void readFromDBFile(String [] props){
+	//if(productProperties == null) return; //SIC! не понял, но здесь бывает null и без этого валится
     	if(props.length > productProperties.length) {
 			System.out.println("Properties length is more than product properties length!");
 			return;
@@ -126,6 +143,7 @@ public class Contract {
     }
 
 	private void matchPropertiesWithMassive(String [] productProperties) {
+	//if(productProperties == null) return; //SIC! не понял, но здесь бывает null и без этого валится
         ZOID = productProperties[0];
         ZVER = productProperties[1];
         ZDATE = productProperties[2];
