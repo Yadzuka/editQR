@@ -167,7 +167,7 @@ private String QRDB_PATH=null;
   long enter_time = System.currentTimeMillis();
   read_parameters_from_web_xml();
   if(QRDB_PATH == null) {printerr("QRDB_PATH параметр не задан! отредактируйте WEB-INF/web.xml"); }
-  Members.setWayToDB(QRDB_PATH);
+  Members.setWayToDB(QRDB_PATH + "/members/");
   String cmd=request.getParameter("cmd");
   if(SZ_EMPTY.equals(cmd) || cmd == null){ cmd=CMD_DEFAULT; }
   try{

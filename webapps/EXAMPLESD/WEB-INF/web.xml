@@ -6,7 +6,7 @@
            version="4.0">
     <context-param>
      <param-name>QRDB_PATH</param-name>
-     <param-value>/s/www/qr.qxyz.ru/db/members/</param-value>
+     <param-value>/s/qrdb/QR.QXYZ.RU/</param-value>
     </context-param>
 
 
