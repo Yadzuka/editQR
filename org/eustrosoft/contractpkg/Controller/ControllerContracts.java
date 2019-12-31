@@ -13,17 +13,17 @@ public class ControllerContracts {
     private ArrayList<Contract> contracts;
     private Contract contractInitializerFromFile;
 
-    public ControllerContracts() {
-        initContactList();
+    public ControllerContracts(String member, String range) {
+        initContactList(member, range);
     }
 
-    private void initContactList(){
-        try{
-            contractInitializerFromFile = new Contract();
+    private void initContactList(String member, String range){
+        //try{
+            contractInitializerFromFile = new Contract(member, range);
             setContracts(contractInitializerFromFile.fillProductPropertiesInStart());
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        //}catch (IOException ex){
+        //    ex.printStackTrace();
+        //}
     }
 
     public void deleteRecord(int id){
