@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+		  http://java.sun.com/xml/ns/javaee/web-app_4_0.xsd"
+           version="4.0">
+    <context-param>
+     <param-name>QRDB_PATH</param-name>
+     <param-value>/s/qrdb/EUSTROSOFT/</param-value>
+    </context-param>
+    <security-constraint>
+      <web-resource-collection>
+         <web-resource-name>EUSTROSOFT.QR.QXYZ member data edit interface</web-resource-name>
+         <!-- Define the context-relative URL(s) to be protected -->
+         <url-pattern>/*</url-pattern>
+         <!-- If you list http methods, only those methods are protected -->
+        <!--
+         <http-method>DELETE</http-method>
+         <http-method>GET</http-method>
+         <http-method>POST</http-method>
+         <http-method>PUT</http-method>
+        -->
+      </web-resource-collection>
+      <auth-constraint>
+         <!-- Anyone with one of the listed roles may access this area -->
+         <role-name>EUSTROSOFT.QR.QXYZ</role-name>
+      </auth-constraint>
+    </security-constraint>
+
+
+    <display-name>EUSTROSOFT.QR.QXYZ member data edit interface</display-name>
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <servlet>
+        <servlet-name>qrServlet</servlet-name>
+        <servlet-class>org.eustrosoft.contractpkg.Controller.QRcodeServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>qrServlet</servlet-name>
+        <url-pattern>/engine/qr</url-pattern>
+    </servlet-mapping>
+    <login-config>
+      <auth-method>BASIC</auth-method>
+      <realm-name>EUSTROSOFT.QR.QXYZ member data edit interface</realm-name>
+    </login-config>
+
+    <!-- Security roles referenced by this web application -->
+    <security-role>
+      <role-name>EUSTROSOFT.QR.QXYZ</role-name>
+    </security-role>
+
+</web-app>

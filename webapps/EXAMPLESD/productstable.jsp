@@ -29,12 +29,15 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 	%>
 
 	<ul>
-		<li><a href="<%= CGI_NAME %>?cmd=lr&member=<%=member%>">Назад</a></li>
+		<li><a href="<%= CGI_NAME %>?cmd=rl&member=<%=member%>">Назад</a></li>
 		<li><a href="<%= CGI_NAME %>?cmd=ie&member=<%=member%>&range=<%=range%>&action=create">Создать новую запись</a></li>
 	</ul>
 
+   		<caption><h3>Таблица проданных товаров, или произведенных изделий, или заключенных договоров. Пока это не очень различимо.</h3></caption>
+<p>
+По всем изменениям - ведется история, кто, когда и что было раньше. Если что - разберемся и починим все что было поломано.
+</p>
 	<table class="memberstable" border="2" width="60%">
-   		<caption><h3>Таблица товаров</h3></caption>
    	<tr>
    		<td>Функции</td>
     	<td>QR Image</td>
@@ -85,14 +88,17 @@ if(availableContracts != null) {
    				<a href="<%= CGI_NAME %>?cmd=iv&member=<%=member%>&range=<%=range%>&zoid=<%=i%>">
    					Просмотр
    				</a><br>
-				Удалить запись
+				Удалить
    			</td>
    			<td>
+    			<a href = "engine/qr?codingString=<%=bufferToPrintProperties.getQr()%>" >
 				<img src="engine/qr?codingString=<%=bufferToPrintProperties.getQr()%>"/>
+			</a>
 			</td>
     		<td>
-    			<a href = "<%="http://qr.qxyz.ru/?q="+bufferToPrintProperties.getQr()%>">
-				<%="http://qr.qxyz.ru/?q="+bufferToPrintProperties.getQr()%>
+    			<a href = "<%="http://qr.qxyz.ru/?q="+bufferToPrintProperties.getQr()%>"
+			 target="_<%=bufferToPrintProperties.getQr()%>">
+				<%=bufferToPrintProperties.getQr()%>
 				</a>
 			</td>
    	 		<td><%=bufferToPrintProperties.getContractum()%></td>

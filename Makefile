@@ -96,6 +96,34 @@ install: all
 	${INSTALL} webapps/EXAMPLESD/css/head.css ${WORK_PATH}/webapps/EXAMPLESD/css/
 	${INSTALL} contrib/core-3.4.0.jar ${WORK_PATH}/webapps/EXAMPLESD/WEB-INF/lib/
 	${INSTALL} work/QREdit.jar ${WORK_PATH}/webapps/EXAMPLESD/WEB-INF/lib/
+	#DOMINATOR
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/DOMINATOR
+	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/css/
+	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/lib/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/DOMINATOR/css/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/lib/
+	${INSTALL} webapps/DOMINATOR/WEB-INF/web.xml ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/
+	#EUSTROSOFT
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/EUSTROSOFT
+	mkdir -p ${WORK_PATH}/webapps/EUSTROSOFT/css/
+	mkdir -p ${WORK_PATH}/webapps/EUSTROSOFT/lib/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/EUSTROSOFT/css/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/lib/
+	${INSTALL} webapps/EUSTROSOFT/WEB-INF/web.xml ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/
+	#rubmaster.ru
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/rubmaster.ru
+	mkdir -p ${WORK_PATH}/webapps/rubmaster.ru/css/
+	mkdir -p ${WORK_PATH}/webapps/rubmaster.ru/lib/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/rubmaster.ru/css/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/rubmaster.ru/WEB-INF/lib/
+	${INSTALL} webapps/rubmaster.ru/WEB-INF/web.xml ${WORK_PATH}/webapps/rubmaster.ru/WEB-INF/
+	#boatswain.org
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/boatswain.org
+	mkdir -p ${WORK_PATH}/webapps/boatswain.org/css/
+	mkdir -p ${WORK_PATH}/webapps/boatswain.org/lib/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/boatswain.org/css/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/boatswain.org/WEB-INF/lib/
+	${INSTALL} webapps/boatswain.org/WEB-INF/web.xml ${WORK_PATH}/webapps/boatswain.org/WEB-INF/
 
 run:
 	${JAVA} -cp ${SERVLET_CLASSPATH}:${WORK_PATH}/${PKG_FILENAME}.jar ${RUN_CLASS}
