@@ -69,6 +69,7 @@ install: all
 	# development version of EXAMPLESD
 	${INSTALL} contrib/core-3.4.0.jar webapps/EXAMPLESD/WEB-INF/lib/
 	${INSTALL} work/QREdit.jar webapps/EXAMPLESD/WEB-INF/lib/
+	touch webapps/EXAMPLESD/index.jsp
 	#Contracts-1.0-SNAPSHOT
 	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/WEB-INF/web.xml ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT/WEB-INF/
 	${INSTALL} webapps/Contracts-1.0-SNAPSHOT/members.jsp ${WORK_PATH}/webapps/Contracts-1.0-SNAPSHOT
