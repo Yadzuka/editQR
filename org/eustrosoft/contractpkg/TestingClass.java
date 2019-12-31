@@ -21,7 +21,7 @@ class TestingClass {
             System.out.println(s);
         }
 
-        ControllerContracts controllerContracts = new ControllerContracts();
+        ControllerContracts controllerContracts = new ControllerContracts("none","none");
         ArrayList<Contract> contracts = controllerContracts.getContracts();
         for(Contract c : contracts){
             System.out.println(c.getZDATE());
