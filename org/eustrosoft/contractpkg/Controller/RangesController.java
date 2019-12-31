@@ -25,6 +25,33 @@ public class RangesController {
         sb = new StringBuilder();
     }
 
+    public static boolean isRange(File f)
+    {
+     if(!f.isDirectory()) return(false);
+     if(f.getName().length() != 5) return(false);
+     try{ Long l = Long.valueOf(f.getName(),16);}
+     catch(Exception e){return(false);}
+     return(true);
+    }
+
+	public String [] getRanges(){
+		int num_dir=0;
+		int membersCounter = allDirectories.length;
+		String[] companyNames = new String[membersCounter];
+		for(int i = 0; i < membersCounter; i++){
+			if(isRange(allDirectories[i]))
+			{
+			companyNames[num_dir] = allDirectories[i].getName();
+			num_dir++;
+			}
+		}
+		String[] names = new String[num_dir];
+		for(int i = 0; i < num_dir; i++){ names[i]=companyNames[i];}
+		companyNames = names;
+		membersCounter = num_dir;
+		return companyNames; //SIC! возврат private (было раньше в Members)
+	}
+
     public String getInfo() throws IOException {
 
         // If finding *.html - read it
