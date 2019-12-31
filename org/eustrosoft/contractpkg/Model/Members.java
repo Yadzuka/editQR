@@ -27,17 +27,25 @@ public class Members {
 	public String [] getCompanyNames(){
 
 		listOfMembers = new File(wayToDB).listFiles();
+		int num_dir=0;
 
-		assert listOfMembers != null;
+		assert listOfMembers != null; //SIC! без этого никак? Ж)
 
 		membersCounter = listOfMembers.length;
 		companyNames = new String[membersCounter];
 
 		for(int i = 0; i < membersCounter; i++){
-			companyNames[i] = listOfMembers[i].getName();
+			if(listOfMembers[i].isDirectory())
+			{
+			companyNames[num_dir] = listOfMembers[i].getName();
+			num_dir++;
+			}
 		}
-
-		return companyNames;
+		String[] names = new String[num_dir];
+		for(int i = 0; i < num_dir; i++){ names[i]=companyNames[i];}
+		companyNames = names;
+		membersCounter = num_dir;
+		return companyNames; //SIC! возврат private
 	}
 	// Private parameter to set company name (optional)
 	private void setCompanyNames(String [] companyNames) {
