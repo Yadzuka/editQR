@@ -6,6 +6,8 @@
 <%
 String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
 if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
+String range = null; try{ range=(String)request.getParameter("range"); } catch(Exception e){}
+String member = null; try{ member=(String)request.getParameter("member"); } catch(Exception e){}
 %>
 <html>
 <head>
@@ -24,7 +26,7 @@ if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>")
 	}catch(Exception ex){
 
 	}
-	ControllerContracts contractController = new ControllerContracts();
+	ControllerContracts contractController = new ControllerContracts(member,range);
 	Contract bufferToShowModel = contractController.getContract(parsedContractParam);
 %>
 <ul>
