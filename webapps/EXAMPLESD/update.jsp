@@ -55,6 +55,8 @@
 <%
 String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
 if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
+String range = null; try{ range=(String)request.getParameter("range"); } catch(Exception e){}
+String member = null; try{ member=(String)request.getParameter("member"); } catch(Exception e){}
 %>
 <html>
 <head>
@@ -73,7 +75,7 @@ if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>")
 	response.setDateHeader("Expires",expire_time);
 	request.setCharacterEncoding("UTF-8");
 //
-	ControllerContracts contractController = new ControllerContracts();
+	ControllerContracts contractController = new ControllerContracts(member,range);
 	ArrayList<Contract> contractsArray = contractController.getContracts();
 
 	int parsedContractParam;
@@ -85,7 +87,7 @@ if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>")
 		parsedContractParam = Integer.parseInt(zoidParam);
 	else
 		parsedContractParam = contractsArray.size();
-	Contract bufferToShowModel = new Contract();
+	Contract bufferToShowModel = new Contract(member,range);
 
 	// Count and add addresses witch are existing
 	String unicsQR = contractsArray.get(0).getQr();
