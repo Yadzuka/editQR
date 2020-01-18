@@ -3,6 +3,8 @@
 <%@ page import="org.eustrosoft.contractpkg.Controller.*" %>
 <%@ page import="java.util.ArrayList" %>
 <%!
+	//
+	public org.eustrosoft.contractpkg.Model.MsgContract msg;
 public int str2int(String str){
 int i=-1; try{i=Integer.parseInt(str);}catch(java.lang.NumberFormatException nfe){}
 return(i);
@@ -40,16 +42,17 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 	<table class="memberstable" border="2" width="60%">
    	<tr>
    		<td>Функции</td>
+<!--
     	<td>QR Image</td>
-    	<td>QR code</td>
-    	<td>Contract</td>
-  		<td>Contract date</td>
-    	<td>Price</td>
-   		<td>Supplier</td>
-    	<td>Client</td>
-    	<td>Production type</td>
-    	<td>Model</td>
-    	<td>Serial number</td>
+-->
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_QR))%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_CONTRACTNUM))%></td>
+	<!-- <td><%=msg.obj2html(msg.getCaption(msg.FN_contractdate))%></td> -->
+	<td>Изделие</td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_SN))%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_CLIENT))%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_SUPPLIER))%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_MONEY))%></td>
    	</tr>
 		<%
 			int firstCompositor;
@@ -86,29 +89,27 @@ if(availableContracts != null) {
    		<tr>
    			<td>
    				<a href="<%= CGI_NAME %>?cmd=iv&member=<%=member%>&range=<%=range%>&zoid=<%=i%>">
-   					Просмотр
-   				</a><br>
-				Удалить
+   					&lt;карточка&gt&nbsp;
+   				</a>
+				<!-- <br> Удалить -->
    			</td>
+<!--
    			<td>
-    			<a href = "engine/qr?codingString=<%=bufferToPrintProperties.getQr()%>" >
+    			<a href = "engine/qr?codingString=<%=msg.obj2value(bufferToPrintProperties.getQr())%>" >
 				<img src="engine/qr?codingString=<%=bufferToPrintProperties.getQr()%>"/>
 			</a>
 			</td>
-    		<td>
-    			<a href = "<%="http://qr.qxyz.ru/?q="+bufferToPrintProperties.getQr()%>"
-			 target="_<%=bufferToPrintProperties.getQr()%>">
-				<%=bufferToPrintProperties.getQr()%>
-				</a>
+-->
+    		<td> &nbsp;<a href = "<%="http://qr.qxyz.ru/?q="+msg.obj2value(bufferToPrintProperties.getQr())%>"
+			 target="_<%=msg.obj2value(bufferToPrintProperties.getQr())%>"><%=msg.obj2html(bufferToPrintProperties.getQr())%></a>
 			</td>
-   	 		<td><%=bufferToPrintProperties.getContractum()%></td>
-    		<td><%=bufferToPrintProperties.getContractdate()%></td>
-    		<td><%=bufferToPrintProperties.getMoney()%></td>
-    		<td><%=bufferToPrintProperties.getSUPPLIER()%></td>
-			<td><%=bufferToPrintProperties.getCLIENT()%></td>
-			<td><%=bufferToPrintProperties.getPRODTYPE()%></td>
-			<td><%=bufferToPrintProperties.getMODEL()%></td>
-			<td><%=bufferToPrintProperties.getSN()%></td>
+   	 		<td><%=msg.obj2html(bufferToPrintProperties.getContractum())%> от
+    		<%=msg.obj2html(bufferToPrintProperties.getContractdate())%></td>
+			<td><%=msg.obj2html(msg.obj2text(bufferToPrintProperties.getPRODTYPE()) + msg.obj2text(bufferToPrintProperties.getMODEL()))%></td>
+			<td><%=msg.obj2html(bufferToPrintProperties.getSN())%></td>
+			<td><%=msg.obj2html(bufferToPrintProperties.getCLIENT())%></td>
+    		<td><%=msg.obj2html(bufferToPrintProperties.getSUPPLIER())%></td>
+    		<td><%=msg.obj2html(bufferToPrintProperties.getMoney())%></td>
    		</tr>
 		<%
 			}

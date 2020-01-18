@@ -3,6 +3,10 @@
 <%@ page import="org.eustrosoft.contractpkg.Model.Contract" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.text.ParseException" %>
+<%!
+	//
+	public org.eustrosoft.contractpkg.Model.MsgContract msg;
+%>
 <%
 String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
 if(CGI_NAME == null) {out.println("<div> no attr_dispatch_canary - exit </div>"); return; }
@@ -37,7 +41,7 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 </ul>
 		<table>
 	   		<tr>
-	   			<td>Картинка qr: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_QR))%></td>
 				<td>
 					<img src="engine/qr?codingString=<%=bufferToShowModel.getQr()%>"/>
 				</td>
@@ -51,63 +55,63 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 				</td>
 			</tr>
    	 		<tr>
-   	 			<td>Контракт: </td>
-   	 			<td><%=bufferToShowModel.getContractum()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_CONTRACTNUM))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getContractum())%></td>
    	 		</tr>
-   	 		   	<td>Дата контракта: </td>
-   	 			<td><%=bufferToShowModel.getContractdate()%></td>
-   	 		</tr>
-   	 		<tr>
-   	 			<td>Сумма: </td>
-   	 			<td><%=bufferToShowModel.getMoney()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_contractdate))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getContractdate())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Поставщик: </td>
-   	 			<td><%=bufferToShowModel.getSUPPLIER()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_MONEY))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getMoney())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Клиент: </td>
-   	 			<td><%=bufferToShowModel.getCLIENT()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_SUPPLIER))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getSUPPLIER())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Тип продукта: </td>
-   	 			<td><%=bufferToShowModel.getPRODTYPE()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_CLIENT))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getCLIENT())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Модель: </td>
-   	 			<td><%=bufferToShowModel.getMODEL()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_PRODTYPE))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getPRODTYPE())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Номер серии: </td>
-   	 			<td><%=bufferToShowModel.getSN()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_MODEL))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getMODEL())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Дата изготовления: </td>
-   	 			<td><%=bufferToShowModel.getProdate()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_SN))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getSN())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Дата привоза: </td>
-   	 			<td><%=bufferToShowModel.getShipdate()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_prodate))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getProdate())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Дата продажи: </td>
-   	 			<td><%=bufferToShowModel.getSALEDATE()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_shipdate))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getShipdate())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Дата отсыла: </td>
-   	 			<td><%=bufferToShowModel.getDEPARTUREDATE()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_SALEDATE))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getSALEDATE())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Начало гарантии: </td>
-   	 			<td><%=bufferToShowModel.getWARRANTYSTART()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_DEPARTUREDATE))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getDEPARTUREDATE())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Конец гарантии: </td>
-   	 			<td><%=bufferToShowModel.getWARRANTYEND()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_WARRANTYSTART))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getWARRANTYSTART())%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Комментарий: </td>
-   	 			<td><%=bufferToShowModel.getCOMMENT()%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_WARRANTYEND))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getWARRANTYEND())%></td>
+   	 		</tr>
+   	 		<tr>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_COMMENT))%></td>
+   	 			<td><%=msg.obj2html(bufferToShowModel.getCOMMENT())%></td>
    	 		</tr>
    	 	</table>
 

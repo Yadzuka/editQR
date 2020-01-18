@@ -241,15 +241,17 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 		<input type="hidden" name="ZVER" value="<%=msg.obj2value(bufferToShowModel.getZVER())%>">
 
 		<table>
+<!--
 	   		<tr>
-	   			<td>Картинка QR: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_QR))%></td>
 				<td>
 					<img src="engine/qr?codingString=<%=msg.obj2value(bufferToShowModel.getQr())%>"/>
 				</td>
 				<td></td>
 			</tr>
+-->
     		<tr>
-    			<td>Ссылка: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_QR))%></td>
 				<td>
 					<input name="Qr" value="<%=msg.obj2value(bufferToShowModel.getQr())%>"/>
 				</td>
@@ -259,78 +261,85 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 				</td>
 			</tr>
    	 		<tr>
-   	 			<td>Контракт: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_CONTRACTNUM))%></td>
    	 			<td><input name="contract" value="<%=msg.obj2value(bufferToShowModel.getContractum())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_CONTRACTNUM))%></td>
    	 		</tr>
-   	 		   	<td>Дата контракта: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_contractdate))%></td>
    	 			<td><input name="Contractdate" value="<%=msg.obj2value(bufferToShowModel.getContractdate())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_contractdate))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Сумма: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_MONEY))%></td>
    	 			<td><input name="Money" value="<%=msg.obj2value(bufferToShowModel.getMoney())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_MONEY))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Поставщик: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_SUPPLIER))%></td>
    	 			<td><input name="SUPPLIER" value="<%=msg.obj2value(bufferToShowModel.getSUPPLIER())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_SUPPLIER))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Клиент: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_CLIENT))%></td>
    	 			<td><input name="CLIENT" value="<%=msg.obj2value(bufferToShowModel.getCLIENT())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_CLIENT))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Тип продукта: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_PRODTYPE))%></td>
    	 			<td><input name="PRODTYPE" value="<%=msg.obj2value(bufferToShowModel.getPRODTYPE())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_PRODTYPE))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Модель: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_MODEL))%></td>
    	 			<td><input name="MODEL" value="<%=msg.obj2value(bufferToShowModel.getMODEL())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_MODEL))%></td>
    	 		</tr>
    	 		<tr>
-				<td><%=msg.obj2html(msg.getCaption(msg.FN_SN))%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_SN))%></td>
    	 			<td><input name="SN" value="<%=msg.obj2value(bufferToShowModel.getSN())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_SN))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Дата изготовления: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_prodate))%></td>
    	 			<td><input name="Prodate" value="<%=msg.obj2value(bufferToShowModel.getProdate())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_prodate))%></td>
    	 		</tr>
    	 		<tr>
-				<td><%=msg.obj2html(msg.getCaption(msg.FN_shipdate))%></td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_shipdate))%></td>
    	 			<td><input name="Shipdate" value="<%=msg.obj2value(bufferToShowModel.getShipdate())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_shipdate))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Дата продажи: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_SALEDATE))%></td>
    	 			<td><input name="SALEDATE" value="<%=msg.obj2value(bufferToShowModel.getSALEDATE())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_SALEDATE))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Дата отсыла: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_DEPARTUREDATE))%></td>
    	 			<td><input name="DEPARTUREDATE" value="<%=msg.obj2value(bufferToShowModel.getDEPARTUREDATE())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_DEPARTUREDATE))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Начало гарантии: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_WARRANTYSTART))%></td>
    	 			<td><input name="WARRANTYSTART" value="<%=msg.obj2value(bufferToShowModel.getWARRANTYSTART())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_WARRANTYSTART))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Конец гарантии: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_WARRANTYEND))%></td>
    	 			<td><input name="WARRANTYEND" value="<%=msg.obj2value(bufferToShowModel.getWARRANTYEND())%>"></td>
 				<td><%=msg.obj2html(msg.getComment(msg.FN_WARRANTYEND))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Комментарий: </td>
+	<td><%=msg.obj2html(msg.getCaption(msg.FN_COMMENT))%></td>
+<!--
    	 			<td><input name="COMMENT" value="<%=msg.obj2value(bufferToShowModel.getCOMMENT())%>"></td>
-				<td><%=msg.obj2html(msg.getComment(msg.FN_COMMENT))%></td>
+-->
+				<td colspan="2"><b><%=msg.obj2html(msg.getComment(msg.FN_COMMENT))%></b></td>
+   	 		</tr>
+   	 		<tr>
+			<td colspan="3">
+<textarea name="COMMENT" rows="10" cols="72"><%=msg.obj2value(bufferToShowModel.getCOMMENT())%></textarea>
+			</td>
    	 		</tr>
    	 	</table>
 	<input type="submit" name="save" value="Сохранить">

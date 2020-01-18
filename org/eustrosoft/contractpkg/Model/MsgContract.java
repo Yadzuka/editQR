@@ -137,12 +137,18 @@ public static String  getSLevelName(int fn){int s=getSLevel(fn);if(s==SLEVEL_DSP
 public static String getFieldRow(int fn){return( fn + ";" + getName(fn) + ";" + getCaption(fn) + ";" + getSLevelName(fn) + ";" + getComment(fn));}
 
 
- public final static String[] CSV_UNSAFE_CHARACTERS = {";","\n"};
- public final static String[] CSV_UNSAFE_CHARACTERS_SUBST = {"\\.,","\\n"};
+ public final static String[] CSV_UNSAFE_CHARACTERS = {";","\n","\r"};
+ public final static String[] CSV_UNSAFE_CHARACTERS_SUBST = {"\\.,","\\n","\\r"};
  public static String value2csv(String text)
  {
  return(translate_tokens(obj2text(text),CSV_UNSAFE_CHARACTERS,CSV_UNSAFE_CHARACTERS_SUBST));
  } // text2html()
+ public static String csv2text(String text)
+ {
+ if(text==null) text= "";
+ return(translate_tokens(text,CSV_UNSAFE_CHARACTERS_SUBST,CSV_UNSAFE_CHARACTERS));
+ } // text2html()
+
 // START of WAMessages
 
 private final static String SZ_NULL = "null";
@@ -157,7 +163,7 @@ private final static String SZ_NULL = "null";
  */
  public static String obj2text(Object o)
  {
- if(o == null) return(SZ_NULL); return(o.toString());
+ if(o == null) return(SZ_NULL); return(csv2text(o.toString()));
  }
 
  /** convert object to text but preserve null value if so.

@@ -199,7 +199,6 @@ private String QRDB_PATH=null;
           printerr("Неправильный запрос cmd=" + cmd);
           break;
         }
-      out.println("<div>after</div>");
     }
     catch(Exception e){printerrln(e.toString());}
 %>
