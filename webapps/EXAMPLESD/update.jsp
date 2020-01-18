@@ -18,9 +18,11 @@
 				maxZOID = Integer.parseInt(contractsArray.get(i).getZOID());
 		}
 		maxZOID++;
-		String s =  String.format("%s%03x",rangeParam, Long.valueOf(maxZOID));
+		String s =  String.format("%s%03X",rangeParam, Long.valueOf(maxZOID));
 		contractToSetNewQr.setQr(s);
 	}
+	//
+	public org.eustrosoft.contractpkg.Model.MsgContract msg;
 
 	// Actions that may be invoked
 	public final String ACTION_EDIT = "edit";
@@ -168,25 +170,26 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 		}
 
 		bufferToShowModel.setZDATE(new Date().toString());
-		bufferToShowModel.setZUID(request.getRemoteUser());
+		bufferToShowModel.setZUID(msg.value2csv(request.getRemoteUser()));
+
 		bufferToShowModel.setZSTA("N");
 		// data fields
-		bufferToShowModel.setQr(request.getParameter("Qr"));
-		bufferToShowModel.setContractum(request.getParameter("contract"));
-		bufferToShowModel.setContractdate(request.getParameter("Contractdate"));
-		bufferToShowModel.setMoney(request.getParameter("Money"));
-		bufferToShowModel.setSUPPLIER(request.getParameter("SUPPLIER"));
-		bufferToShowModel.setCLIENT(request.getParameter("CLIENT"));
-		bufferToShowModel.setPRODTYPE(request.getParameter("PRODTYPE"));
-		bufferToShowModel.setMODEL(request.getParameter("MODEL"));
-		bufferToShowModel.setSN(request.getParameter("SN"));
-		bufferToShowModel.setProdate(request.getParameter("Prodate"));
-		bufferToShowModel.setShipdate(request.getParameter("Shipdate"));
-		bufferToShowModel.setSALEDATE(request.getParameter("SALEDATE"));
-		bufferToShowModel.setDEPARTUREDATE(request.getParameter("DEPARTUREDATE"));
-		bufferToShowModel.setWARRANTYSTART(request.getParameter("WARRANTYSTART"));
-		bufferToShowModel.setWARRANTYEND(request.getParameter("WARRANTYEND"));
-		bufferToShowModel.setCOMMENT(request.getParameter("COMMENT"));
+		bufferToShowModel.setQr(msg.value2csv(request.getParameter("Qr")));
+		bufferToShowModel.setContractum(msg.value2csv(request.getParameter("contract")));
+		bufferToShowModel.setContractdate(msg.value2csv(request.getParameter("Contractdate")));
+		bufferToShowModel.setMoney(msg.value2csv(request.getParameter("Money")));
+		bufferToShowModel.setSUPPLIER(msg.value2csv(request.getParameter("SUPPLIER")));
+		bufferToShowModel.setCLIENT(msg.value2csv(request.getParameter("CLIENT")));
+		bufferToShowModel.setPRODTYPE(msg.value2csv(request.getParameter("PRODTYPE")));
+		bufferToShowModel.setMODEL(msg.value2csv(request.getParameter("MODEL")));
+		bufferToShowModel.setSN(msg.value2csv(request.getParameter("SN")));
+		bufferToShowModel.setProdate(msg.value2csv(request.getParameter("Prodate")));
+		bufferToShowModel.setShipdate(msg.value2csv(request.getParameter("Shipdate")));
+		bufferToShowModel.setSALEDATE(msg.value2csv(request.getParameter("SALEDATE")));
+		bufferToShowModel.setDEPARTUREDATE(msg.value2csv(request.getParameter("DEPARTUREDATE")));
+		bufferToShowModel.setWARRANTYSTART(msg.value2csv(request.getParameter("WARRANTYSTART")));
+		bufferToShowModel.setWARRANTYEND(msg.value2csv(request.getParameter("WARRANTYEND")));
+		bufferToShowModel.setCOMMENT(msg.value2csv(request.getParameter("COMMENT")));
 
 		if (SZ_NULL.equals(bufferToShowModel.getQr()) || bufferToShowModel.getQr() == null) {
 			Random randLinkCreater = new Random();
@@ -234,83 +237,100 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 	<input type="submit" name="refresh" value="Обновить">
 	<input type="submit" name="save" value="Сохранить">
 
-		<input type="hidden" name="ZOID" value="<%=bufferToShowModel.getZOID()%>">
-		<input type="hidden" name="ZVER" value="<%=bufferToShowModel.getZVER()%>">
+		<input type="hidden" name="ZOID" value="<%=msg.obj2value(bufferToShowModel.getZOID())%>">
+		<input type="hidden" name="ZVER" value="<%=msg.obj2value(bufferToShowModel.getZVER())%>">
 
 		<table>
 	   		<tr>
-	   			<td>Картинка qr: </td>
+	   			<td>Картинка QR: </td>
 				<td>
-					<img src="engine/qr?codingString=<%=bufferToShowModel.getQr()%>"/>
+					<img src="engine/qr?codingString=<%=msg.obj2value(bufferToShowModel.getQr())%>"/>
 				</td>
+				<td></td>
 			</tr>
     		<tr>
     			<td>Ссылка: </td>
 				<td>
-					<input name="Qr" value="<%=bufferToShowModel.getQr()%>"/>
+					<input name="Qr" value="<%=msg.obj2value(bufferToShowModel.getQr())%>"/>
 				</td>
 				<td>
 					<input type="submit" name="genqr" value="Сгенерировать новый код"/>
+				<%=msg.obj2html(msg.getComment(msg.FN_QR))%>
 				</td>
 			</tr>
    	 		<tr>
    	 			<td>Контракт: </td>
-   	 			<td><input name="contract" value="<%=bufferToShowModel.getContractum()%>"></td>
+   	 			<td><input name="contract" value="<%=msg.obj2value(bufferToShowModel.getContractum())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_CONTRACTNUM))%></td>
    	 		</tr>
    	 		   	<td>Дата контракта: </td>
-   	 			<td><input name="Contractdate" value="<%=bufferToShowModel.getContractdate()%>"></td>
+   	 			<td><input name="Contractdate" value="<%=msg.obj2value(bufferToShowModel.getContractdate())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_contractdate))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Сумма: </td>
-   	 			<td><input name="Money" value="<%=bufferToShowModel.getMoney()%>"></td>
+   	 			<td><input name="Money" value="<%=msg.obj2value(bufferToShowModel.getMoney())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_MONEY))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Поставщик: </td>
-   	 			<td><input name="SUPPLIER" value="<%=bufferToShowModel.getSUPPLIER()%>"></td>
+   	 			<td><input name="SUPPLIER" value="<%=msg.obj2value(bufferToShowModel.getSUPPLIER())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_SUPPLIER))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Клиент: </td>
-   	 			<td><input name="CLIENT" value="<%=bufferToShowModel.getCLIENT()%>"></td>
+   	 			<td><input name="CLIENT" value="<%=msg.obj2value(bufferToShowModel.getCLIENT())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_CLIENT))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Тип продукта: </td>
-   	 			<td><input name="PRODTYPE" value="<%=bufferToShowModel.getPRODTYPE()%>"></td>
+   	 			<td><input name="PRODTYPE" value="<%=msg.obj2value(bufferToShowModel.getPRODTYPE())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_PRODTYPE))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Модель: </td>
-   	 			<td><input name="MODEL" value="<%=bufferToShowModel.getMODEL()%>"></td>
+   	 			<td><input name="MODEL" value="<%=msg.obj2value(bufferToShowModel.getMODEL())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_MODEL))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Номер серии: </td>
-   	 			<td><input name="SN" value="<%=bufferToShowModel.getSN()%>"></td>
+				<td><%=msg.obj2html(msg.getCaption(msg.FN_SN))%></td>
+   	 			<td><input name="SN" value="<%=msg.obj2value(bufferToShowModel.getSN())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_SN))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Дата изготовления: </td>
-   	 			<td><input name="Prodate" value="<%=bufferToShowModel.getProdate()%>"></td>
+   	 			<td><input name="Prodate" value="<%=msg.obj2value(bufferToShowModel.getProdate())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_prodate))%></td>
    	 		</tr>
    	 		<tr>
-   	 			<td>Дата привоза: </td>
-   	 			<td><input name="Shipdate" value="<%=bufferToShowModel.getShipdate()%>"></td>
+				<td><%=msg.obj2html(msg.getCaption(msg.FN_shipdate))%></td>
+   	 			<td><input name="Shipdate" value="<%=msg.obj2value(bufferToShowModel.getShipdate())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_shipdate))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Дата продажи: </td>
-   	 			<td><input name="SALEDATE" value="<%=bufferToShowModel.getSALEDATE()%>"></td>
+   	 			<td><input name="SALEDATE" value="<%=msg.obj2value(bufferToShowModel.getSALEDATE())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_SALEDATE))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Дата отсыла: </td>
-   	 			<td><input name="DEPARTUREDATE" value="<%=bufferToShowModel.getDEPARTUREDATE()%>"></td>
+   	 			<td><input name="DEPARTUREDATE" value="<%=msg.obj2value(bufferToShowModel.getDEPARTUREDATE())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_DEPARTUREDATE))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Начало гарантии: </td>
-   	 			<td><input name="WARRANTYSTART" value="<%=bufferToShowModel.getWARRANTYSTART()%>"></td>
+   	 			<td><input name="WARRANTYSTART" value="<%=msg.obj2value(bufferToShowModel.getWARRANTYSTART())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_WARRANTYSTART))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Конец гарантии: </td>
-   	 			<td><input name="WARRANTYEND" value="<%=bufferToShowModel.getWARRANTYEND()%>"></td>
+   	 			<td><input name="WARRANTYEND" value="<%=msg.obj2value(bufferToShowModel.getWARRANTYEND())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_WARRANTYEND))%></td>
    	 		</tr>
    	 		<tr>
    	 			<td>Комментарий: </td>
-   	 			<td><input name="COMMENT" value="<%=bufferToShowModel.getCOMMENT()%>"></td>
+   	 			<td><input name="COMMENT" value="<%=msg.obj2value(bufferToShowModel.getCOMMENT())%>"></td>
+				<td><%=msg.obj2html(msg.getComment(msg.FN_COMMENT))%></td>
    	 		</tr>
    	 	</table>
 	<input type="submit" name="save" value="Сохранить">

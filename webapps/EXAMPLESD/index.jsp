@@ -22,7 +22,7 @@
 // Global parameters
 //
 private final static String CGI_NAME = "index.jsp";
-private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий";
+private final static String CGI_TITLE = "edit-qr.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий";
 //private final static String DBSERVER_URL = "jdbc:postgresql:tisexmpldb?user=tisuser1&password=";
 private final static String DBSERVER_URL = "jdbc:postgresql:conceptisdb";
 private final static String JSP_VERSION = "$Id$";
@@ -151,7 +151,7 @@ private String QRDB_PATH=null;
   <title><%= CGI_TITLE %></title>
  </head>
 <body>
-  <h2><%= CGI_TITLE %></h2>
+  <h2><a href="/">EDIT-QR</a>&nbsp;-&nbsp;<%= CGI_TITLE %></h2>
  <hr>
 <div>
 <a href='<%= CGI_NAME %>'>Начало</a>&nbsp;
