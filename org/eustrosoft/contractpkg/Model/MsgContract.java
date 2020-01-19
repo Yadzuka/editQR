@@ -267,6 +267,20 @@ private final static String SZ_NULL = "null";
  {return(translate_tokens(sz,from,to,-1));}
 // END of WAMessages
 
+public static java.math.BigDecimal str2dec(String dec_str)
+{
+java.math.BigDecimal d = java.math.BigDecimal.ZERO;
+if(dec_str==null){dec_str="";}
+dec_str=dec_str.replaceAll("[\t ]*","");
+dec_str=dec_str.replaceAll(",",".");
+//dec_str=dec_str.replaceAll("[0-9][0-9]*.",".");
+try{
+ d=new java.math.BigDecimal(dec_str);
+}
+catch(Exception ne){ d = java.math.BigDecimal.ZERO; }
+return(d);
+}//str2dec()
+
 /*
 * выводит описание в CSV формате в stdout
 */
@@ -274,5 +288,7 @@ public static void main(String[] args)
 {
 System.out.println("#FN;FNAME;FCAPTION;FSLEVEL;FCOMMENT");
 for(int i=0;i<FieldNames.length;i++) {System.out.println(getFieldRow(i));}
+java.math.BigDecimal d = str2dec("12 23,4e3");
+System.out.println(d);
 } //main()
 } //end of class

@@ -2,6 +2,8 @@
 <%@ page import="org.eustrosoft.contractpkg.Model.*" %>
 <%@ page import="org.eustrosoft.contractpkg.Controller.*" %>
 <%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.*" %>
+<%@ page import="java.math.*" %>
 <%!
 	//
 	public org.eustrosoft.contractpkg.Model.MsgContract msg;
@@ -59,10 +61,24 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 			int secondCompositor;
 			// Prints only last version of object
 if(availableContracts != null) {
+//TreeMap years = null;
+//TreeMap mounthes = null;
+TreeMap products = new TreeMap(); 
+TreeMap models = null;
+BigDecimal[] counts = null;
+BigDecimal all_money = BigDecimal.ZERO;
+
 			for(int i = availableContracts.size()-1; i >= 0; i--){
 
 				bufferToPrintProperties = availableContracts.get(i);
 				bufferForComparison = availableContracts.get(i);
+				String prodtype = msg.obj2text(bufferToPrintProperties.getPRODTYPE());
+				String model = msg.obj2text(bufferToPrintProperties.getMODEL());
+				String money = msg.obj2text(bufferToPrintProperties.getMoney());
+				models = (TreeMap)products.get(prodtype);
+				if(models == null){models = new TreeMap(); products.put(model,models);}
+				all_money = all_money.add(msg.str2dec(money));
+				
 
 				// Works with all ZOID objects
 				for(int j = 0; j < availableContracts.size();j++){
@@ -113,8 +129,16 @@ if(availableContracts != null) {
    		</tr>
 		<%
 			}
-} //if
 		%>
+<tr><td colspan="7">Всего:</td>
+<td>
+<%
+out.println(all_money);
+} //if
+%>
+</td></tr>
   	</table>
+<%
+%>
 </body>
 </html>
