@@ -55,6 +55,7 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 	<td><%=msg.obj2html(msg.getCaption(msg.FN_CLIENT))%></td>
 	<td><%=msg.obj2html(msg.getCaption(msg.FN_SUPPLIER))%></td>
 	<td><%=msg.obj2html(msg.getCaption(msg.FN_MONEY))%></td>
+	<td>Деньги - распознано как (руб):</td>
    	</tr>
 		<%
 			int firstCompositor;
@@ -102,7 +103,8 @@ BigDecimal all_money = BigDecimal.ZERO;
 				String money = msg.obj2text(bufferToPrintProperties.getMoney());
 				models = (TreeMap)products.get(prodtype);
 				if(models == null){models = new TreeMap(); products.put(model,models);}
-				all_money = all_money.add(msg.str2dec(money));
+				java.math.BigDecimal dec_money = msg.str2dec(money);
+				all_money = all_money.add(dec_money);
 		%>
 		
    		<tr>
@@ -129,11 +131,12 @@ BigDecimal all_money = BigDecimal.ZERO;
 			<td><%=msg.obj2html(bufferToPrintProperties.getCLIENT())%></td>
     		<td><%=msg.obj2html(bufferToPrintProperties.getSUPPLIER())%></td>
     		<td><%=msg.obj2html(bufferToPrintProperties.getMoney())%></td>
+    		<td><%=msg.obj2html(dec_money)%></td>
    		</tr>
 		<%
 			}
 		%>
-<tr><td colspan="7">Всего:</td>
+<tr><td colspan="8">Всего:</td>
 <td>
 <%
 out.println(all_money);
