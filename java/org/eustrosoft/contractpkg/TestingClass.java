@@ -1,0 +1,430 @@
+package org.eustrosoft.contractpkg;
+
+class TestingClass {
+
+    public static void main(String[] args) {
+        MsgContract msg = new MsgContract();
+        System.out.println("\"12345\"");
+        System.out.println(MsgContract.value2csv("\"12345\""));
+    }
+}
+
+
+class MsgContract {
+    private static String FieldNames[] = {
+            "ZOID",
+            "ZVER",
+
+            "ZDATE",
+
+            "ZUID",
+
+            "ZSTA",
+
+            "QR",
+
+            "CONTRACTNUM",
+
+            "contractdate",
+
+            "MONEY",
+
+            "SUPPLIER",
+
+            "CLIENT",
+
+            "PRODTYPE",
+
+            "MODEL",
+
+            "SN",
+
+            "prodate",
+
+            "shipdate",
+
+            "SALEDATE",
+
+            "DEPARTUREDATE",
+
+            "WARRANTYSTART",
+
+            "WARRANTYEND",
+
+            "COMMENT"
+
+    };
+
+
+    private static String FieldCaptions[] = {
+
+            "ZOID",
+
+            "ZVER",
+
+            "ZDATE",
+
+            "ZUID",
+
+            "ZSTA",
+
+            "QR код",
+
+            "№ договора",
+
+            "дата договора",
+
+            "Деньги по договору",
+
+            "Юр-лицо поставщик",
+
+            "Юр-лицо клиент",
+
+            "Тип продукта",
+
+            "Модель продукта",
+
+            "SN",
+
+            "Дата производства",
+
+            "Дата ввоза (ГТД)",
+
+            "Дата продажи",
+
+            "Дата отправки клиенту",
+
+            "Дата начала гарантии",
+
+            "Дата окончания гарантии",
+
+            "Комментарий (для клиента)"
+
+    };
+
+
+    private static String FieldComments[] = {
+
+            "ZOID - идентификатор объекта (записи) в файле, записи с одинаковым ZOID - разные версии одной записи",
+
+            "ZVER - номер версии записи ",
+
+            "ZDATE - дата порождения данной версии",
+
+            "ZUID - пользователь, записавший версию",
+
+            "ZSTA - статус 'N' - актуальная, 'C' - устаревшая, 'D' - удаленная",
+
+            "QR код должен содержать ровно 8 символов, алфавит [0-9,A-F], первые 5 - это диапазон, оставшиеся 3 - номер внутри диапазона в 16-ричном",
+
+            "для новых номеров можно использовать последние 4 символа QR-кода. допустимо несколько карточек с одним номером договора",
+
+            "дата заключения договора",
+
+            "Деньги, причитающиеся поставщику, по договору за это изделие. Если изделий по договору несколько - заполняйте отдельные карточки",
+
+            "кто исполнитель по договору, если у нас более одного юр-лица или ИП",
+
+            "Юр-лицо клиента, пока только название, но можете добавить ИНН, через запятую, или еще что-то. Последним укажите город. Напр: EustroSoft,...,Москва",
+
+            "Тип продукта.",
+
+            "Модель продукта",
+
+            "Серийный номер изделия. Возможно - серийные номера агрегатов через запятую. Потом разберемся",
+
+            "Дата производства изделия",
+
+            "Сейчас - номер ГТД. Изначально хотели указывать дату ввоза в Россию, или дату поступления на склад.",
+
+            "Дата продажи - видимо дата поступления денег или гарантийного письма об оплате ",
+
+            "Дата отправки клиенту/отгрузки со склада. Обычно - это-же дата начала гарантии",
+
+            "Дата начала гарантии для конечного пользователя. т.е. при продажи дилером - задается им",
+
+            "Дата окончания гарантии. Обычно   1 год, но нет правил без исключений",
+
+            "Этот комментарий виден клиенту! конфиденциальное пишите в поле Деньги"
+
+    };
+
+
+    public static final int SLEVEL_DSP = 8;
+
+
+    public static final int SLEVEL_PUB = 10;
+
+
+    private static int FieldSLevel[] = {
+
+            SLEVEL_PUB, //"ZOID",
+
+            SLEVEL_PUB, //"ZVER",
+
+            SLEVEL_PUB, //"ZDATE",
+
+            SLEVEL_PUB, //"ZUID",
+
+            SLEVEL_PUB, //"ZSTA",
+
+            SLEVEL_PUB, //"QR код",
+
+            SLEVEL_PUB, //"№ договора",
+
+            SLEVEL_PUB, //"дата договора",
+
+            SLEVEL_PUB, //"Деньги по договору",
+
+            SLEVEL_DSP, //"Юр-лицо поставщик",
+
+            SLEVEL_DSP, //"Юр-лицо клиент",
+
+            SLEVEL_PUB, //"Тип продукта",
+
+            SLEVEL_PUB, //"Модель продукта",
+
+            SLEVEL_PUB, //"SN",
+
+            SLEVEL_PUB, //"Дата производства",
+
+            SLEVEL_DSP, //"Дата ввоза (ГТД)",
+
+            SLEVEL_PUB, //"Дата продажи",
+
+            SLEVEL_PUB, //"Дата отправки клиенту",
+
+            SLEVEL_PUB, //"Дата начала гарантии",
+
+            SLEVEL_PUB, //"Дата окончания гарантии",
+
+            SLEVEL_PUB //"Комментарий (для клиента)"
+
+    };
+
+
+    public static final int FN_ZOID = 0;
+
+
+    public static final int FN_ZVER = 1;
+
+
+    public static final int FN_ZDATE = 2;
+
+
+    public static final int FN_ZUID = 3;
+
+
+    public static final int FN_ZSTA = 4;
+
+
+    public static final int FN_QR = 5;
+
+
+    public static final int FN_CONTRACTNUM = 6;
+
+
+    public static final int FN_contractdate = 7;
+
+
+    public static final int FN_MONEY = 8;
+
+
+    public static final int FN_SUPPLIER = 9;
+
+
+    public static final int FN_CLIENT = 10;
+
+
+    public static final int FN_PRODTYPE = 11;
+
+
+    public static final int FN_MODEL = 12;
+
+
+    public static final int FN_SN = 13;
+
+
+    public static final int FN_prodate = 14;
+
+
+    public static final int FN_shipdate = 15;
+
+
+    public static final int FN_SALEDATE = 16;
+
+
+    public static final int FN_DEPARTUREDATE = 17;
+
+
+    public static final int FN_WARRANTYSTART = 18;
+
+
+    public static final int FN_WARRANTYEND = 19;
+
+
+    public static final int FN_COMMENT = 20;
+
+
+    public static String getCaption(int fn) {
+        return (FieldCaptions[fn]);
+    }
+
+
+    public static String getComment(int fn) {
+        return (FieldComments[fn]);
+    }
+
+
+    public static String getName(int fn) {
+        return (FieldNames[fn]);
+    }
+
+
+    public static int getSLevel(int fn) {
+        return (FieldSLevel[fn]);
+    }
+
+
+    public static String getSLevelName(int fn) {
+        int s = getSLevel(fn);
+        if (s == SLEVEL_DSP) return ("DSP");
+        if (s == SLEVEL_PUB) return ("PUB");
+        return ("" + s);
+    }
+
+
+    public static String getFieldRow(int fn) {
+        return (fn + ";" + getName(fn) + ";" + getCaption(fn) + ";" + getSLevelName(fn) + ";" + getComment(fn));
+    }
+
+    public final static String[] CSV_UNSAFE_CHARACTERS = {";", "\n"};
+
+
+    public final static String[] CSV_UNSAFE_CHARACTERS_SUBST = {"\\.,", "\\n"};
+
+
+    public static String value2csv(String text) {
+
+        return (translate_tokens(obj2text(text), CSV_UNSAFE_CHARACTERS, CSV_UNSAFE_CHARACTERS_SUBST));
+
+
+    }
+
+    private final static String SZ_NULL = "null";
+
+    public static String obj2text(Object o) {
+
+        if (o == null) return (SZ_NULL);
+        return (o.toString());
+
+
+    }
+
+    public static String obj2string(Object o) {
+
+        if (o == null) return (null);
+        return (obj2text(o));
+
+
+    }
+
+    public static String obj2html(Object o) {
+
+        if (o == null) return ("<STRIKE><small>null</small></STRIKE>");
+
+        else return (text2html(obj2text(o)));
+    }
+
+    public static Long string2Long(String szValue) {
+
+        if (szValue == null) return (null);
+
+        Long v = null;
+        try {
+            v = Long.valueOf(szValue);
+        } catch (NumberFormatException e) {
+        }
+        return (v);
+    }
+
+    public final static String[] HTML_UNSAFE_CHARACTERS = {"<", ">", "&", "\n"};
+
+    public final static String[] HTML_UNSAFE_CHARACTERS_SUBST = {"&lt;", "&gt;", "&amp;", "<br>\n"};
+
+    public final static String[] VALUE_CHARACTERS = {"<", ">", "&", "\"", "'"};
+
+    public final static String[] VALUE_CHARACTERS_SUBST = {"&lt;", "&gt;", "&amp;", "&quot;", "&#039;"};
+
+    public final static String[] JSON_VALUE_CHARACTERS = {"\n", "\r", "\"", "\\"};
+
+    public final static String[] JSON_VALUE_CHARACTERS_SUBST = {"\\n", "\\r", "\\", "\\\\"};
+
+    public static String text2html(String text) {
+
+        return (translate_tokens(text, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST));
+
+
+    }
+
+    public static String text2value(String text) {
+
+        return (translate_tokens(text, VALUE_CHARACTERS, VALUE_CHARACTERS_SUBST));
+
+
+    } // text2value()
+
+
+    public static String text2json(String text) {
+
+        return ("\"" + translate_tokens(text, JSON_VALUE_CHARACTERS, JSON_VALUE_CHARACTERS_SUBST)+ "\"");
+
+
+    }
+
+    public static String obj2value(Object o) {
+        return (text2value(obj2text(o)));
+    }
+
+    public static String translate_tokens(String sz, String[] from, String[] to, int len) {
+
+        if (sz == null) return (sz);
+
+        StringBuffer sb = new StringBuffer(sz.length()+256);
+
+        int p = 0;
+
+        if (len < 0) len = from.length;
+
+        //if(len>to.length) len=to.length; // let's
+
+        while (p < sz.length()) {
+
+            int i = 0;
+
+            while (i < len) // search for token
+
+            {
+
+                if (sz.startsWith(from[i], p)) {
+                    sb.append(to[i]);
+                    p = --p + from[i].length();
+                    break;
+                }
+
+                i++;
+
+            }
+
+            if (i >= len) sb.append(sz.charAt(p)); // not found
+
+            p++;
+
+        }
+        return (sb.toString());
+    }
+
+    public static String translate_tokens(String sz, String[] from, String[] to) {
+        return (translate_tokens(sz, from, to, -1));
+    }
+}
