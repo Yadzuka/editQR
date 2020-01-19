@@ -72,12 +72,6 @@ BigDecimal all_money = BigDecimal.ZERO;
 
 				bufferToPrintProperties = availableContracts.get(i);
 				bufferForComparison = availableContracts.get(i);
-				String prodtype = msg.obj2text(bufferToPrintProperties.getPRODTYPE());
-				String model = msg.obj2text(bufferToPrintProperties.getMODEL());
-				String money = msg.obj2text(bufferToPrintProperties.getMoney());
-				models = (TreeMap)products.get(prodtype);
-				if(models == null){models = new TreeMap(); products.put(model,models);}
-				all_money = all_money.add(msg.str2dec(money));
 				
 
 				// Works with all ZOID objects
@@ -100,6 +94,15 @@ BigDecimal all_money = BigDecimal.ZERO;
 				secondCompositor = str2int(bufferToPrintProperties.getZVER());
 				if(firstCompositor < secondCompositor)
 					continue;
+				//
+				// count data for reports using resulting bufferToPrintProperties
+				//
+				String prodtype = msg.obj2text(bufferToPrintProperties.getPRODTYPE());
+				String model = msg.obj2text(bufferToPrintProperties.getMODEL());
+				String money = msg.obj2text(bufferToPrintProperties.getMoney());
+				models = (TreeMap)products.get(prodtype);
+				if(models == null){models = new TreeMap(); products.put(model,models);}
+				all_money = all_money.add(msg.str2dec(money));
 		%>
 		
    		<tr>
