@@ -2,9 +2,6 @@ package org.eustrosoft.contractpkg.Model;
 
 import java.io.File;
 
-/*
-	Class witch contains list of members
- */
 public class Members {
 
 	// Global parameters to get existing members
@@ -19,7 +16,7 @@ public class Members {
 	public static String getWayToDB(){
 		return wayToDB;
 	}
-	// Constructor to set capacity of company names
+
 	public Members() {
 
 	}
@@ -28,8 +25,6 @@ public class Members {
 
 		listOfMembers = new File(wayToDB).listFiles();
 		int num_dir=0;
-
-		assert listOfMembers != null; //SIC! без этого никак? Ж)
 
 		membersCounter = listOfMembers.length;
 		companyNames = new String[membersCounter];
@@ -47,7 +42,6 @@ public class Members {
 		membersCounter = num_dir;
 		return companyNames; //SIC! возврат private
 	}
-	// Private parameter to set company name (optional)
 	private void setCompanyNames(String [] companyNames) {
 		this.companyNames = companyNames;
 	}

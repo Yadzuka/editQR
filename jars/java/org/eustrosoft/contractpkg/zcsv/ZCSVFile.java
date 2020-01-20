@@ -308,6 +308,10 @@ public class ZCSVFile {
         }
         return (null);
     }
+    @Override
+    public String toString(){
+        return rootPath+sourceFileName;
+    }
     // constructors
     public ZCSVFile() {
 

@@ -2,12 +2,10 @@
 <%@
         page import="java.util.*"
              import="java.io.*"
-             import="org.eustrosoft.contractpkg.zcsv.*"
              import="org.eustrosoft.contractpkg.Controller.*"
              import="org.eustrosoft.contractpkg.Model.*"
-
+             import="org.eustrosoft.contractpkg.zcsv.*"
 %>
-<%@ page import="java.net.http.HttpRequest" %>
 <%!
     private static final String CGI_NAME = "editqrpage.jsp";
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий";
@@ -16,7 +14,7 @@
     JspWriter out;
 
     private String QRDB_PATH = null;
-    public void read_parameters_from_web_xml() {
+    private void read_parameters_from_web_xml() {
         QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH");
     }
 
@@ -92,6 +90,8 @@
     private void setRangePage(String member) throws IOException {
         RangesController rController = new RangesController(member);
         String s = rController.getInfo();
+        out.println(s);
+
         String [] allItems = rController.getRanges();
         out.println("<table class=\"memberstable\" border=\"2\" width=\"60%\"><tr><td>Диапазон</td><td>Описание</td>");
         for(int i =0; i <  allItems.length; i++) {
@@ -104,9 +104,8 @@
         out.println("</table>");
     }
 
-    private void setProductsPage(String member, String range){
+    private void setProductsPage(String member, String range) throws IOException {
         ControllerContracts contractController = new ControllerContracts(member, range);
-
     }
 
     public void printerr(String msg) throws java.io.IOException {
@@ -142,9 +141,10 @@
     if(CMD == null){
         CMD = "members";
     }
+
     long enter_time = System.currentTimeMillis();
     read_parameters_from_web_xml();
-    Members.setWayToDB(QRDB_PATH + "members/");
+    Members.setWayToDB(QRDB_PATH);
     if (QRDB_PATH == null) {
         printerr("QRDB_PATH параметр не задан! отредактируйте WEB-INF/web.xml");
     }
@@ -154,20 +154,13 @@
     switch (CMD) {
         case "members":
             setMembersPage();
-
-
-            final String[] VALUE_CHARACTERS = { "<",">","&","\"","'" };
-
-            final String[] VALUE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","&quot;","&#039;"};
-            for(int i = 0;i< VALUE_CHARACTERS.length;i++){
-                out.println(VALUE_CHARACTERS_SUBST[i]);
-            }
             break;
         case "ranges":
             setRangePage(request.getParameter(parameters[0]));
             break;
         case "prodtable":
-            setProductsPage(parameters[0], parameters[1]);
+            ZCSVFile zf = new ZCSVFile();
+            setProductsPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]));
             break;
         case "prodview":
             break;

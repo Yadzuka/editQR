@@ -47,7 +47,7 @@ public class RangesController {
 		}
 		String[] names = new String[num_dir];
 		for(int i = 0; i < num_dir; i++){ names[i]=companyNames[i];}
-		companyNames = names;
+		    companyNames = names;
 		membersCounter = num_dir;
 		return companyNames; //SIC! возврат private (было раньше в Members)
 	}
@@ -65,12 +65,9 @@ public class RangesController {
                 while ((bufferForWriting = bufferedReader.readLine()) != null) {
                     sb.append(bufferForWriting);
                 }
-               // printWriter.println(sb.toString());
             }
         }
         bufferForWriting = sb.toString();
-
-        // PRINT WRITER CLOSES IN JSP! BUFFERED READER AS WELL!
         return bufferForWriting;
     }
 }

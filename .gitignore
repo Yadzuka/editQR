@@ -2,3 +2,6 @@
 *.class
 work/
 .idea
+/target
+*.iml
+Makefile
