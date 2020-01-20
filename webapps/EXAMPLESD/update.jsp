@@ -3,6 +3,7 @@
 	import="org.eustrosoft.contractpkg.Controller.ControllerContracts"
 	import="org.eustrosoft.contractpkg.Model.Contract" 
 	import="java.io.PrintWriter"
+	import="java.text.SimpleDateFormat"
 %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.Arrays" %>
@@ -20,6 +21,14 @@
 		maxZOID++;
 		String s =  String.format("%s%03X",rangeParam, Long.valueOf(maxZOID));
 		contractToSetNewQr.setQr(s);
+	}
+	public static String getCurrentDate4ZDATE()
+	{
+	return(new SimpleDateFormat("y-MM-dd HH:mm:ss Z").format(new Date()));
+	}
+	public static String getRequestUser4ZUID(HttpServletRequest request)
+	{
+		return(request.getRemoteUser() + "@" + request.getRemoteAddr());
 	}
 	//
 	public org.eustrosoft.contractpkg.Model.MsgContract msg;
@@ -169,8 +178,8 @@ String member = null; try{ member=(String)request.getParameter("member"); } catc
 			bufferToShowModel.setZVER("0");
 		}
 
-		bufferToShowModel.setZDATE(new Date().toString());
-		bufferToShowModel.setZUID(msg.value2csv(request.getRemoteUser()));
+		bufferToShowModel.setZDATE(getCurrentDate4ZDATE());
+		bufferToShowModel.setZUID(msg.value2csv(getRequestUser4ZUID(request)));
 
 		bufferToShowModel.setZSTA("N");
 		// data fields
