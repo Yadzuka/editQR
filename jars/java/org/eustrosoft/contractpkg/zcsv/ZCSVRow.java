@@ -105,8 +105,8 @@ public class ZCSVRow {
         nameMap = names;
     }
 
-    public ZCSVRow getNames() {
-        return this;
+    public String[] getNames() {
+        return nameMap;
     }
 
     @Override

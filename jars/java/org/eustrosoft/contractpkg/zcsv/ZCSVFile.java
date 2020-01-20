@@ -46,12 +46,13 @@ public class ZCSVFile {
     public String getFileName() {
         return sourceFileName;
     }
+    public int getFileRowsLength(){ return fileRows.size(); }
     // actions on file
     // open file for read (or write, or append, or lock)
     // ALL FILE STRINGS NOW DOWNLOADED TO THE ARRAY LIST AND CHANNEL OPENED
     // IT WORKS! (in my opinion)
     public boolean tryOpenFile(int mode) {
-        if (Files.exists(Paths.get(configureFilePath))) {
+        //if (Files.exists(Paths.get(configureFilePath))) {
             try {
                 if (channel == null) {
                     if (mode > MODES_TO_FILE_ACCESS.length - 1 || mode < 0) {
@@ -71,8 +72,8 @@ public class ZCSVFile {
                 ex.printError();
                 return false;
             }
-        }
-        return false;
+        //}
+        //return false;
     }
     // close file and free it for others
     // IT WORKS! (MB)
@@ -109,18 +110,13 @@ public class ZCSVFile {
     // IT WORKS!
     public void loadFromFile() {
         try {
-            /*buffer = ByteBuffer.allocate((int) channel.size());
-            channel.read(buffer);
-
-            byte[] bytes = buffer.array();
-            String f = new String(bytes, StandardCharsets.UTF_8);*/
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader
                             (new FileInputStream(rootPath + sourceFileName + FILE_EXTENSION), StandardCharsets.UTF_8));
 
             String bufForStrings = "";
             while((bufForStrings = reader.readLine()) != null) {
-                bufForStrings.trim();
+                bufForStrings = bufForStrings.trim();
                 if ("".equals(bufForStrings) || bufForStrings.startsWith("#"))
                     continue;
                 else
@@ -271,6 +267,7 @@ public class ZCSVFile {
             }
         }
     }
+    // Not sure that this needs
     private void compireFileAndArray() throws IOException {
         ByteBuffer secondBuffer = ByteBuffer.allocate((int)channel.size());
         channel.read(secondBuffer);
@@ -310,7 +307,7 @@ public class ZCSVFile {
     }
     @Override
     public String toString(){
-        return rootPath+sourceFileName;
+        return rootPath+sourceFileName+FILE_EXTENSION;
     }
     // constructors
     public ZCSVFile() {

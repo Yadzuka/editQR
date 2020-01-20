@@ -6,6 +6,8 @@
              import="org.eustrosoft.contractpkg.Model.*"
              import="org.eustrosoft.contractpkg.zcsv.*"
 %>
+<%@ page import="java.nio.file.Paths" %>
+<%@ page import="java.nio.file.Files" %>
 <%!
     private static final String CGI_NAME = "editqrpage.jsp";
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий";
@@ -95,17 +97,61 @@
         String [] allItems = rController.getRanges();
         out.println("<table class=\"memberstable\" border=\"2\" width=\"60%\"><tr><td>Диапазон</td><td>Описание</td>");
         for(int i =0; i <  allItems.length; i++) {
-            String item = allItems[i];
+            String range = allItems[i];
             out.println("<tr>");
-            out.println("<td><a href=\'"+CGI_NAME+"?page=prodtable&member="+member+"&range="+item+"\'>"+item+"</a></td>");
-            out.println("<td>" + getNailedRangDesc(item, "Диапазон: " + item) + "</td>");
+            out.println("<td><a href=\'"+CGI_NAME+"?page=prodtable&member="+member+"&range="+range+"\'>"+range+"</a></td>");
+            out.println("<td>" + getNailedRangDesc(range, "Диапазон: " + range) + "</td>");
             out.println("</tr>");
         }
         out.println("</table>");
     }
 
     private void setProductsPage(String member, String range) throws IOException {
-        ControllerContracts contractController = new ControllerContracts(member, range);
+        ZCSVFile zcsvFile = new ZCSVFile();
+        zcsvFile.setRootPath(Members.getWayToDB()+member+"/"+range+"/");
+        zcsvFile.setFileName("master.list");
+        String [] namesMap = new String[]
+                {"ZOID","ZVER","ZDATE","ZUID","ZSTA","QR","CONTRACTNUM", "contractdate",
+                        "MONEY","SUPPLIER","CLIENT","PRODTYPE","MODEL","SN","prodate","shipdate",
+                        "SALEDATE","DEPARTUREDATE","WARRANTYSTART","WARRANTYEND","COMMENT "};
+        if(Files.exists(Paths.get(zcsvFile.toString()))) {
+            boolean res = zcsvFile.tryOpenFile(1);
+            if (res) {
+                zcsvFile.loadFromFile();
+
+                out.println("<table>");
+
+                for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
+
+                    out.println("<tr>");
+                    ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
+                    eachRow.setNames(namesMap);
+                    out.println("<td>" +
+                            "<a href=\'"+CGI_NAME+"?page=prodview&member="+member+"&range="+range+"&zoid="+eachRow.get(0)+"\'>" +
+                                "Change card" +
+                            "</a></td>");
+                    for(int j = 0; j < eachRow.getNames().length; j++){
+                        out.println("<td>");
+                        out.print(eachRow.get(j));
+                        out.println("</td>");
+                    }
+                    out.println("</tr>");
+                }
+
+                out.println("</table>");
+
+            } else {
+                out.println("can't open file");
+            }
+        }else{
+            out.println("Doesn't exists");
+        }
+    }
+
+    private void setProdViewPage(String member, String range, String ZOID){
+
+
+
     }
 
     public void printerr(String msg) throws java.io.IOException {
@@ -159,10 +205,10 @@
             setRangePage(request.getParameter(parameters[0]));
             break;
         case "prodtable":
-            ZCSVFile zf = new ZCSVFile();
             setProductsPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]));
             break;
         case "prodview":
+            setProdViewPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]),request.getParameter(parameters[2]));
             break;
         case "updateprod":
             break;

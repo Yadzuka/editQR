@@ -18,9 +18,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Hashtable;
 
-/*
-    Creating QR using zxing class
- */
 public class QRcodeServlet extends HttpServlet {
 
     //doGet method to create QR image (using engine/qr in jsp)
