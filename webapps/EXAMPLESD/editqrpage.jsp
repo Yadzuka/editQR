@@ -12,6 +12,7 @@
     private static final String CGI_NAME = "editqrpage.jsp";
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий";
     private final static String JSP_VERSION = "$id$";
+    private static ZCSVFile zcsvFile;
     private static String CMD;
     JspWriter out;
 
@@ -73,85 +74,124 @@
     }
 
     private void setMembersPage() throws IOException {
-        Members members = new Members();
-        String[] allRegisteredMembers = members.getCompanyNames();
+        try {
+            Members members = new Members();
+            String[] allRegisteredMembers = members.getCompanyNames();
 
-        out.println("<table class=\"memberstable\" border=\"2\" width=\"60%\">");
-        for (int i = 0; i < allRegisteredMembers.length; i++) {
-            out.println("<tr>");
-            out.println("<td>");
-            out.print("<a href=\'"+CGI_NAME+"?page=ranges&member="+allRegisteredMembers[i]+"\'>");
-            out.println(allRegisteredMembers[i]);
-            out.println("</a>");
-            out.println("</td>");
-            out.println("</tr>");
+            out.println("<table class=\"memberstable\" border=\"2\" width=\"60%\">");
+            for (int i = 0; i < allRegisteredMembers.length; i++) {
+                out.println("<tr>");
+                out.println("<td>");
+                out.print("<a href=\'" + CGI_NAME + "?page=ranges&member=" + allRegisteredMembers[i] + "\'>");
+                out.println(allRegisteredMembers[i]);
+                out.println("</a>");
+                out.println("</td>");
+                out.println("</tr>");
+            }
+            out.println("</table>");
+        }catch (Exception ex){
+            printerr("There was some unknown error in Member's page! Call the system administrator!");
         }
-        out.println("</table>");
     }
 
     private void setRangePage(String member) throws IOException {
-        RangesController rController = new RangesController(member);
-        String s = rController.getInfo();
-        out.println(s);
+        try {
+            RangesController rController = new RangesController(member);
+            String s = rController.getInfo();
+            out.println(s);
 
-        String [] allItems = rController.getRanges();
-        out.println("<table class=\"memberstable\" border=\"2\" width=\"60%\"><tr><td>Диапазон</td><td>Описание</td>");
-        for(int i =0; i <  allItems.length; i++) {
-            String range = allItems[i];
-            out.println("<tr>");
-            out.println("<td><a href=\'"+CGI_NAME+"?page=prodtable&member="+member+"&range="+range+"\'>"+range+"</a></td>");
-            out.println("<td>" + getNailedRangDesc(range, "Диапазон: " + range) + "</td>");
-            out.println("</tr>");
+            String[] allItems = rController.getRanges();
+            out.println("<table class=\"memberstable\" border=\"2\" width=\"60%\"><tr><td>Диапазон</td><td>Описание</td>");
+            for (int i = 0; i < allItems.length; i++) {
+                String range = allItems[i];
+                out.println("<tr>");
+                out.println("<td><a href=\'" + CGI_NAME + "?page=prodtable&member=" + member + "&range=" + range + "\'>" + range + "</a></td>");
+                out.println("<td>" + getNailedRangDesc(range, "Диапазон: " + range) + "</td>");
+                out.println("</tr>");
+            }
+            out.println("</table>");
+        }catch (Exception ex){
+            printerr("There was some unknown error in Range's page! Call the system admitistrator!");
         }
-        out.println("</table>");
     }
 
     private void setProductsPage(String member, String range) throws IOException {
-        ZCSVFile zcsvFile = new ZCSVFile();
-        zcsvFile.setRootPath(Members.getWayToDB()+member+"/"+range+"/");
-        zcsvFile.setFileName("master.list");
-        String [] namesMap = new String[]
-                {"ZOID","ZVER","ZDATE","ZUID","ZSTA","QR","CONTRACTNUM", "contractdate",
-                        "MONEY","SUPPLIER","CLIENT","PRODTYPE","MODEL","SN","prodate","shipdate",
-                        "SALEDATE","DEPARTUREDATE","WARRANTYSTART","WARRANTYEND","COMMENT "};
-        if(Files.exists(Paths.get(zcsvFile.toString()))) {
-            boolean res = zcsvFile.tryOpenFile(1);
-            if (res) {
-                zcsvFile.loadFromFile();
+        try {
+            zcsvFile = new ZCSVFile();
+            zcsvFile.setRootPath(Members.getWayToDB() + member + "/" + range + "/");
+            zcsvFile.setFileName("master.list");
+            String[] namesMap = new String[]
+                    {"ZOID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR", "CONTRACTNUM", "contractdate",
+                            "MONEY", "SUPPLIER", "CLIENT", "PRODTYPE", "MODEL", "SN", "prodate", "shipdate",
+                            "SALEDATE", "DEPARTUREDATE", "WARRANTYSTART", "WARRANTYEND", "COMMENT "};
+            if (Files.exists(Paths.get(zcsvFile.toString()))) {
+                boolean res = zcsvFile.tryOpenFile(1);
+                if (res) {
+                    zcsvFile.loadFromFileValidVersions();
 
-                out.println("<table>");
-
-                for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
-
-                    out.println("<tr>");
-                    ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
-                    eachRow.setNames(namesMap);
-                    out.println("<td>" +
-                            "<a href=\'"+CGI_NAME+"?page=prodview&member="+member+"&range="+range+"&zoid="+eachRow.get(0)+"\'>" +
+                    out.println("<table>");
+                    for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
+                        out.println("<tr>");
+                        ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
+                        eachRow.setNames(namesMap);
+                        out.println("<td>" +
+                                "<a href=\'" + CGI_NAME + "?page=prodview&member=" + member + "&range=" + range + "&zoid=" + eachRow.get(0) +"&zver="+ eachRow.get(1) + "\'>" +
                                 "Change card" +
-                            "</a></td>");
-                    for(int j = 0; j < eachRow.getNames().length; j++){
-                        out.println("<td>");
-                        out.print(eachRow.get(j));
-                        out.println("</td>");
+                                "</a></td>");
+                        for (int j = 0; j < eachRow.getNames().length; j++) {
+                            out.println("<td>");
+                            if("null".equals(eachRow.get(j)) || eachRow.get(j) == null)
+                                out.print("");
+                            else
+                                out.print(eachRow.get(j));
+                            out.println("</td>");
+                        }
+                        out.println("</tr>");
                     }
-                    out.println("</tr>");
+                    out.println("</table>");
+
+                } else {
+                    printerr("Can't open file! Call the system administrator!");
                 }
-
-                out.println("</table>");
-
             } else {
-                out.println("can't open file");
+                printerr("File doesn't exists! Call the system administrator!");
             }
-        }else{
-            out.println("Doesn't exists");
+        }catch (IOException ex){
+            printerr("There was input/output error! Call the system administrator!");
+        }catch (Exception ex){
+            printerr("There was general exception! Call the system administrator!");
         }
     }
 
-    private void setProdViewPage(String member, String range, String ZOID){
+    private void setProdViewPage(String member, String range, String ZOID, String ZVER) throws IOException {
+        try {
+            ZCSVRow row = new ZCSVRow();
+            for(int i = 0; i < zcsvFile.getFileRowsLength(); i++){
+                row = zcsvFile.getRowObjectByIndex(i);
+                if(ZOID.equals(row.get("ZOID")) && ZVER.equals(row.get("ZVER")))
+                    break;
+            }
 
+            out.println("<table>");
+            for (int i = 0; i < row.getNames().length; i++) {
+                out.println("<tr>");
+                out.print("<td>");
+                out.print(row.getNames()[i]);
+                out.print("</td>");
 
-
+                out.print("<td>");
+                out.print(row.get(i));
+                out.print("</td>");
+                out.println("</tr>");
+            }
+            out.println("</table>");
+        }catch (IOException ex){
+            printerr("IOexception! Call the system administrator!");
+        }catch (Exception ex){
+            out.println("Message: " + ex.getMessage());
+            out.println("Cause: " + ex.getCause());
+            printerr("There was some unknown error in ProdView's page! Call the system administrator!");
+        }
     }
 
     public void printerr(String msg) throws java.io.IOException {
@@ -195,7 +235,7 @@
         printerr("QRDB_PATH параметр не задан! отредактируйте WEB-INF/web.xml");
     }
 
-    String [] parameters = {"member", "range", "zoid", "action"};
+    String [] parameters = {"member", "range", "zoid", "zver", "action"};
 
     switch (CMD) {
         case "members":
@@ -208,7 +248,7 @@
             setProductsPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]));
             break;
         case "prodview":
-            setProdViewPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]),request.getParameter(parameters[2]));
+            setProdViewPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]),request.getParameter(parameters[2]), request.getParameter(parameters[3]));
             break;
         case "updateprod":
             break;

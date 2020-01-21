@@ -107,6 +107,7 @@ public class ZCSVFile {
     }
     //actions on file content
     // load all lines from file & parse valid rows
+    // Load all strings ( also with any versions )
     // IT WORKS!
     public void loadFromFile() {
         try {
@@ -122,12 +123,51 @@ public class ZCSVFile {
                 else
                     fileRows.add(new ZCSVRow(bufForStrings));
             }
+
+        } catch (IOException | NullPointerException ex) {
+            ex.printStackTrace();
+        }
+    }
+    public void loadFromFileValidVersions(){
+        try {
+            BufferedReader reader = new BufferedReader
+                    (new InputStreamReader
+                            (new FileInputStream(rootPath + sourceFileName + FILE_EXTENSION), StandardCharsets.UTF_8));
+
+            String bufForStrings = "";
+            while((bufForStrings = reader.readLine()) != null) {
+                bufForStrings = bufForStrings.trim();
+                if ("".equals(bufForStrings) || bufForStrings.startsWith("#"))
+                    continue;
+                else {
+                    fileRows.add(new ZCSVRow(bufForStrings));
+                }
+            }
+
+
+            ArrayList arrayForValidVersions = new ArrayList();
+            for(int i = 0; i < fileRows.size(); i++){
+                ZCSVRow row_one = (ZCSVRow) fileRows.get(i);
+                for(int j = 0; j< fileRows.size(); j++){
+                    ZCSVRow row_two = (ZCSVRow) fileRows.get(j);
+                    if(row_one.get(0).equals(row_two.get(0))){
+                        if(Integer.parseInt(row_two.get(1)) > Integer.parseInt(row_one.get(1))){
+                            row_one = row_two;
+                        }
+                    }
+                }
+                if(!arrayForValidVersions.contains(row_one))
+                    arrayForValidVersions.add(row_one);
+            }
+            fileRows = arrayForValidVersions;
+            arrayForValidVersions = null;
             System.out.println("Array filled by each string!");
 
         } catch (IOException | NullPointerException ex) {
-            System.out.println("Array does not filled!");
+            ex.printStackTrace();
         }
     }
+
     //reload data from file if changed
     public int reloadFromFile() {
        // channel.force(true);

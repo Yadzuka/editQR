@@ -13,7 +13,7 @@
     <display-name>Test</display-name>
 
     <welcome-file-list>
-        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>editqrpage.jsp</welcome-file>
     </welcome-file-list>
 
     <servlet>

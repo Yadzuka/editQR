@@ -24,7 +24,7 @@ public class ZCSVException extends Exception {
         super(s);
     }
     //  debugging variant
-    public void printError(){
-        super.getMessage();
+    public String printError(){
+        return super.getMessage();
     }
 } //ZCSVException
