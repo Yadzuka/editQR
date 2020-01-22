@@ -89,7 +89,7 @@ public class ZCSVFile {
     }
     // exclusively lock file (can be used before update)
     // IT WORKS!
-    private boolean tryFileLock() {
+    public boolean tryFileLock() {
         if (channel == null) {
             return false;
         }
@@ -144,7 +144,6 @@ public class ZCSVFile {
                 }
             }
 
-
             ArrayList arrayForValidVersions = new ArrayList();
             for(int i = 0; i < fileRows.size(); i++){
                 ZCSVRow row_one = (ZCSVRow) fileRows.get(i);
@@ -161,8 +160,6 @@ public class ZCSVFile {
             }
             fileRows = arrayForValidVersions;
             arrayForValidVersions = null;
-            System.out.println("Array filled by each string!");
-
         } catch (IOException | NullPointerException ex) {
             ex.printStackTrace();
         }
@@ -177,7 +174,6 @@ public class ZCSVFile {
     public int updateFromChannel() throws IOException {
         try {
             for(int i = 0;i < fileRows.size(); i++){
-                System.out.println(fileRows.get(i).toString());
                 ZCSVRow row = (ZCSVRow) fileRows.get(i);
                 if(row.isDirty()){
                     fileRows.set(i, row.toString());
@@ -226,7 +222,8 @@ public class ZCSVFile {
             else {
                 return -1;
             }
-            BufferedWriter writer = new BufferedWriter(new FileWriter(fullPath));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream
+                    (fullPath, false),StandardCharsets.UTF_8));
             for (int i = 0; i < fileRows.size(); i++) {
                 row = (ZCSVRow) fileRows.get(i);
                 writer.write(row.toString() + NEXT_LINE_SYMBOL);
@@ -243,7 +240,7 @@ public class ZCSVFile {
     // IT WORKS!
     public void appendNewStringsToFile() throws IOException {
         if(tryFileLock()) {
-            BufferedWriter writer = new BufferedWriter
+                BufferedWriter writer = new BufferedWriter
                     (new OutputStreamWriter
                             (new FileOutputStream(rootPath + sourceFileName
                                     + FILE_EXTENSION, true), StandardCharsets.UTF_8));

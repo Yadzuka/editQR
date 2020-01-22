@@ -78,14 +78,10 @@
             Members members = new Members();
             String[] allRegisteredMembers = members.getCompanyNames();
 
-            out.println("<table class=\"memberstable\" border=\"2\" width=\"60%\">");
+            out.println("<table class=\"memberstable\" border=\"3\">");
             for (int i = 0; i < allRegisteredMembers.length; i++) {
                 out.println("<tr>");
-                out.println("<td>");
-                out.print("<a href=\'" + CGI_NAME + "?page=ranges&member=" + allRegisteredMembers[i] + "\'>");
-                out.println(allRegisteredMembers[i]);
-                out.println("</a>");
-                out.println("</td>");
+                printTableElement("<a href=\'" + CGI_NAME + "?page=ranges&member=" + allRegisteredMembers[i] + "\'>"+allRegisteredMembers[i]+"</a>");
                 out.println("</tr>");
             }
             out.println("</table>");
@@ -105,8 +101,8 @@
             for (int i = 0; i < allItems.length; i++) {
                 String range = allItems[i];
                 out.println("<tr>");
-                out.println("<td><a href=\'" + CGI_NAME + "?page=prodtable&member=" + member + "&range=" + range + "\'>" + range + "</a></td>");
-                out.println("<td>" + getNailedRangDesc(range, "Диапазон: " + range) + "</td>");
+                printTableElement("<a href=\'" + CGI_NAME + "?page=prodtable&member=" + member + "&range=" + range + "\'>" + range + "</a>");
+                printTableElement(getNailedRangDesc(range, "Диапазон: " + range));
                 out.println("</tr>");
             }
             out.println("</table>");
@@ -121,21 +117,25 @@
             zcsvFile.setRootPath(Members.getWayToDB() + member + "/" + range + "/");
             zcsvFile.setFileName("master.list");
             String[] namesMap = new String[]
-                    {"ZOID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR", "CONTRACTNUM", "contractdate",
-                            "MONEY", "SUPPLIER", "CLIENT", "PRODTYPE", "MODEL", "SN", "prodate", "shipdate",
-                            "SALEDATE", "DEPARTUREDATE", "WARRANTYSTART", "WARRANTYEND", "COMMENT "};
+                    {"ZRID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR  код", "№ договора", "Дата договора",
+                            "Деньги по договору", "Юр-лицо поставщик", "Юр-лицо клиент", "Тип продукта", "Модель продукта",
+                            "SN", "Дата производства", "Дата ввоза (ГТД)",
+                            "Дата продажи", "Дата отправки клиенту", "Дата начала гарантии",
+                            "Дата окончания гарантии", "Комментарий (для клиента)"};
             if (Files.exists(Paths.get(zcsvFile.toString()))) {
                 boolean res = zcsvFile.tryOpenFile(1);
                 if (res) {
                     zcsvFile.loadFromFileValidVersions();
-
+                    printTable(zcsvFile, namesMap);
+                    /*
                     out.println("<table>");
+
                     for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
                         out.println("<tr>");
                         ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                         eachRow.setNames(namesMap);
                         out.println("<td>" +
-                                "<a href=\'" + CGI_NAME + "?page=prodview&member=" + member + "&range=" + range + "&zoid=" + eachRow.get(0) +"&zver="+ eachRow.get(1) + "\'>" +
+                                "<a href=\'" + CGI_NAME + "?page=prodview&member=" + member + "&range=" + range + "&zrid=" + eachRow.get(0) +"&zver="+ eachRow.get(1) + "\'>" +
                                 "Change card" +
                                 "</a></td>");
                         for (int j = 0; j < eachRow.getNames().length; j++) {
@@ -149,7 +149,7 @@
                         out.println("</tr>");
                     }
                     out.println("</table>");
-
+                    */
                 } else {
                     printerr("Can't open file! Call the system administrator!");
                 }
@@ -163,12 +163,12 @@
         }
     }
 
-    private void setProdViewPage(String member, String range, String ZOID, String ZVER) throws IOException {
+    private void setProdViewPage(String member, String range, String ZRID) throws IOException {
         try {
             ZCSVRow row = new ZCSVRow();
             for(int i = 0; i < zcsvFile.getFileRowsLength(); i++){
                 row = zcsvFile.getRowObjectByIndex(i);
-                if(ZOID.equals(row.get("ZOID")) && ZVER.equals(row.get("ZVER")))
+                if(ZRID.equals(row.get("ZRID")))
                     break;
             }
 
@@ -194,10 +194,63 @@
         }
     }
 
+    private void printTable(ZCSVFile file) throws IOException {
+        try {
+            ZCSVFile timedFile = file;
+            ZCSVRow timedRow = null;
+
+            out.println("<table>");
+            for (int i = 0; i < timedFile.getFileRowsLength(); i++) {
+                timedRow = timedFile.getRowObjectByIndex(i);
+                out.println("<tr>");
+                for(int j = 0; j < timedRow.getNames().length; j++){
+                    out.println("<td>");
+                        out.println(timedRow.get(j));
+                    out.println("</td>");
+                }
+                out.println("</tr>");
+            }
+            out.println("</table>");
+        }catch (Exception ex){
+            out.println("<b>Ошибка при создании таблицы. Свяжитесь с системным администратором.</b>");
+        }
+    }
+    private void printTable(ZCSVFile file, String [] columnNames) throws IOException {
+        try {
+            ZCSVFile timedFile = file;
+            ZCSVRow timedRow = null;
+
+            out.println("<table>");
+            out.println("<tr>");
+            for(int i = 0; i < columnNames.length; i++){
+                printTableElement(columnNames[i]);
+            }
+            out.println("</tr>");
+            for (int i = 0; i < timedFile.getFileRowsLength(); i++) {
+                timedRow = timedFile.getRowObjectByIndex(i);
+                timedRow.setNames(columnNames);
+                    out.println("<tr>");
+                    for (int j = 0; j < columnNames.length; j++) {
+                        printTableElement(timedRow.get(j));
+                    }
+                    out.println("</tr>");
+            }
+            out.println("</table>");
+        }catch (Exception ex){
+            out.println("<b>Ошибка при создании таблицы. Свяжитесь с системным администратором.</b>");
+        }
+    }
+    private void printTableElement(Object tElement) throws IOException {
+        out.println("<td>");
+        out.println(obj2str(tElement));
+        out.println("</td>");
+    }
+    private String obj2str(Object obj){
+        return obj.toString();
+    }
     public void printerr(String msg) throws java.io.IOException {
         out.print("<b>" + msg + "</b>");
     }
-
     public void printerrln(String msg) throws java.io.IOException {
         printerr(msg);
         out.print("<br>");
@@ -235,7 +288,7 @@
         printerr("QRDB_PATH параметр не задан! отредактируйте WEB-INF/web.xml");
     }
 
-    String [] parameters = {"member", "range", "zoid", "zver", "action"};
+    String [] parameters = {"member", "range", "zrid", "action"};
 
     switch (CMD) {
         case "members":
@@ -248,7 +301,7 @@
             setProductsPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]));
             break;
         case "prodview":
-            setProdViewPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]),request.getParameter(parameters[2]), request.getParameter(parameters[3]));
+            setProdViewPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]),request.getParameter(parameters[2]));
             break;
         case "updateprod":
             break;
