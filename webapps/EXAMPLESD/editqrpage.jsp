@@ -12,6 +12,14 @@
     private static final String CGI_NAME = "editqrpage.jsp";
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий";
     private final static String JSP_VERSION = "$id$";
+    public final String ACTION_EDIT = "edit";
+    public final String ACTION_CREATE = "create";
+    public final String ACTION_SAVE = "save";
+    public final String ACTION_REFRESH = "refresh";
+    public final String ACTION_CANCEL = "cancel";
+    public final String ACTION_GENERATEQR ="genqr";
+    public final String [] ACTIONS = {ACTION_EDIT,ACTION_CREATE,ACTION_SAVE,ACTION_REFRESH, ACTION_CANCEL, ACTION_GENERATEQR};
+
     private static ZCSVFile zcsvFile;
     private static String CMD;
     JspWriter out;
@@ -92,6 +100,13 @@
 
     private void setRangePage(String member) throws IOException {
         try {
+            printUpsideMenu(
+                    new String[]{
+                            "Назад",
+                    }, new String[]{
+                            "page=members",
+                    });
+
             RangesController rController = new RangesController(member);
             String s = rController.getInfo();
             out.println(s);
@@ -113,6 +128,14 @@
 
     private void setProductsPage(String member, String range) throws IOException {
         try {
+            printUpsideMenu(
+                    new String[]{
+                            "Назад","Создать новую запись",
+                    }, new String[]{
+                            "page=ranges&member=" + member,
+                            "page=updateprod&member="+member+"&range="+range+"&zrid=n&action=create"
+                    });
+
             zcsvFile = new ZCSVFile();
             zcsvFile.setRootPath(Members.getWayToDB() + member + "/" + range + "/");
             zcsvFile.setFileName("master.list");
@@ -126,19 +149,17 @@
                 boolean res = zcsvFile.tryOpenFile(1);
                 if (res) {
                     zcsvFile.loadFromFileValidVersions();
-                    printTable(zcsvFile, namesMap);
-                    /*
-                    out.println("<table>");
 
+                    out.println("<table class=\"memberstable\" border=\"1\">");
+                    printTableString(namesMap);
                     for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
                         out.println("<tr>");
                         ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                         eachRow.setNames(namesMap);
-                        out.println("<td>" +
-                                "<a href=\'" + CGI_NAME + "?page=prodview&member=" + member + "&range=" + range + "&zrid=" + eachRow.get(0) +"&zver="+ eachRow.get(1) + "\'>" +
-                                "Change card" +
-                                "</a></td>");
-                        for (int j = 0; j < eachRow.getNames().length; j++) {
+                        printTableElement(
+                                "<a href=\'" + CGI_NAME + "?page=prodview&member=" + member + "&range=" + range + "&zrid=" + eachRow.get(0) + "\'>" +
+                                                                                                                            "<карточка>" + "</a>");
+                        for (int j = 5; j < eachRow.getNames().length; j++) {
                             out.println("<td>");
                             if("null".equals(eachRow.get(j)) || eachRow.get(j) == null)
                                 out.print("");
@@ -149,7 +170,6 @@
                         out.println("</tr>");
                     }
                     out.println("</table>");
-                    */
                 } else {
                     printerr("Can't open file! Call the system administrator!");
                 }
@@ -165,13 +185,20 @@
 
     private void setProdViewPage(String member, String range, String ZRID) throws IOException {
         try {
+            printUpsideMenu(
+                    new String[]{
+                        "Назад","Изменить запись",
+                    }, new String[]{
+                        "page=prodtable&member=" + member + "&range=" + range,
+                            "page=updateprod&member="+member+"&range="+range+"&zrid="+ZRID+"&action=edit"
+                    });
+
             ZCSVRow row = new ZCSVRow();
             for(int i = 0; i < zcsvFile.getFileRowsLength(); i++){
                 row = zcsvFile.getRowObjectByIndex(i);
                 if(ZRID.equals(row.get("ZRID")))
                     break;
             }
-
             out.println("<table>");
             for (int i = 0; i < row.getNames().length; i++) {
                 out.println("<tr>");
@@ -194,6 +221,38 @@
         }
     }
 
+    private void setUpdateProductPage(String member, String range, String ZRID, String action){
+        if(ACTION_GENERATEQR.equals(action)){
+
+        }
+        if (ACTION_CANCEL.equals(action)) {
+
+        }
+        if(ACTION_REFRESH.equals(action)){
+
+        }
+        if (ACTION_EDIT.equals(action)) {
+
+        }
+        if (ACTION_SAVE.equals(action)) {
+
+        }
+        if (ACTION_CREATE.equals(action)) {
+
+        }
+    }
+
+    private void printUpsideMenu(String [] menuItems, String [] menuReferences) throws IOException {
+        out.println("<ul>");
+        for(int i = 0; i < menuItems.length; i++){
+            out.print("<li>");
+            out.println("<a href=\'" + CGI_NAME + "?" + menuReferences[i] + "\'>" + menuItems[i] + "</a>");
+            out.print("</li>");
+        }
+        out.println("</ul>");
+        out.println("<br/>");
+    }
+
     private void printTable(ZCSVFile file) throws IOException {
         try {
             ZCSVFile timedFile = file;
@@ -202,11 +261,14 @@
             out.println("<table>");
             for (int i = 0; i < timedFile.getFileRowsLength(); i++) {
                 timedRow = timedFile.getRowObjectByIndex(i);
+
                 out.println("<tr>");
                 for(int j = 0; j < timedRow.getNames().length; j++){
-                    out.println("<td>");
-                        out.println(timedRow.get(j));
-                    out.println("</td>");
+                    if("null".equals(timedRow.get(j)) || timedRow.get(j) == null)
+                        out.print("");
+                    else
+                        out.print(timedRow.get(j));
+                    printTableElement(timedRow);
                 }
                 out.println("</tr>");
             }
@@ -217,20 +279,19 @@
     }
     private void printTable(ZCSVFile file, String [] columnNames) throws IOException {
         try {
-            ZCSVFile timedFile = file;
             ZCSVRow timedRow = null;
 
             out.println("<table>");
             out.println("<tr>");
-            for(int i = 0; i < columnNames.length; i++){
+            for(int i = 5; i < columnNames.length; i++){
                 printTableElement(columnNames[i]);
             }
             out.println("</tr>");
-            for (int i = 0; i < timedFile.getFileRowsLength(); i++) {
-                timedRow = timedFile.getRowObjectByIndex(i);
+            for (int i = 0; i < file.getFileRowsLength(); i++) {
+                timedRow = file.getRowObjectByIndex(i);
                 timedRow.setNames(columnNames);
                     out.println("<tr>");
-                    for (int j = 0; j < columnNames.length; j++) {
+                    for (int j = 5; j < columnNames.length; j++) {
                         printTableElement(timedRow.get(j));
                     }
                     out.println("</tr>");
@@ -239,6 +300,14 @@
         }catch (Exception ex){
             out.println("<b>Ошибка при создании таблицы. Свяжитесь с системным администратором.</b>");
         }
+    }
+    private void printTableString(String ... outputString) throws IOException {
+        out.println("<tr>");
+        for(int i = 4; i < outputString.length; i++){
+            if(i==4) printTableElement("Опции");
+            else printTableElement(outputString[i]);
+        }
+        out.println("</tr>");
     }
     private void printTableElement(Object tElement) throws IOException {
         out.println("<td>");
@@ -258,8 +327,9 @@
 %>
 <html>
 <head>
-    <title><%= CGI_TITLE %>
-    </title>
+    <title><%= CGI_TITLE %></title>
+    <link rel="stylesheet" type="text/css" href="css/webcss.css">
+    <link rel="stylesheet" type="text/css" href="css/head.css">
 </head>
 <body>
 <h2><%= CGI_TITLE %>
@@ -271,7 +341,6 @@
     <a href='test.jsp'>test.jsp</a>&nbsp;
     <!--
     -->
-
 </div>
 <%
     set_request_hints(request, response);
@@ -304,6 +373,7 @@
             setProdViewPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]),request.getParameter(parameters[2]));
             break;
         case "updateprod":
+            setUpdateProductPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]), request.getParameter(parameters[2]), request.getParameter(parameters[3]));
             break;
         case "test":
             out.print("Hello test page!");

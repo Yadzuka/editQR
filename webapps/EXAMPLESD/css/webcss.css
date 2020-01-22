@@ -1,10 +1,9 @@
 /* Member's table parameters */
 .memberstable{
     font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
-    font-size: 18px;
+    font-size: 14px;
     background: white;
     width: 99%;
-    border-collapse: collapse;
     text-align: left;
     margin: 0 auto 20px;
 }

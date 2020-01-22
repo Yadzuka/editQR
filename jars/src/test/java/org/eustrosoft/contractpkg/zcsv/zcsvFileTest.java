@@ -137,16 +137,4 @@ public class zcsvFileTest {
             ex.printStackTrace();
         }
     }
-
-    @Test
-    public void getRowObjectByIndex() {
-    }
-
-    @Test
-    public void editRowObjectByIndex() {
-    }
-
-    @Test
-    public void testToString() {
-    }
 }
