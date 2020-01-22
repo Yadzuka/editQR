@@ -97,7 +97,7 @@
             out.println(s);
 
             String[] allItems = rController.getRanges();
-            out.println("<table class=\"memberstable\" border=\"2\" width=\"60%\"><tr><td>Диапазон</td><td>Описание</td>");
+            out.println("<table><tr><th>Диапазон</th><th>Описание</th>");
             for (int i = 0; i < allItems.length; i++) {
                 String range = allItems[i];
                 out.println("<tr>");
