@@ -13,6 +13,8 @@ import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -113,7 +115,7 @@ public class ZCSVFile {
     // Load all strings ( also with any versions )
     public void loadFromFile() {
         try {
-            BufferedReader reader = new BufferedReader
+            /*BufferedReader reader = new BufferedReader
                     (new InputStreamReader
                             (new FileInputStream(rootPath + sourceFileName + FILE_EXTENSION), StandardCharsets.UTF_8));
 
@@ -124,7 +126,11 @@ public class ZCSVFile {
                     continue;
                 else
                     fileRows.add(new ZCSVRow(bufForStrings));
-            }
+            }*/
+
+            Files.lines(Paths.get(rootPath+sourceFileName+FILE_EXTENSION),StandardCharsets.UTF_8).
+                    filter(w -> !(w.startsWith("#") || "".
+                    equals(w))).forEach(w->fileRows.add(new ZCSVRow(w.trim())));
 
         } catch (IOException | NullPointerException ex) {
             ex.printStackTrace();
@@ -145,8 +151,6 @@ public class ZCSVFile {
                 if ("".equals(bufForStrings) || bufForStrings.startsWith("#"))
                     continue;
                 else {
-                    ZCSVRow newRow = new ZCSVRow(bufForStrings);
-
                     fileRows.add(new ZCSVRow(bufForStrings));
                 }
             }
@@ -223,20 +227,10 @@ public class ZCSVFile {
     // get line from loaded file by number (as is, text upto \n)
     // IT WORKS!
     public String getLineByIndex(int i) throws IOException {
-        String stringToGet;
-        BufferedReader reader = new BufferedReader
-                (new InputStreamReader
-                        (new FileInputStream(rootPath + sourceFileName + FILE_EXTENSION), StandardCharsets.UTF_8));
-        while ((stringToGet = reader.readLine()) != null) {
-            if (i < 0) {
-                return "Not valid value";
-            } else if (i > 0) {
-                i--;
-            } else {
-                return stringToGet;
-            }
-        }
-        return "This string does not existing";
+        if(i < 0 || i >= fileRows.size())
+            return null;
+        else
+            return fileRows.get(i).toString();
     }
 
     // WRITE SECTION
@@ -341,8 +335,7 @@ public class ZCSVFile {
 
     // get read-only row from loaded file by number (only proper rows, not commented lines)
     public ZCSVRow getRowObjectByIndex(int i) {
-        ZCSVRow takeRow = new ZCSVRow(fileRows.get(i).toString());
-        return takeRow;
+        return (ZCSVRow) fileRows.get(i);
     }
 
     // the same as above but ready for update, change it and use update() method of parent ZCSVFile

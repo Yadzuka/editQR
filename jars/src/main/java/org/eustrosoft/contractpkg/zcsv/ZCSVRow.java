@@ -8,6 +8,9 @@
 
 package org.eustrosoft.contractpkg.zcsv;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Vector;
 
 /**
@@ -21,7 +24,7 @@ public class ZCSVRow {
 
     private ZCSVRow previousRow = null;
     private String[] nameMap = null;
-    private Vector dataInRow = null;
+    private ArrayList dataInRow = null;
 
     public String setStringSpecificIndex(int i, String str) {
         try {
@@ -29,7 +32,7 @@ public class ZCSVRow {
                 throw new ZCSVException("Индекс указан неправильно!");
             if (is_row) return null;
             is_dirty = true;
-            if (dataInRow == null) dataInRow = new Vector(i + 1);
+            if (dataInRow == null) dataInRow = new ArrayList(i + 1);
             if (i >= dataInRow.size()) return (null);
 
             dataInRow.set(i, str);
@@ -46,7 +49,6 @@ public class ZCSVRow {
             int index = name2column(name);
             if (index == -1)
                 throw new ZCSVException("Название параметра не найдено!");
-
             return setStringSpecificIndex(index, dataInRow);
         } catch (ZCSVException ex) {
             ex.printError();
@@ -125,14 +127,11 @@ public class ZCSVRow {
     }
 
     private void splitString(String str) {
-        dataInRow = new Vector();
+        dataInRow = new ArrayList();
 
-        for (String s : str.trim().split(DELIMETER)) {
-            dataInRow.add(s.trim());
-        }
+        Collections.addAll(dataInRow, str.split(DELIMETER));
     }
 
-    // constructors
     public ZCSVRow() {
     }
 
@@ -150,8 +149,8 @@ public class ZCSVRow {
     }
 
     public ZCSVRow(String[] values, String[] names) {
-        setNames(values);
-        for (String s : names) {
+        setNames(names);
+        for (String s : values) {
             dataInRow.add(s);
         }
     }

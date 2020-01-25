@@ -136,9 +136,9 @@
                             "page=updateprod&member="+member+"&range="+range+"&zrid=n&action=create"
                     });
 
-            zcsvFile = new ZCSVFile();
-            zcsvFile.setRootPath(Members.getWayToDB() + member + "/" + range + "/");
-            zcsvFile.setFileName("master.list");
+            String rootPath = Members.getWayToDB() + member + "/" + range + "/";
+            zcsvFile = setupZCSVPaths(rootPath, "master.list");
+
             String[] namesMap = new String[]
                     {"ZRID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR  код", "№ договора", "Дата договора",
                             "Деньги по договору", "Юр-лицо поставщик", "Юр-лицо клиент", "Тип продукта", "Модель продукта",
@@ -146,26 +146,19 @@
                             "Дата продажи", "Дата отправки клиенту", "Дата начала гарантии",
                             "Дата окончания гарантии", "Комментарий (для клиента)"};
             if (Files.exists(Paths.get(zcsvFile.toString()))) {
-                boolean res = zcsvFile.tryOpenFile(1);
-                if (res) {
+                if (zcsvFile.tryOpenFile(1)) {
                     zcsvFile.loadFromFileValidVersions();
-
                     out.println("<table class=\"memberstable\" border=\"1\">");
                     printTableString(namesMap);
                     for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
-                        out.println("<tr>");
                         ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                         eachRow.setNames(namesMap);
+                        out.println("<tr>");
                         printTableElement(
                                 "<a href=\'" + CGI_NAME + "?page=prodview&member=" + member + "&range=" + range + "&zrid=" + eachRow.get(0) + "\'>" +
                                                                                                                             "<карточка>" + "</a>");
                         for (int j = 5; j < eachRow.getNames().length; j++) {
-                            out.println("<td>");
-                            if("null".equals(eachRow.get(j)) || eachRow.get(j) == null)
-                                out.print("");
-                            else
-                                out.print(eachRow.get(j));
-                            out.println("</td>");
+                            printTableElement((eachRow.get(j) == null || "null".equals(eachRow.get(j)) ? "" : eachRow.get(j)));
                         }
                         out.println("</tr>");
                     }
@@ -179,7 +172,8 @@
         }catch (IOException ex){
             printerr("There was input/output error! Call the system administrator!");
         }catch (Exception ex){
-            printerr("There was general exception! Call the system administrator!");
+            ex.printStackTrace(new PrintWriter(out));
+            printerr("There was general exception Call the system administrator!");
         }
     }
 
@@ -187,36 +181,29 @@
         try {
             printUpsideMenu(
                     new String[]{
-                        "Назад","Изменить запись",
+                            "Назад", "Изменить запись",
                     }, new String[]{
-                        "page=prodtable&member=" + member + "&range=" + range,
-                            "page=updateprod&member="+member+"&range="+range+"&zrid="+ZRID+"&action=edit"
+                            "page=prodtable&member=" + member + "&range=" + range,
+                            "page=updateprod&member=" + member + "&range=" + range + "&zrid=" + ZRID + "&action=edit"
                     });
 
-            ZCSVRow row = new ZCSVRow();
-            for(int i = 0; i < zcsvFile.getFileRowsLength(); i++){
-                row = zcsvFile.getRowObjectByIndex(i);
-                if(ZRID.equals(row.get("ZRID")))
-                    break;
-            }
-            out.println("<table>");
-            for (int i = 0; i < row.getNames().length; i++) {
-                out.println("<tr>");
-                out.print("<td>");
-                out.print(row.getNames()[i]);
-                out.print("</td>");
+            ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
 
-                out.print("<td>");
-                out.print(row.get(i));
-                out.print("</td>");
+            out.println("<table>");
+            out.print("<tr>");
+            out.print("<img src=\"engine/qr?codingString=" + row.get(5) + "\">");
+            out.print("<tr>");
+            for (int i = 5; i < row.getNames().length; i++) {
+                out.println("<tr>");
+                printTableElement((row.getNames()[i] == null) ? "" : row.getNames()[i]);
+                printTableElement((row.get(i) == null | "null".equals(row.get(i))) ? "" : row.get(i));
                 out.println("</tr>");
             }
             out.println("</table>");
         }catch (IOException ex){
             printerr("IOexception! Call the system administrator!");
         }catch (Exception ex){
-            out.println("Message: " + ex.getMessage());
-            out.println("Cause: " + ex.getCause());
+            ex.printStackTrace(new PrintWriter(out));
             printerr("There was some unknown error in ProdView's page! Call the system administrator!");
         }
     }
@@ -240,6 +227,13 @@
         if (ACTION_CREATE.equals(action)) {
 
         }
+    }
+
+    private ZCSVFile setupZCSVPaths(String rootPath, String fileName){
+        ZCSVFile file = new ZCSVFile();
+        file.setRootPath(rootPath);
+        file.setFileName(fileName);
+        return file;
     }
 
     private void printUpsideMenu(String [] menuItems, String [] menuReferences) throws IOException {
@@ -350,6 +344,7 @@
         CMD = "members";
     }
 
+
     long enter_time = System.currentTimeMillis();
     read_parameters_from_web_xml();
     Members.setWayToDB(QRDB_PATH);
@@ -358,6 +353,12 @@
     }
 
     String [] parameters = {"member", "range", "zrid", "action"};
+    for(int i = 0; i < parameters.length; i++){
+        if(request.getParameter(parameters[i]) != null || !"null".equals(request.getParameter(parameters[i])))
+        if(request.getParameter(parameters[i]).contains("..") || request.getParameter(parameters[i]).contains("/")){
+
+        }
+    }
 
     switch (CMD) {
         case "members":
