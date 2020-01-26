@@ -127,7 +127,6 @@ public class ZCSVFile {
                 else
                     fileRows.add(new ZCSVRow(bufForStrings));
             }*/
-
             Files.lines(Paths.get(rootPath+sourceFileName+FILE_EXTENSION),StandardCharsets.UTF_8).
                     filter(w -> !(w.startsWith("#") || "".
                     equals(w))).forEach(w->fileRows.add(new ZCSVRow(w.trim())));
@@ -141,36 +140,37 @@ public class ZCSVFile {
     // 0 index - ZRID (row). 1 index - ZVER (version)
     public void loadFromFileValidVersions() {
         try {
+            ArrayList<Integer> zRIDS = new ArrayList<>();
+
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader
                             (new FileInputStream(rootPath + sourceFileName + FILE_EXTENSION), StandardCharsets.UTF_8));
-
             String bufForStrings = "";
             while ((bufForStrings = reader.readLine()) != null) {
                 bufForStrings = bufForStrings.trim();
                 if ("".equals(bufForStrings) || bufForStrings.startsWith("#"))
                     continue;
                 else {
-                    fileRows.add(new ZCSVRow(bufForStrings));
-                }
-            }
-
-            ArrayList arrayForValidVersions = new ArrayList();
-            for (int i = 0; i < fileRows.size(); i++) {
-                ZCSVRow row_one = (ZCSVRow) fileRows.get(i);
-                for (int j = 0; j < fileRows.size(); j++) {
-                    ZCSVRow row_two = (ZCSVRow) fileRows.get(j);
-                    if (row_one.get(0).equals(row_two.get(0))) {
-                        if (Integer.parseInt(row_two.get(1)) > Integer.parseInt(row_one.get(1))) {
-                            row_one = row_two;
+                    ZCSVRow newRow = new ZCSVRow(bufForStrings);
+                    if(zRIDS.contains(Integer.parseInt(newRow.get(0)))) {
+                        for (int i = 0; i < zRIDS.size(); i++) {
+                            ZCSVRow row = (ZCSVRow) fileRows.get(i);
+                            if (newRow.get(0).equals(row.get(0))) {
+                                if (Integer.parseInt(newRow.get(1)) > Integer.parseInt(row.get(1))) {
+                                    fileRows.remove(i);
+                                    fileRows.add(i, newRow);
+                                    break;
+                                }else if(Integer.parseInt(newRow.get(1)) == Integer.parseInt(row.get(1))){
+                                    break;
+                                }
+                            }
                         }
+                    }else {
+                        fileRows.add(newRow);
+                        zRIDS.add(Integer.parseInt(newRow.get(0)));
                     }
                 }
-                if (!arrayForValidVersions.contains(row_one))
-                    arrayForValidVersions.add(row_one);
             }
-            fileRows = arrayForValidVersions;
-            arrayForValidVersions = null;
         } catch (IOException | NullPointerException ex) {
             ex.printStackTrace();
         }

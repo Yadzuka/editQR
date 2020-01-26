@@ -20,6 +20,8 @@
     public final String ACTION_GENERATEQR ="genqr";
     public final String [] ACTIONS = {ACTION_EDIT,ACTION_CREATE,ACTION_SAVE,ACTION_REFRESH, ACTION_CANCEL, ACTION_GENERATEQR};
 
+    private static boolean tryHach = false;
+
     private static ZCSVFile zcsvFile;
     private static String CMD;
     JspWriter out;
@@ -82,6 +84,8 @@
     }
 
     private void setMembersPage() throws IOException {
+        if(tryHach)
+            out.print("<b>Bad game :)</b><br/> Don't try to hack us :)");
         try {
             Members members = new Members();
             String[] allRegisteredMembers = members.getCompanyNames();
@@ -208,7 +212,14 @@
         }
     }
 
-    private void setUpdateProductPage(String member, String range, String ZRID, String action){
+    private void setUpdateProductPage(String member, String range, String ZRID, String action) throws IOException {
+        printUpsideMenu(
+                new String[]{
+                        "Назад", "Изменить запись",
+                }, new String[]{
+                        "page=prodtable&member=" + member + "&range=" + range,
+                        "page=updateprod&member=" + member + "&range=" + range + "&zrid=" + ZRID + "&action=edit"
+                });
         if(ACTION_GENERATEQR.equals(action)){
 
         }
@@ -344,7 +355,6 @@
         CMD = "members";
     }
 
-
     long enter_time = System.currentTimeMillis();
     read_parameters_from_web_xml();
     Members.setWayToDB(QRDB_PATH);
@@ -354,9 +364,15 @@
 
     String [] parameters = {"member", "range", "zrid", "action"};
     for(int i = 0; i < parameters.length; i++){
-        if(request.getParameter(parameters[i]) != null || !"null".equals(request.getParameter(parameters[i])))
-        if(request.getParameter(parameters[i]).contains("..") || request.getParameter(parameters[i]).contains("/")){
-
+        //if(request.getParameter(parameters[i]) != null || !"null".equals(request.getParameter(parameters[i])))
+        String x = request.getParameter(parameters[i]);
+        if(x != null) {
+            if (x.contains("/") || x.contains("..")) {
+                tryHach = true;
+                response.sendRedirect("editqrpage.jsp");
+            }else{
+                tryHach = false;
+            }
         }
     }
 
