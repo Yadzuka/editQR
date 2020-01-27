@@ -57,6 +57,13 @@
             "FFFF", ""
     };
 
+    private String [] namesMap = new String[]
+            {"ZRID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR  код", "№ договора", "Дата договора",
+                    "Деньги по договору", "Юр-лицо поставщик", "Юр-лицо клиент", "Тип продукта", "Модель продукта",
+                    "SN", "Дата производства", "Дата ввоза (ГТД)",
+                    "Дата продажи", "Дата отправки клиенту", "Дата начала гарантии",
+                    "Дата окончания гарантии", "Комментарий (для клиента)"};
+
     public String getNailedRangDesc(String r, String desc){
         int i=0;
         String new_desc=desc;
@@ -137,23 +144,18 @@
                             "Назад","Создать новую запись",
                     }, new String[]{
                             "page=ranges&member=" + member,
-                            "page=updateprod&member="+member+"&range="+range+"&zrid=n&action=create"
+                            "page=updateprod&member="+member+"&range="+range+"&action=create"
                     });
 
             String rootPath = Members.getWayToDB() + member + "/" + range + "/";
             zcsvFile = setupZCSVPaths(rootPath, "master.list");
 
-            String[] namesMap = new String[]
-                    {"ZRID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR  код", "№ договора", "Дата договора",
-                            "Деньги по договору", "Юр-лицо поставщик", "Юр-лицо клиент", "Тип продукта", "Модель продукта",
-                            "SN", "Дата производства", "Дата ввоза (ГТД)",
-                            "Дата продажи", "Дата отправки клиенту", "Дата начала гарантии",
-                            "Дата окончания гарантии", "Комментарий (для клиента)"};
             if (Files.exists(Paths.get(zcsvFile.toString()))) {
                 if (zcsvFile.tryOpenFile(1)) {
                     zcsvFile.loadFromFileValidVersions();
                     out.println("<table class=\"memberstable\" border=\"1\">");
-                    printTableString(namesMap);
+                    printProductsTableUpsideString(namesMap);
+
                     for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
                         ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                         eachRow.setNames(namesMap);
@@ -213,31 +215,48 @@
     }
 
     private void setUpdateProductPage(String member, String range, String ZRID, String action) throws IOException {
-        printUpsideMenu(
-                new String[]{
-                        "Назад", "Изменить запись",
-                }, new String[]{
-                        "page=prodtable&member=" + member + "&range=" + range,
-                        "page=updateprod&member=" + member + "&range=" + range + "&zrid=" + ZRID + "&action=edit"
-                });
-        if(ACTION_GENERATEQR.equals(action)){
+        if("changenm".equals(action)){
+            out.println("Enter the name map using ',' by delimeter. Without any spaces and new lines.");
+            out.println("<input type=\"text\"/>");
+        }else {
+            boolean newRecord = ZRID == null | "".equals(ZRID) | "null".equals(ZRID);
 
-        }
-        if (ACTION_CANCEL.equals(action)) {
+            if (newRecord) {
+                try {
+                    printUpsideMenu(
+                            new String[]{
+                                    "Назад", "Change name map(Experimental)"
+                            }, new String[]{
+                                    "page=prodtable&member=" + member + "&range=" + range,
+                                    "page=updateprod&member=" + member + "&range=" + range + "action=changenm",
+                            });
+                    out.print("<input type=\"submit\" value=\"Button\"/> ");
 
-        }
-        if(ACTION_REFRESH.equals(action)){
 
-        }
-        if (ACTION_EDIT.equals(action)) {
+                } catch (Exception ex) {
+                    printerr("Exception! Call the system administrator!");
+                }
+            } else {
+                try {
+                    printUpsideMenu(
+                            new String[]{
+                                    "Назад", "change name map(Experimental)"
+                            }, new String[]{
+                                    "page=prodtable&member=" + member + "&range=" + range + "&ZRID=" + ZRID,
+                                    "page=updateprod&member=" + member + "&range=" + range + "&ZRID=" + ZRID + "action=changenm",
+                            });
 
+                    ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
+                    printTable(row);
+                } catch (IOException ex) {
+                    printerr("IOexception! Call the system administrator!");
+                } catch (Exception ex) {
+                    ex.printStackTrace(new PrintWriter(out));
+                    printerr("There was some unknown error in ProdView's page! Call the system administrator!");
+                }
+            }
         }
-        if (ACTION_SAVE.equals(action)) {
 
-        }
-        if (ACTION_CREATE.equals(action)) {
-
-        }
     }
 
     private ZCSVFile setupZCSVPaths(String rootPath, String fileName){
@@ -258,23 +277,12 @@
         out.println("<br/>");
     }
 
-    private void printTable(ZCSVFile file) throws IOException {
+    private void printTable(ZCSVRow row) throws IOException {
         try {
-            ZCSVFile timedFile = file;
-            ZCSVRow timedRow = null;
-
             out.println("<table>");
-            for (int i = 0; i < timedFile.getFileRowsLength(); i++) {
-                timedRow = timedFile.getRowObjectByIndex(i);
-
+            for (int i = 0; i < row.getNames().length; i++) {
                 out.println("<tr>");
-                for(int j = 0; j < timedRow.getNames().length; j++){
-                    if("null".equals(timedRow.get(j)) || timedRow.get(j) == null)
-                        out.print("");
-                    else
-                        out.print(timedRow.get(j));
-                    printTableElement(timedRow);
-                }
+                printTableElement(row.get(i));
                 out.println("</tr>");
             }
             out.println("</table>");
@@ -282,31 +290,16 @@
             out.println("<b>Ошибка при создании таблицы. Свяжитесь с системным администратором.</b>");
         }
     }
-    private void printTable(ZCSVFile file, String [] columnNames) throws IOException {
-        try {
-            ZCSVRow timedRow = null;
 
-            out.println("<table>");
-            out.println("<tr>");
-            for(int i = 5; i < columnNames.length; i++){
-                printTableElement(columnNames[i]);
-            }
-            out.println("</tr>");
-            for (int i = 0; i < file.getFileRowsLength(); i++) {
-                timedRow = file.getRowObjectByIndex(i);
-                timedRow.setNames(columnNames);
-                    out.println("<tr>");
-                    for (int j = 5; j < columnNames.length; j++) {
-                        printTableElement(timedRow.get(j));
-                    }
-                    out.println("</tr>");
-            }
-            out.println("</table>");
+    private void printUpdateTable(){
+        try{
+
         }catch (Exception ex){
-            out.println("<b>Ошибка при создании таблицы. Свяжитесь с системным администратором.</b>");
+
         }
     }
-    private void printTableString(String ... outputString) throws IOException {
+
+    private void printProductsTableUpsideString(String ... outputString) throws IOException {
         out.println("<tr>");
         for(int i = 4; i < outputString.length; i++){
             if(i==4) printTableElement("Опции");
