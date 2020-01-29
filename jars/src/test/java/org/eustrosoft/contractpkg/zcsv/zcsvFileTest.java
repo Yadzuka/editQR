@@ -16,15 +16,15 @@ public class zcsvFileTest {
     public void setPathTest() {
         ZCSVFile testingFile = new ZCSVFile();
         testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData");
+        testingFile.setFileName("testingData.csv");
         Assert.assertTrue(Files.exists(Paths.get(testingFile.toString())));
     }
 
     @Test
-    public void getFileRowsLengthTest() {
+    public void getFileRowsLengthTest() throws Exception {
         ZCSVFile testingFile = new ZCSVFile();
         testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData");
+        testingFile.setFileName("testingData.csv");
         int stringsCounter = 0;
         String buffer;
         try {
@@ -49,10 +49,10 @@ public class zcsvFileTest {
     }
 
     @Test
-    public void closeFileRightlyTest() {
+    public void closeFileRightlyTest() throws Exception{
         ZCSVFile testingFile = new ZCSVFile();
         testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData");
+        testingFile.setFileName("testingData.csv");
         testingFile.tryOpenFile(0);
         try {
             Assert.assertTrue(testingFile.closeFile());
@@ -66,7 +66,7 @@ public class zcsvFileTest {
     public void closeFileIncorrectlyTest() {
         ZCSVFile testingFile = new ZCSVFile();
         testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData");
+        testingFile.setFileName("testingData.csv");
         try {
             Assert.assertFalse(testingFile.closeFile());
         }catch (Exception ex){
@@ -76,10 +76,10 @@ public class zcsvFileTest {
     }
 
     @Test
-    public void loadFromFileRightlyTest() {
+    public void loadFromFileRightlyTest() throws Exception{
         ZCSVFile testingFile = new ZCSVFile();
         testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData");
+        testingFile.setFileName("testingData.csv");
         testingFile.tryOpenFile(0);
         testingFile.loadFromFile();
         String buffer = null, testingRow = null;
@@ -107,7 +107,7 @@ public class zcsvFileTest {
     public void tryAppendNewStringsToFileWhenClosedTetst() {
         ZCSVFile testingFile = new ZCSVFile();
         testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData");
+        testingFile.setFileName("testingData.csv");
         BufferedWriter writer = null;
         try{
         testingFile.tryOpenFile(0);
@@ -134,7 +134,7 @@ public class zcsvFileTest {
     public void getRawObjectByIndexTest() {
         ZCSVFile testingFile = new ZCSVFile();
         testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData");
+        testingFile.setFileName("testingData.csv");
         try {
             testingFile.tryOpenFile(0);
             testingFile.loadFromFileValidVersions();

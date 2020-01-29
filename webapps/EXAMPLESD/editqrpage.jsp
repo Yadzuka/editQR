@@ -87,20 +87,20 @@
         } catch (IOException ex) {
             out.print("There was some error.\nCall the system administrator.");
         }
-
     }
 
-    private void setMembersPage() throws IOException {
-        if(tryHach)
-            out.print("<b>Bad game :)</b><br/> Don't try to hack us :)");
+    private void setMembersPage() throws Exception {
         try {
+            if (tryHach)
+                out.print("<b>Bad game :)</b><br/> Don't try to hack us :)");
+
             Members members = new Members();
             String[] allRegisteredMembers = members.getCompanyNames();
 
             out.println("<table class=\"memberstable\" border=\"3\">");
             for (int i = 0; i < allRegisteredMembers.length; i++) {
                 out.println("<tr>");
-                printTableElement("<a href=\'" + CGI_NAME + "?page=ranges&member=" + allRegisteredMembers[i] + "\'>"+allRegisteredMembers[i]+"</a>");
+                printTableElement("<a href=\'" + CGI_NAME + "?page=ranges&member=" + allRegisteredMembers[i] + "\'>" + allRegisteredMembers[i] + "</a>");
                 out.println("</tr>");
             }
             out.println("</table>");
@@ -109,7 +109,7 @@
         }
     }
 
-    private void setRangePage(String member) throws IOException {
+    private void setRangePage(String member) throws Exception{
         try {
             printUpsideMenu(
                     new String[]{
@@ -132,12 +132,12 @@
                 out.println("</tr>");
             }
             out.println("</table>");
-        }catch (Exception ex){
+        }catch (IOException ex){
             printerr("There was some unknown error in Range's page! Call the system admitistrator!");
         }
     }
 
-    private void setProductsPage(String member, String range) throws IOException {
+    private void setProductsPage(String member, String range) throws Exception{
         try {
             printUpsideMenu(
                     new String[]{
@@ -148,7 +148,7 @@
                     });
 
             String rootPath = Members.getWayToDB() + member + "/" + range + "/";
-            zcsvFile = setupZCSVPaths(rootPath, "master.list");
+            zcsvFile = setupZCSVPaths(rootPath, "master.list.csv");
 
             if (Files.exists(Paths.get(zcsvFile.toString()))) {
                 if (zcsvFile.tryOpenFile(1)) {
@@ -175,15 +175,15 @@
             } else {
                 printerr("File doesn't exists! Call the system administrator!");
             }
+        }catch (ZCSVException ex){
+            printerr("There was ZCSV exception error! Call the system administrator!");
         }catch (IOException ex){
-            printerr("There was input/output error! Call the system administrator!");
-        }catch (Exception ex){
             ex.printStackTrace(new PrintWriter(out));
-            printerr("There was general exception Call the system administrator!");
+            printerr("There was IOEx! Call the system administrator!");
         }
     }
 
-    private void setProdViewPage(String member, String range, String ZRID) throws IOException {
+    private void setProdViewPage(String member, String range, String ZRID) throws Exception{
         try {
             printUpsideMenu(
                     new String[]{
@@ -214,11 +214,7 @@
         }
     }
 
-    private void setUpdateProductPage(String member, String range, String ZRID, String action) throws IOException {
-        if("changenm".equals(action)){
-            out.println("Enter the name map using ',' by delimeter. Without any spaces and new lines.");
-            out.println("<input type=\"text\"/>");
-        }else {
+    private void setUpdateProductPage(String member, String range, String ZRID, String action) throws Exception {
             boolean newRecord = ZRID == null | "".equals(ZRID) | "null".equals(ZRID);
 
             if (newRecord) {
@@ -232,7 +228,7 @@
                             });
                     out.print("<input type=\"submit\" value=\"Button\"/> ");
 
-
+                    
                 } catch (Exception ex) {
                     printerr("Exception! Call the system administrator!");
                 }
@@ -255,7 +251,7 @@
                     printerr("There was some unknown error in ProdView's page! Call the system administrator!");
                 }
             }
-        }
+
 
     }
 
@@ -277,7 +273,7 @@
         out.println("<br/>");
     }
 
-    private void printTable(ZCSVRow row) throws IOException {
+    private void printTable(ZCSVRow row) throws Exception {
         try {
             out.println("<table>");
             for (int i = 0; i < row.getNames().length; i++) {
@@ -299,13 +295,17 @@
         }
     }
 
-    private void printProductsTableUpsideString(String ... outputString) throws IOException {
-        out.println("<tr>");
-        for(int i = 4; i < outputString.length; i++){
-            if(i==4) printTableElement("Опции");
-            else printTableElement(outputString[i]);
+    private void printProductsTableUpsideString(String ... outputString) throws Exception {
+        try {
+            out.println("<tr>");
+            for (int i = 4; i < outputString.length; i++) {
+                if (i == 4) printTableElement("Опции");
+                else printTableElement(outputString[i]);
+            }
+            out.println("</tr>");
+        }catch (IOException ex){
+            printerr("Error was occured by printing products table upside string!\nCall the system administrator!");
         }
-        out.println("</tr>");
     }
     private void printTableElement(Object tElement) throws IOException {
         out.println("<td>");
@@ -315,10 +315,10 @@
     private String obj2str(Object obj){
         return obj.toString();
     }
-    public void printerr(String msg) throws java.io.IOException {
+    public void printerr(String msg) throws Exception {
         out.print("<b>" + msg + "</b>");
     }
-    public void printerrln(String msg) throws java.io.IOException {
+    public void printerrln(String msg) throws Exception {
         printerr(msg);
         out.print("<br>");
     }
@@ -357,7 +357,6 @@
 
     String [] parameters = {"member", "range", "zrid", "action"};
     for(int i = 0; i < parameters.length; i++){
-        //if(request.getParameter(parameters[i]) != null || !"null".equals(request.getParameter(parameters[i])))
         String x = request.getParameter(parameters[i]);
         if(x != null) {
             if (x.contains("/") || x.contains("..")) {
