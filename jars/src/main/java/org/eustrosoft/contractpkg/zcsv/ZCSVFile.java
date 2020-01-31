@@ -55,6 +55,8 @@ public class ZCSVFile {
         return fileRows.size();
     }
 
+    public ArrayList getRowObjects() { return this.fileRows; }
+
     // READ SECTION
 
     // actions on file
