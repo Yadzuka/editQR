@@ -26,50 +26,36 @@ public class ZCSVRow {
     private String[] nameMap = null;
     private ArrayList dataInRow = null;
 
-    public String setStringSpecificIndex(int i, String str) {
-        try {
-            if (i < 0)
-                throw new ZCSVException("Индекс указан неправильно!");
-            if (is_row) return null;
-            is_dirty = true;
-            if (dataInRow == null) dataInRow = new ArrayList(i + 1);
-            if (i >= dataInRow.size()) return (null);
+    public void setStringSpecificIndex(int i, String str) throws ZCSVException {
+        if(nameMap == null) throw new ZCSVException("NameMap не заполнен!");
+        if (i < 0 || i >= nameMap.length)
+            throw new ZCSVException("Индекс указан неправильно!");
+        if (is_row) return;
+        is_dirty = true;
 
-            dataInRow.set(i, str);
-            String ov = (String) dataInRow.get(i);
-            return (ov);
-        } catch (ZCSVException ex) {
-            ex.printError();
-        }
-        return null;
+        if(dataInRow.isEmpty())
+            for(int j = 0; j < nameMap.length; j ++)
+                dataInRow.add("");
+
+        dataInRow.set(i, str);
     }
 
-    public String setNewName(String name, String dataInRow) {
-        try {
+    public void setNewName(String name, String dataInRow) throws ZCSVException {
             int index = name2column(name);
             if (index == -1)
                 throw new ZCSVException("Название параметра не найдено!");
-            return setStringSpecificIndex(index, dataInRow);
-        } catch (ZCSVException ex) {
-            ex.printError();
-        }
-        return null;
+            setStringSpecificIndex(index, dataInRow);
     }
 
-    public String get(int i) {
-        try {
+    public String get(int i) throws ZCSVException {
             if (dataInRow == null)
                 throw new ZCSVException("Данные не загружены!");
             if (i >= dataInRow.size() || i < 0)
                 throw new ZCSVException("Индекс задан неправильно!");
             return (String) dataInRow.get(i);
-        } catch (ZCSVException ex) {
-            ex.printError();
-        }
-        return null;
     }
 
-    public String get(String name) {
+    public String get(String name) throws ZCSVException{
         return get(name2column(name));
     }
 
@@ -133,6 +119,7 @@ public class ZCSVRow {
     }
 
     public ZCSVRow() {
+        dataInRow = new ArrayList();
     }
 
     public ZCSVRow(String row) {

@@ -120,7 +120,7 @@ public class ZCSVFile {
 
     // Load and show only last versions of contract
     // 0 index - ZRID (row). 1 index - ZVER (version)
-    public void loadFromFileValidVersions() throws IOException {
+    public void loadFromFileValidVersions() throws Exception {
         ArrayList<Integer> zRIDS = new ArrayList<>();
 
         BufferedReader reader = new BufferedReader
@@ -211,7 +211,6 @@ public class ZCSVFile {
 
     // write changes to file but do not touch any existing data (it's paranodal-safe version of update() method
     public void appendChangedStringsToFile() throws IOException {
-        if (tryFileLock()) {
             BufferedWriter writer = new BufferedWriter
                     (new OutputStreamWriter
                             (new FileOutputStream(rootPath + sourceFileName
@@ -224,7 +223,6 @@ public class ZCSVFile {
             }
             writer.flush();
             writer.close();
-        }
     }
 
     // the same as as above but new file only
