@@ -21,17 +21,45 @@
     public final String ACTION_REFRESH = "refresh";
     public final String ACTION_CANCEL = "cancel";
     public final String ACTION_GENERATEQR = "genqr";
+    // constants for request paremeters
+    public final static String PARAM_CMD="page"; // SIC! RENAME_IT : правда странно, когда PARAM_CMD!="cmd"
+    public final static String PARAM_MEMBER="member";
+    public final static String PARAM_RANGE="range";
+    public final static String PARAM_ZRID="zrid";
+    public final static String PARAM_ACTION="action";
+    public final static String[] STD_REQUEST_PARAMETERS = {PARAM_MEMBER,PARAM_RANGE,PARAM_ZRID,PARAM_ACTION };
+    // constants for CMD
+    public final static String CMD_MEMBERS="members";
+    public final static String CMD_RANGES="ranges";
+    public final static String CMD_PRODTABLE="prodtable";
+    public final static String CMD_PRODVIEW="prodview";
+    public final static String CMD_UPDATE="updateprod";
+    public final static String CMD_TEST="test";
 
-    private static boolean tryHach = false;
+    private static boolean tryHach = false; //SIC! static - это на весь сервлет, который обслуживает всех пользователей
 
-    private static ZCSVFile zcsvFile;
-    private static String CMD;
+    private static ZCSVFile zcsvFile; //SIC! static - это на весь сервлет, который обслуживает всех пользователей
+    //private static String CMD; //SIC! static - это на весь сервлет, который обслуживает всех пользователей
     JspWriter out;
 
-    private String QRDB_PATH = null;
+    private String QRDB_PATH = null; //SIC! а не статик общий для экземпляра, который тоже может обслуживать всех пользователей
+
+    private String getRequestParameter(ServletRequest request, String param) {return(getRequestParameter(request,param,null));}
+    private String getRequestParameter(ServletRequest request, String param, String default_value)
+    {
+     String value = request.getParameter(param);
+     if(value==null) value = default_value;
+     if(value==null) return(null); // null is valid, no check requred
+     switch(param){ // check for shell injections attack
+      case PARAM_MEMBER: 
+      case PARAM_RANGE: 
+        if (value.contains("/") || value.contains("..")) { throw new RuntimeException("shell injection detected"); } //!SIC надо облагородить потом
+     }
+     return(value);
+    } // getRequestParameter
 
     private void setMembersPage() throws Exception {
-        if (tryHach) {
+        if (tryHach) { //!SIC не Hach а Hack раз, см SIC! к определению два
             out.print("<b>Bad game :)</b><br/> Don't try to hack us :)");
             tryHach = false;
         }
@@ -148,6 +176,10 @@
         printUpdateTable(member, range, ZRID, action, row);
     }
 
+    // SIC! ВНИМАТЕЛЬНО СМ НИЖЕ
+    // SIC! printUpdateTable и printNewRecordTable надо объеденить в printEditForm() в них нет разницы,
+    // SIC! Старик Оккам завещал нам : "не плодите сущьностей, сверх необходимости" 
+    // SIC! СМ ВЫШЕ 
     private void printUpdateTable(String member, String range, String ZRID, String action, ZCSVRow row) throws Exception {
         if (row != null) {
             if (row.getNames() != null) {
@@ -160,7 +192,7 @@
                         printTableString(new Object[]{row.getNames()[i], "<input type=\"text\" name=" + i + " value=" + showingParameter + ">"});
                     } else {
                         printTableString(new Object[]{row.getNames()[i], "<textarea name=" + i + " " +
-                                "rows=\"5\" cols=\"40\">" + showingParameter + "</textarea>"});
+                                "rows=\"5\" cols='40'>" + showingParameter + "</textarea>"});
                     }
                 }
                 out.println("</table>");
@@ -168,7 +200,7 @@
             } else
                 throw new ZCSVException("Names won't be setted! Call the system administramtor!");
         } else {
-            throw new Exception("Unknown exception");
+            throw new Exception("Unknown exception"); // SIC! ммм просто Exception?
         }
     }
 
@@ -191,10 +223,10 @@
         out.println("<table>");
         for (int i = 5; i < namesMap.length; i++) {
             if (!namesMap[i].toLowerCase().contains("комментарий")) {
-                printTableString(new Object[]{namesMap[i], "<input type=\"text\" name=" + i + ">"});
+                printTableString(new Object[]{namesMap[i], "<input type='text' name=" + i + ">"}); //!SIC лучше i -> REC_PREFIX + i -> getFieldName(i)
             } else {
                 printTableString(new Object[]{namesMap[i], "<textarea name=" + i + " " +
-                        "rows=\"5\" cols=\"40\"> </textarea>"});
+                        "rows='5' cols='40'> </textarea>"});
             }
         }
         out.println("</table>");
@@ -208,7 +240,7 @@
     }
 
     private void startCreateForm(String member, String range, String action) throws Exception {
-        action = "save";
+        action = "save"; // !SIC строка внизу + member -> + encode_url_value(member) -> + euv(member) и так везде надо
         out.println("<form action=\"" + CGI_NAME + "?page=updateprod&member=" + member + "&range=" + range + "&action=" + action + "\" method=\"POST\">");
     }
 
@@ -239,7 +271,7 @@
         out.println("<br/>");
     }
 
-    private void printProductsTableUpsideString(String... outputString) throws Exception {
+    private void printProductsTableUpsideString(String... outputString) throws Exception { //SIC! а так можно? за это уже не сажают? ;)
         out.println("<tr>");
         for (int i = 4; i < outputString.length; i++) {
             if (i == 4) printTableElement("Опции");
@@ -248,7 +280,7 @@
         out.println("</tr>");
     }
 
-    private void printTableString(Object[] data) throws Exception {
+    private void printTableString(Object[] data) throws Exception { //SIC! printTableString -> printTabRow
         out.println("<tr>");
         for (int i = 0; i < data.length; i++) {
             printTableElement(data[i]);
@@ -256,7 +288,7 @@
         out.println("</tr>");
     }
 
-    private void printTableElement(Object tElement) throws IOException {
+    private void printTableElement(Object tElement) throws IOException { //SIC! RENAME_IT printTableElement -> printCell
         out.println("<td>");
         out.println(obj2str(tElement));
         out.println("</td>");
@@ -271,10 +303,10 @@
     }
 
     private String obj2str(Object obj) {
-        return obj.toString();
+        return obj.toString(); //SIC! ой, а если obj == null  будет NullPointerException...
     }
 
-    public void printNextLine() throws Exception {
+    public void printNextLine() throws Exception { //SIC! а println() было-бы короче и понятнее
         out.println("<br/>");
     }
 
@@ -284,11 +316,11 @@
 
     public void printerrln(String msg) throws Exception {
         printerr(msg);
-        out.print("<br>");
+        out.print("<br>"); //SIC! а printNextLine() у на зачем? который в println() переименовать надо
     }
 
     public void set_request_hints(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws IOException { //SIC! этому куску кода уже 15 лет, надо разобраться как сделать лучше, он еще для NN 4.x
         long enter_time = System.currentTimeMillis();
         long expire_time = enter_time + 24 * 60 * 60 * 1000;
         response.setHeader("Cache-Control", "No-cache");
@@ -301,7 +333,7 @@
         QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH");
     }
 
-    private String[] NAILED_RANGE_DESC = {
+    private String[] NAILED_RANGE_DESC = { //!SIC прибивать гвоздями плохо, просто 31-го очень к столу успеть хотелось
             "01000", "(Пример) - по каждому объекту (QR-коду) ведется отдельная страница",
             "0100A", "(Пример) здесь будет пример информации защищенной паролем",
             "0100F", "(Пример) здесь будет пример перенаправления на другие сайты",
@@ -369,26 +401,26 @@
     set_request_hints(request, response);
     long enter_time = System.currentTimeMillis();
     this.out = out;
+    String CMD = getRequestParameter(request, PARAM_CMD, CMD_MEMBERS);
 
     try {
-        CMD = request.getParameter("page");
-        if (CMD == null) {
-            CMD = "members";
-        }
-
-        read_parameters_from_web_xml();
+        read_parameters_from_web_xml(); //SIC! следующие 4 строки не в том порядке - раз, не защищают от пустого пути - два
         Members.setWayToDB(QRDB_PATH);
         if (QRDB_PATH == null) {
-            printerr("QRDB_PATH параметр не задан! отредактируйте WEB-INF/web.xml");
+            printerr("QRDB_PATH параметр не задан! отредактируйте WEB-INF/web.xml"); //SIC! а если он будет не из web.xml кто всмомнит это переписать?
         }
 
-        String[] parameters = {"member", "range", "zrid", "action"};
-        for (int i = 0; i < parameters.length; i++) {
+        String p_member = getRequestParameter(request,PARAM_MEMBER); // shell injection checed inside getRequestParameter
+        String p_range = getRequestParameter(request,PARAM_RANGE); // shell injection checed inside getRequestParameter
+        String p_ZRID = getRequestParameter(request,PARAM_ZRID);
+        String p_action = getRequestParameter(request,PARAM_ACTION);
+        String[] parameters = STD_REQUEST_PARAMETERS; // was: {"member", "range", "zrid", "action"};
+        for (int i = 0; i < parameters.length; i++) { // SIC! DEV_NULL этот блок кода уйдет в /dev/null и предыдущую строку возьмет с собой
             String parameter = request.getParameter(parameters[i]);
             if (parameter != null) {
                 if (parameter.contains("/") || parameter.contains("..")) {
                     tryHach = true;
-                    response.sendRedirect("editqrpage.jsp");
+                    response.sendRedirect("editqrpage.jsp"); //SIC! CGI_NAME у нас зачем ;)
                 } else {
                     tryHach = false;
                 }
@@ -396,36 +428,36 @@
         }
 
         switch (CMD) {
-            case "members":
+            case CMD_MEMBERS:
                 setMembersPage();
                 break;
-            case "ranges":
-                setRangePage(request.getParameter(parameters[0]));
+            case CMD_RANGES:
+                setRangePage(p_member);
                 break;
-            case "prodtable":
-                setProductsPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]));
+            case CMD_PRODTABLE:
+                setProductsPage(p_member, p_range);
                 break;
-            case "prodview":
-                setProdViewPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]), request.getParameter(parameters[2]));
+            case CMD_PRODVIEW:
+                setProdViewPage(p_member, p_range, p_ZRID);
                 break;
-            case "updateprod":
-                String action = request.getParameter(parameters[3]);
+            case CMD_UPDATE:
+                String action = p_action; //SIC! а теперь - упростить
                 if (ACTION_EDIT.equals(action))
-                    setUpdateProductPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]), request.getParameter(parameters[2]), request.getParameter(parameters[3]));
+                    setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
                 if (ACTION_NEWRECORD.equals(action))
-                    setNewRecordPage(request.getParameter(parameters[0]), request.getParameter(parameters[1]), request.getParameter(parameters[3]));
+                    setNewRecordPage(p_member, p_range, p_action);
                 if (ACTION_SAVE.equals(action)) {
                     Integer zrdsLength = zcsvFile.getRowObjects().size();
                     ZCSVRow newRow;
                     System.out.println("saved");
-                    if(request.getParameter(parameters[2]) == null || "null".equals(request.getParameter(parameters[2]))) {
+                    if(p_ZRID == null || "null".equals(p_ZRID)) {
                         newRow = new ZCSVRow();
                         newRow.setNames(namesMap);
                         newRow.setStringSpecificIndex(0, zrdsLength.toString());
                         newRow.setStringSpecificIndex(1, "1");
                     }
                     else {
-                        newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(request.getParameter(parameters[2])));
+                        newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID)); //!SIC а здесь NumberFormatException словить только так
                         System.out.println("New row checked");
                     }
 /*
@@ -438,14 +470,15 @@
                     }
                     zcsvFile.getRowObjects().add(newRow);
                     zcsvFile.appendChangedStringsToFile();
-                    out.print("Saved");*/
+                    out.print("Saved");
+*/
                 }
                 break;
             case "test":
                 out.print("Hello test page!");
                 break;
             default:
-                request.getRequestDispatcher("editqrpage.jsp?page=members").forward(request, response);
+                request.getRequestDispatcher("editqrpage.jsp?page=members").forward(request, response); //SIC! CGI_NAME у нас зачем ;) forward - в топку
                 break;
         }
     } catch (IOException ex) {
