@@ -11,26 +11,31 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class zcsvFileTest {
+    //public static final String DEFAULT_TESTDB_ROOT="/s/proj/yadzuka/edit.qr.qxyz.ru/jars/src/test/resources/";
+    public static final String DEFAULT_TESTDB_ROOT="./src/test/resources/";
+    public static final String TESTINGDATA_CSV="testingData.csv";
+    public static String getTestDBFileName(String file_name){ return(DEFAULT_TESTDB_ROOT + file_name); }
+    public static String getTestDBFileName(){return(getTestDBFileName("")); }
 
     @Test
     public void setPathTest() {
         ZCSVFile testingFile = new ZCSVFile();
-        testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData.csv");
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
         Assert.assertTrue(Files.exists(Paths.get(testingFile.toString())));
     }
 
     @Test
     public void getFileRowsLengthTest() throws Exception {
         ZCSVFile testingFile = new ZCSVFile();
-        testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData.csv");
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
         int stringsCounter = 0;
         String buffer;
         try {
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader
-                            (new FileInputStream("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/testingData.csv")
+                            (new FileInputStream(getTestDBFileName(TESTINGDATA_CSV))
                                     , StandardCharsets.UTF_8));
             while((buffer = reader.readLine()) != null){
                 if(buffer.startsWith("#") || buffer.trim().equals(""))
@@ -51,8 +56,8 @@ public class zcsvFileTest {
     @Test
     public void closeFileRightlyTest() throws Exception{
         ZCSVFile testingFile = new ZCSVFile();
-        testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData.csv");
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
         testingFile.tryOpenFile(0);
         try {
             Assert.assertTrue(testingFile.closeFile());
@@ -65,8 +70,8 @@ public class zcsvFileTest {
     @Test
     public void closeFileIncorrectlyTest() {
         ZCSVFile testingFile = new ZCSVFile();
-        testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData.csv");
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
         try {
             Assert.assertFalse(testingFile.closeFile());
         }catch (Exception ex){
@@ -78,15 +83,15 @@ public class zcsvFileTest {
     @Test
     public void loadFromFileRightlyTest() throws Exception{
         ZCSVFile testingFile = new ZCSVFile();
-        testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData.csv");
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
         testingFile.tryOpenFile(0);
         testingFile.loadFromFile();
         String buffer = null, testingRow = null;
         try {
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader
-                            (new FileInputStream("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/testingData.csv")
+                            (new FileInputStream(getTestDBFileName(TESTINGDATA_CSV))
                                     , StandardCharsets.UTF_8));
             while ((buffer = reader.readLine()) != null) {
                 if (!buffer.startsWith("#"))
@@ -106,14 +111,14 @@ public class zcsvFileTest {
     @Test
     public void tryAppendNewStringsToFileWhenClosedTetst() {
         ZCSVFile testingFile = new ZCSVFile();
-        testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData.csv");
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
         BufferedWriter writer = null;
         try{
         testingFile.tryOpenFile(0);
         writer = new BufferedWriter
                 (new OutputStreamWriter
-                        (new FileOutputStream("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/testingData.csv",true)
+                        (new FileOutputStream(getTestDBFileName(TESTINGDATA_CSV),true)
                                 , StandardCharsets.UTF_8));
             testingFile.tryFileLock();
             writer.write("CSDSD");
@@ -133,14 +138,14 @@ public class zcsvFileTest {
     @Test
     public void getRawObjectByIndexTest() {
         ZCSVFile testingFile = new ZCSVFile();
-        testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
-        testingFile.setFileName("testingData.csv");
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
         try {
             testingFile.tryOpenFile(0);
             testingFile.loadFromFileValidVersions();
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader
-                            (new FileInputStream("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/testingData.csv")
+                            (new FileInputStream(getTestDBFileName(TESTINGDATA_CSV))
                                     , StandardCharsets.UTF_8));
 
             ZCSVRow row = testingFile.getRowObjectByIndex(0);
@@ -170,7 +175,7 @@ public class zcsvFileTest {
         ZCSVFile testingFile = new ZCSVFile();
         ZCSVRow row;
         try {
-            testingFile.setRootPath("/s/proj/edit.qr.qxyz.ru/jars/src/test/resources/");
+            testingFile.setRootPath(getTestDBFileName());
             testingFile.setFileName("testingData");
             testingFile.tryOpenFile(1);
             testingFile.loadFromFile();
