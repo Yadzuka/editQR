@@ -34,7 +34,10 @@ usage:
 	@echo "  run - to run some testing code"
 	@echo "  clean - remove all constructed products"
 	@echo "  usage - for this message"
-all: depend build
+#all: depend build
+all:	
+	cd jars && mvn package
+	cp jars/target/jars-1.0-SNAPSHOT.jar webapps/EXAMPLESD/WEB-INF/lib/
 build:
 	@echo "-- buildng web application and everything it's depend on"
 	mkdir -p ${WORK_PATH}
