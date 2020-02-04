@@ -36,9 +36,9 @@
     public final static String CMD_UPDATE="updateprod";
     public final static String CMD_TEST="test";
 
-    private static boolean tryHach = false; //SIC! static - это на весь сервлет, который обслуживает всех пользователей
+    private boolean tryHack = false;
 
-    private static ZCSVFile zcsvFile; //SIC! static - это на весь сервлет, который обслуживает всех пользователей
+    private ZCSVFile zcsvFile;
     //private static String CMD; //SIC! static - это на весь сервлет, который обслуживает всех пользователей
     JspWriter out;
 
@@ -59,9 +59,9 @@
     } // getRequestParameter
 
     private void setMembersPage() throws Exception {
-        if (tryHach) { //!SIC не Hach а Hack раз, см SIC! к определению два
+        if (tryHack) { //!SIC не Hach а Hack раз, см SIC! к определению два
             out.print("<b>Bad game :)</b><br/> Don't try to hack us :)");
-            tryHach = false;
+            tryHack = false;
         }
 
         Members members = new Members();
@@ -70,7 +70,7 @@
         out.println("<table class=\"memberstable\" border=\"3\">");
         for (int i = 0; i < allRegisteredMembers.length; i++) {
             out.println("<tr>");
-            printTableElement("<a href=\'" + CGI_NAME + "?page=ranges&member=" + allRegisteredMembers[i] + "\'>" + allRegisteredMembers[i] + "</a>");
+            printCell("<a href=\'" + CGI_NAME + "?page=ranges&member=" + allRegisteredMembers[i] + "\'>" + allRegisteredMembers[i] + "</a>");
             out.println("</tr>");
         }
         out.println("</table>");
@@ -93,8 +93,8 @@
         for (int i = 0; i < allItems.length; i++) {
             String range = allItems[i];
             out.println("<tr>");
-            printTableElement("<a href=\'" + CGI_NAME + "?page=prodtable&member=" + member + "&range=" + range + "\'>" + range + "</a>");
-            printTableElement(getNailedRangDesc(range, "Диапазон: " + range));
+            printCell("<a href=\'" + CGI_NAME + "?page=prodtable&member=" + member + "&range=" + range + "\'>" + range + "</a>");
+            printCell(getNailedRangDesc(range, "Диапазон: " + range));
             out.println("</tr>");
         }
         out.println("</table>");
@@ -122,11 +122,11 @@
                     ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                     eachRow.setNames(namesMap);
                     out.println("<tr>");
-                    printTableElement(
+                    printCell(
                             "<a href=\'" + CGI_NAME + "?page=prodview&member=" + member + "&range=" + range + "&zrid=" + eachRow.get(0) + "\'>" +
                                     "<карточка>" + "</a>");
                     for (int j = 5; j < eachRow.getNames().length; j++) {
-                        printTableElement((eachRow.get(j) == null || "null".equals(eachRow.get(j)) ? "" : eachRow.get(j)));
+                        printCell((eachRow.get(j) == null || "null".equals(eachRow.get(j)) ? "" : eachRow.get(j)));
                     }
                     out.println("</tr>");
                 }
@@ -156,8 +156,8 @@
         out.print("<tr>");
         for (int i = 5; i < row.getNames().length; i++) {
             out.println("<tr>");
-            printTableElement((row.getNames()[i] == null) ? "" : row.getNames()[i]);
-            printTableElement((row.get(i) == null | "null".equals(row.get(i))) ? "" : row.get(i));
+            printCell((row.getNames()[i] == null) ? "" : row.getNames()[i]);
+            printCell((row.get(i) == null | "null".equals(row.get(i))) ? "" : row.get(i));
             out.println("</tr>");
         }
         out.println("</table>");
@@ -172,13 +172,13 @@
                         "page=updateprod&member=" + member + "&range=" + range + "&zrid=" + ZRID + "action=changenm",
                 });
         ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
-        printNextLine();
+        println();
         printUpdateTable(member, range, ZRID, action, row);
     }
 
     // SIC! ВНИМАТЕЛЬНО СМ НИЖЕ
     // SIC! printUpdateTable и printNewRecordTable надо объеденить в printEditForm() в них нет разницы,
-    // SIC! Старик Оккам завещал нам : "не плодите сущьностей, сверх необходимости" 
+    // SIC! Старик Оккам завещал нам : "не плодите сущностей, сверх необходимости" 
     // SIC! СМ ВЫШЕ 
     private void printUpdateTable(String member, String range, String ZRID, String action, ZCSVRow row) throws Exception {
         if (row != null) {
@@ -189,9 +189,9 @@
                 for (int i = 5; i < row.getNames().length; i++) {
                     String showingParameter = (row.get(i) == null || "null".equals(row.get(i))) ? "" : row.get(i);
                     if (!row.getNames()[i].toLowerCase().contains("комментарий")) {
-                        printTableString(new Object[]{row.getNames()[i], "<input type=\"text\" name=" + i + " value=" + showingParameter + ">"});
+                        printTableRow(new Object[]{row.getNames()[i], "<input type=\"text\" name=" + i + " value=" + showingParameter + ">"});
                     } else {
-                        printTableString(new Object[]{row.getNames()[i], "<textarea name=" + i + " " +
+                        printTableRow(new Object[]{row.getNames()[i], "<textarea name=" + i + " " +
                                 "rows=\"5\" cols='40'>" + showingParameter + "</textarea>"});
                     }
                 }
@@ -200,7 +200,18 @@
             } else
                 throw new ZCSVException("Names won't be setted! Call the system administramtor!");
         } else {
-            throw new Exception("Unknown exception"); // SIC! ммм просто Exception?
+            throw new Exception("Unknown exception"); // SIC! ммм просто Exception? - Может быть IOException, но не уверен... Тут завязана на ошибке, которая может возникнуть при написании через JSPWriter
+        }
+    }
+
+    private void printEditForm(String member, String range, String ZRID, String action) throws Exception {
+        if(ZRID == null || "null".equals(ZRID)){
+            
+        }else{
+            Integer numberOfRow = Integer.parseInt(ZRID);
+            ZCSVRow edittedRow = zcsvFile.editRowObjectByIndex(numberOfRow - 1);
+            
+            
         }
     }
 
@@ -212,10 +223,10 @@
                         "page=prodtable&member=" + member + "&range=" + range,
                         "page=updateprod&member=" + member + "&range=" + range + "action=changenm",
                 });
-        printNextLine();
+        println();
         printNewRecordTable(member, range, action);
     }
-
+    
     private void printNewRecordTable(String member, String range, String action) throws Exception {
         startCreateForm(member, range, action);
         printUpdatePageButtons();
@@ -223,9 +234,9 @@
         out.println("<table>");
         for (int i = 5; i < namesMap.length; i++) {
             if (!namesMap[i].toLowerCase().contains("комментарий")) {
-                printTableString(new Object[]{namesMap[i], "<input type='text' name=" + i + ">"}); //!SIC лучше i -> REC_PREFIX + i -> getFieldName(i)
+                printTableRow(new Object[]{namesMap[i], "<input type='text' name=" + i + ">"}); //!SIC лучше i -> REC_PREFIX + i -> getFieldName(i)
             } else {
-                printTableString(new Object[]{namesMap[i], "<textarea name=" + i + " " +
+                printTableRow(new Object[]{namesMap[i], "<textarea name=" + i + " " +
                         "rows='5' cols='40'> </textarea>"});
             }
         }
@@ -271,24 +282,24 @@
         out.println("<br/>");
     }
 
-    private void printProductsTableUpsideString(String... outputString) throws Exception { //SIC! а так можно? за это уже не сажают? ;)
+    private void printProductsTableUpsideString(String... outputString) throws Exception { //SIC! а так можно? за это уже не сажают? ;) - А раньше сажали? :)
         out.println("<tr>");
         for (int i = 4; i < outputString.length; i++) {
-            if (i == 4) printTableElement("Опции");
-            else printTableElement(outputString[i]);
+            if (i == 4) printCell("Опции");
+            else printCell(outputString[i]);
         }
         out.println("</tr>");
     }
 
-    private void printTableString(Object[] data) throws Exception { //SIC! printTableString -> printTabRow
+    private void printTableRow(Object[] data) throws Exception { 
         out.println("<tr>");
         for (int i = 0; i < data.length; i++) {
-            printTableElement(data[i]);
+            printCell(data[i]);
         }
         out.println("</tr>");
     }
 
-    private void printTableElement(Object tElement) throws IOException { //SIC! RENAME_IT printTableElement -> printCell
+    private void printCell(Object tElement) throws IOException { 
         out.println("<td>");
         out.println(obj2str(tElement));
         out.println("</td>");
@@ -305,8 +316,8 @@
     private String obj2str(Object obj) {
         return obj.toString(); //SIC! ой, а если obj == null  будет NullPointerException...
     }
-
-    public void printNextLine() throws Exception { //SIC! а println() было-бы короче и понятнее
+    
+    public void println() throws Exception {
         out.println("<br/>");
     }
 
@@ -316,7 +327,7 @@
 
     public void printerrln(String msg) throws Exception {
         printerr(msg);
-        out.print("<br>"); //SIC! а printNextLine() у на зачем? который в println() переименовать надо
+        println();
     }
 
     public void set_request_hints(HttpServletRequest request, HttpServletResponse response)
@@ -419,10 +430,10 @@
             String parameter = request.getParameter(parameters[i]);
             if (parameter != null) {
                 if (parameter.contains("/") || parameter.contains("..")) {
-                    tryHach = true;
+                    tryHack = true;
                     response.sendRedirect("editqrpage.jsp"); //SIC! CGI_NAME у нас зачем ;)
                 } else {
-                    tryHach = false;
+                    tryHack = false;
                 }
             }
         }
