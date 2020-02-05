@@ -11,6 +11,19 @@ public int str2int(String str){
 int i=-1; try{i=Integer.parseInt(str);}catch(java.lang.NumberFormatException nfe){}
 return(i);
 }
+
+public static final String SZ_EMPTY="";
+
+public boolean isDate(String date)
+{
+if(date == null) return(false);
+date=date.trim();
+if(date.equals("-")) date = SZ_EMPTY;
+if(date.equals("null")) date = SZ_EMPTY;
+if(date.equals("(null)")) date = SZ_EMPTY;
+return(!date.equals(SZ_EMPTY));
+} //isDate
+
 %>
 <%
 String CGI_NAME = null; try{ CGI_NAME=(String)request.getAttribute("CGI_NAME"); } catch(Exception e){} //it's ok! see before&after
@@ -68,6 +81,8 @@ TreeMap products = new TreeMap();
 TreeMap models = null;
 BigDecimal[] counts = null;
 BigDecimal all_money = BigDecimal.ZERO;
+BigDecimal all_money_sent = BigDecimal.ZERO;
+BigDecimal all_money_wait = BigDecimal.ZERO;
 
 			for(int i = availableContracts.size()-1; i >= 0; i--){
 
@@ -101,10 +116,13 @@ BigDecimal all_money = BigDecimal.ZERO;
 				String prodtype = msg.obj2text(bufferToPrintProperties.getPRODTYPE());
 				String model = msg.obj2text(bufferToPrintProperties.getMODEL());
 				String money = msg.obj2text(bufferToPrintProperties.getMoney());
+				String date_sent = msg.obj2text(bufferToPrintProperties.getDEPARTUREDATE());
 				models = (TreeMap)products.get(prodtype);
 				if(models == null){models = new TreeMap(); products.put(model,models);}
 				java.math.BigDecimal dec_money = msg.str2dec(money);
 				all_money = all_money.add(dec_money);
+				if(isDate(date_sent)) all_money_sent = all_money_sent.add(dec_money); 
+				else all_money_wait = all_money_wait.add(dec_money);
 		%>
 		
    		<tr>
@@ -131,18 +149,35 @@ BigDecimal all_money = BigDecimal.ZERO;
 			<td><%=msg.obj2html(bufferToPrintProperties.getCLIENT())%></td>
     		<td><%=msg.obj2html(bufferToPrintProperties.getSUPPLIER())%></td>
     		<td><%=msg.obj2html(bufferToPrintProperties.getMoney())%></td>
-    		<td><%=msg.obj2html(dec_money)%></td>
+    		<td><%=msg.obj2html(dec_money) + "&nbsp" + (isDate(date_sent)?"":"ждемс") %></td>
    		</tr>
 		<%
 			}
 		%>
-<tr><td colspan="8">Всего:</td>
-<td>
 <%
+//
+out.println("<tr><td colspan='7'>&nbsp;</td>");
+out.println("<td>");
+out.println("Отгружено:&nbsp;");
+out.println("</td><td>");
+out.println(all_money_sent);
+out.println("</td></tr>");
+//
+out.println("<tr><td colspan='7'>&nbsp;</td>");
+out.println("<td>");
+out.println("Ждемc:&nbsp;");
+out.println("</td><td>");
+out.println(all_money_wait);
+out.println("</td></tr>");
+//
+out.println("<tr><td colspan='7'>&nbsp;</td>");
+out.println("<td>");
+out.println("Всего:&nbsp;");
+out.println("</td><td>");
 out.println(all_money);
+out.println("</td></tr>");
 } //if
 %>
-</td></tr>
   	</table>
 <%
 %>
