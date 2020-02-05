@@ -8,7 +8,6 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import javax.imageio.ImageIO;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,22 +19,55 @@ import java.util.Hashtable;
 
 public class QRcodeServlet extends HttpServlet {
 
+    private final String P_CODING_STRING = "p_codingString";
+    private final String P_IMG_FORMAT = "p_imgFormat";
+    private final String P_IMG_SIZE = "p_imgSize";
+    private final String P_IMG_COLOR = "p_imgColor";
+    private final String [] PARAMETERS = {P_CODING_STRING, P_IMG_SIZE, P_IMG_COLOR};
+
+    private final String PNG_FORMAT = "PNG";
+    private final String JPG_FORMAT = "JPG";
+    private final String SVG_FORMAT = "SVG";
+    private final String [] IMG_FORMATS = {PNG_FORMAT,JPG_FORMAT,SVG_FORMAT};
+
+    private String codingString;
+    private String imgFormat;
+    private Color imgColor;
+    private int imgSize;
+
     //doGet method to create QR image (using engine/qr in jsp)
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+            throws  IOException, NumberFormatException {
         OutputStream str= resp.getOutputStream();
-        String codingString = req.getParameter("codingString");
-        String toQR = "http://qr.qxyz.ru/?q=" + codingString;
         try {
-            createQRImage(str,125,"PNG",toQR);
+            setParameters(req);
+
+            String toQR = "http://qr.qxyz.ru/?q=" + codingString + "&f=" + imgFormat + "&s=" + imgSize + "&c=" + imgColor;
+
+            createQRImage(str, imgSize, imgFormat, imgColor, toQR);
         } catch (WriterException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void setParameters(HttpServletRequest request) throws Exception {
+        codingString = request.getParameter(P_CODING_STRING);
+        imgSize = Integer.parseInt(request.getParameter(P_IMG_SIZE));
+        imgFormat = request.getParameter(P_IMG_FORMAT);
+        for(int i = 0; i < IMG_FORMATS.length; i++){
+            if(imgFormat.equals(IMG_FORMATS[i]))
+                break;
+            if(i == IMG_FORMATS.length - 1)
+                throw new Exception("Unrecognized format!");
+        }
+        imgColor = Color.getColor(request.getParameter(P_IMG_COLOR));
+    }
+
     // Main method to create qr image
-    public void createQRImage(OutputStream outStream, int size, String fileType,String qrCodeText)
+    public void createQRImage(OutputStream outStream, int size, String fileType, Color imgColor, String qrCodeText)
             throws WriterException, IOException {
         // Decoding context
         Hashtable<EncodeHintType, ErrorCorrectionLevel> hintMap = new Hashtable();
@@ -56,7 +88,7 @@ public class QRcodeServlet extends HttpServlet {
         graphics.fillRect(0, 0, matrixWidth, matrixWidth);
 
         // QR code color (black generally)
-        graphics.setColor(Color.BLACK);
+        graphics.setColor(imgColor);
         for (int i = 0; i < matrixWidth; i++) {
             for (int j = 0; j < matrixWidth; j++) {
                 if (byteMatrix.get(i, j)) {

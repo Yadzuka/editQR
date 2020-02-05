@@ -1,19 +1,26 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@
-        page import="java.util.*"
-             import="java.io.*"
-             import="org.eustrosoft.contractpkg.Controller.*"
-             import="org.eustrosoft.contractpkg.Model.*"
-             import="org.eustrosoft.contractpkg.zcsv.*"
-             import="java.text.SimpleDateFormat"
-             import="java.util.Date"
+<%@ page contentType="text/html;charset=UTF-8" language="java"
+         import="java.util.*"
+         import="java.io.*"
+         import="org.eustrosoft.contractpkg.Controller.*"
+         import="org.eustrosoft.contractpkg.Model.*"
+         import="org.eustrosoft.contractpkg.zcsv.*"
+         import="java.text.SimpleDateFormat"
+         import="java.util.Date"
+         import="java.nio.file.Paths"
+         import="java.nio.file.Files"
 %>
-<%@ page import="java.nio.file.Paths" %>
-<%@ page import="java.nio.file.Files" %>
+
 <%!
+    /// T - table
+
     private static final String CGI_NAME = "editqrpage.jsp";
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий";
     private final static String JSP_VERSION = "$id$";
+
+    private final String DB_FILENAME = "master.list.csv";
+
+    private final String SZ_NULL = "null";
+
     public final String ACTION_EDIT = "edit";
     public final String ACTION_CREATE = "create";
     public final String ACTION_NEWRECORD = "new";
@@ -21,13 +28,14 @@
     public final String ACTION_REFRESH = "refresh";
     public final String ACTION_CANCEL = "cancel";
     public final String ACTION_GENERATEQR = "genqr";
+    public final String ACTION_CHANGENAMEMAP = "changenamemap";
     // constants for request paremeters
-    public final static String PARAM_CMD="page"; // SIC! RENAME_IT : правда странно, когда PARAM_CMD!="cmd"
+    public final static String PARAM_CMD="cmd"; // SIC! RENAME_IT : правда странно, когда PARAM_CMD!="cmd"
     public final static String PARAM_MEMBER="member";
     public final static String PARAM_RANGE="range";
     public final static String PARAM_ZRID="zrid";
     public final static String PARAM_ACTION="action";
-    public final static String[] STD_REQUEST_PARAMETERS = {PARAM_MEMBER,PARAM_RANGE,PARAM_ZRID,PARAM_ACTION };
+    public final static String[] STD_REQUEST_PARAMETERS = {PARAM_CMD, PARAM_MEMBER,PARAM_RANGE,PARAM_ZRID,PARAM_ACTION };
     // constants for CMD
     public final static String CMD_MEMBERS="members";
     public final static String CMD_RANGES="ranges";
@@ -35,53 +43,58 @@
     public final static String CMD_PRODVIEW="prodview";
     public final static String CMD_UPDATE="updateprod";
     public final static String CMD_TEST="test";
-
-    private boolean tryHack = false;
+    private final static String [] CMD_PARAMETERS = {CMD_MEMBERS,CMD_RANGES,CMD_PRODTABLE,CMD_PRODVIEW,CMD_UPDATE,CMD_TEST};
 
     private ZCSVFile zcsvFile;
-    //private static String CMD; //SIC! static - это на весь сервлет, который обслуживает всех пользователей
-    JspWriter out;
+    private String QRDB_PATH = null;
+    private JspWriter out;
+    private String[] namesMap = new String[]
+            {"ZRID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR  код", "№ договора", "Дата договора",
+                    "Деньги по договору", "Юр-лицо поставщик", "Юр-лицо клиент", "Тип продукта", "Модель продукта",
+                    "SN", "Дата производства", "Дата ввоза (ГТД)",
+                    "Дата продажи", "Дата отправки клиенту", "Дата начала гарантии",
+                    "Дата окончания гарантии", "Комментарий (для клиента)"};
 
-    private String QRDB_PATH = null; //SIC! а не статик общий для экземпляра, который тоже может обслуживать всех пользователей
 
-    private String getRequestParameter(ServletRequest request, String param) {return(getRequestParameter(request,param,null));}
+    private String getRequestParameter(ServletRequest request, String param) {
+        return(getRequestParameter(request,param,null));
+    }
+
     private String getRequestParameter(ServletRequest request, String param, String default_value)
     {
      String value = request.getParameter(param);
-     if(value==null) value = default_value;
-     if(value==null) return(null); // null is valid, no check requred
-     switch(param){ // check for shell injections attack
-      case PARAM_MEMBER: 
-      case PARAM_RANGE: 
-        if (value.contains("/") || value.contains("..")) { throw new RuntimeException("shell injection detected"); } //!SIC надо облагородить потом
-     }
-     return(value);
-    } // getRequestParameter
+
+     if(value==null)
+         value = default_value;
+     if(value==null)
+         return(null);
+     switch(param) {
+        case PARAM_MEMBER:
+        case PARAM_RANGE:
+            if (checkShellInjection(value)) { throw new RuntimeException("Shell injection detected"); } // SIC!
+        }
+        return(value);
+    }
 
     private void setMembersPage() throws Exception {
-        if (tryHack) { //!SIC не Hach а Hack раз, см SIC! к определению два
-            out.print("<b>Bad game :)</b><br/> Don't try to hack us :)");
-            tryHack = false;
-        }
-
         Members members = new Members();
         String[] allRegisteredMembers = members.getCompanyNames();
 
-        out.println("<table class=\"memberstable\" border=\"3\">");
+        beginT();
         for (int i = 0; i < allRegisteredMembers.length; i++) {
-            out.println("<tr>");
-            printCell("<a href=\'" + CGI_NAME + "?page=ranges&member=" + allRegisteredMembers[i] + "\'>" + allRegisteredMembers[i] + "</a>");
-            out.println("</tr>");
+            beginTRow();
+            printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_RANGES, allRegisteredMembers[i]) + "\'>" + allRegisteredMembers[i] + "</a>");
+            endTRow();
         }
-        out.println("</table>");
+        endT();
     }
 
-    private void setRangePage(String member) throws Exception {
+    private void setRangesPage(String member) throws Exception {
         printUpsideMenu(
                 new String[]{
                         "Назад",
                 }, new String[]{
-                        "page=members",
+                        getRequestParamsURL(CMD_MEMBERS),
                 });
 
         RangesController rController = new RangesController(member);
@@ -92,25 +105,26 @@
         out.println("<table><tr><th>Диапазон</th><th>Описание</th>");
         for (int i = 0; i < allItems.length; i++) {
             String range = allItems[i];
-            out.println("<tr>");
-            printCell("<a href=\'" + CGI_NAME + "?page=prodtable&member=" + member + "&range=" + range + "\'>" + range + "</a>");
+            beginTRow();
+            printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, member, range) + "\'>" + range + "</a>");
             printCell(getNailedRangDesc(range, "Диапазон: " + range));
-            out.println("</tr>");
+            endTRow();
         }
-        out.println("</table>");
+        beginT();
     }
 
     private void setProductsPage(String member, String range) throws Exception {
         printUpsideMenu(
                 new String[]{
-                        "Назад", "Создать новую запись",
+                        "Назад",
+                        "Создать новую запись",
                 }, new String[]{
-                        "page=ranges&member=" + member,
-                        "page=updateprod&member=" + member + "&range=" + range + "&action=new"
+                        getRequestParamsURL(CMD_RANGES , member),
+                        getRequestParamsURL(CMD_UPDATE , member, range, SZ_NULL, ACTION_NEWRECORD),
                 });
 
         String rootPath = Members.getWayToDB() + member + "/" + range + "/";
-        zcsvFile = setupZCSVPaths(rootPath, "master.list.csv");
+        zcsvFile = setupZCSVPaths(rootPath, DB_FILENAME);
 
         if (Files.exists(Paths.get(zcsvFile.toString()))) {
             if (zcsvFile.tryOpenFile(1)) {
@@ -121,16 +135,15 @@
                 for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
                     ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                     eachRow.setNames(namesMap);
-                    out.println("<tr>");
-                    printCell(
-                            "<a href=\'" + CGI_NAME + "?page=prodview&member=" + member + "&range=" + range + "&zrid=" + eachRow.get(0) + "\'>" +
+                    beginTRow();
+                    printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i)) + "\'>" +
                                     "<карточка>" + "</a>");
                     for (int j = 5; j < eachRow.getNames().length; j++) {
-                        printCell((eachRow.get(j) == null || "null".equals(eachRow.get(j)) ? "" : eachRow.get(j)));
+                        printCell((eachRow.get(j) == null || SZ_NULL.equals(eachRow.get(j)) ? "" : eachRow.get(j)));
                     }
-                    out.println("</tr>");
+                    endTRow();
                 }
-                out.println("</table>");
+                beginT();
             } else {
                 printerr("Can't open file! Call the system administrator!");
             }
@@ -142,107 +155,98 @@
     private void setProdViewPage(String member, String range, String ZRID) throws Exception {
         printUpsideMenu(
                 new String[]{
-                        "Назад", "Изменить запись",
+                        "Назад",
+                        "Изменить запись",
                 }, new String[]{
-                        "page=prodtable&member=" + member + "&range=" + range,
-                        "page=updateprod&member=" + member + "&range=" + range + "&zrid=" + ZRID + "&action=edit"
+                        getRequestParamsURL(CMD_PRODTABLE, member, range),
+                        getRequestParamsURL(CMD_UPDATE, member, range, ZRID, ACTION_EDIT),
                 });
 
-        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
+        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID));
 
-        out.println("<table>");
-        out.print("<tr>");
+        beginT();
+        beginTRow();
         out.print("<img src=\"engine/qr?codingString=" + row.get(5) + "\">");
-        out.print("<tr>");
+        beginTRow();
         for (int i = 5; i < row.getNames().length; i++) {
-            out.println("<tr>");
+            beginTRow();
             printCell((row.getNames()[i] == null) ? "" : row.getNames()[i]);
-            printCell((row.get(i) == null | "null".equals(row.get(i))) ? "" : row.get(i));
-            out.println("</tr>");
+            printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : row.get(i));
+            endTRow();
         }
-        out.println("</table>");
+        beginT();
     }
 
     private void setUpdateProductPage(String member, String range, String ZRID, String action) throws Exception {
         printUpsideMenu(
                 new String[]{
-                        "Назад", "change name map(Experimental)"
+                        "Назад",
+                        "change name map(Experimental)",
                 }, new String[]{
-                        "page=prodview&member=" + member + "&range=" + range + "&zrid=" + ZRID,
-                        "page=updateprod&member=" + member + "&range=" + range + "&zrid=" + ZRID + "action=changenm",
+                        getRequestParamsURL(CMD_PRODVIEW, member, range, ZRID),
+                        getRequestParamsURL(CMD_UPDATE , member, range, ZRID, ACTION_CHANGENAMEMAP),
                 });
-        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
-        println();
-        printUpdateTable(member, range, ZRID, action, row);
-    }
 
-    // SIC! ВНИМАТЕЛЬНО СМ НИЖЕ
-    // SIC! printUpdateTable и printNewRecordTable надо объеденить в printEditForm() в них нет разницы,
-    // SIC! Старик Оккам завещал нам : "не плодите сущностей, сверх необходимости" 
-    // SIC! СМ ВЫШЕ 
-    private void printUpdateTable(String member, String range, String ZRID, String action, ZCSVRow row) throws Exception {
-        if (row != null) {
-            if (row.getNames() != null) {
-                startUpdateForm(member, range, ZRID, action);
-                printUpdatePageButtons();
-                out.println("<table>");
-                for (int i = 5; i < row.getNames().length; i++) {
-                    String showingParameter = (row.get(i) == null || "null".equals(row.get(i))) ? "" : row.get(i);
-                    if (!row.getNames()[i].toLowerCase().contains("комментарий")) {
-                        printTableRow(new Object[]{row.getNames()[i], "<input type=\"text\" name=" + i + " value=" + showingParameter + ">"});
-                    } else {
-                        printTableRow(new Object[]{row.getNames()[i], "<textarea name=" + i + " " +
-                                "rows=\"5\" cols='40'>" + showingParameter + "</textarea>"});
-                    }
-                }
-                out.println("</table>");
-                endForm();
-            } else
-                throw new ZCSVException("Names won't be setted! Call the system administramtor!");
-        } else {
-            throw new Exception("Unknown exception"); // SIC! ммм просто Exception? - Может быть IOException, но не уверен... Тут завязана на ошибке, которая может возникнуть при написании через JSPWriter
-        }
-    }
-
-    private void printEditForm(String member, String range, String ZRID, String action) throws Exception {
-        if(ZRID == null || "null".equals(ZRID)){
-            
-        }else{
-            Integer numberOfRow = Integer.parseInt(ZRID);
-            ZCSVRow edittedRow = zcsvFile.editRowObjectByIndex(numberOfRow - 1);
-            
-            
-        }
+        printEditForm(member, range, ZRID, action);
     }
 
     private void setNewRecordPage(String member, String range, String action) throws Exception {
         printUpsideMenu(
                 new String[]{
-                        "Назад", "change name map(Experimental)"
+                        "Назад",
+                        "change name map(Experimental)",
                 }, new String[]{
-                        "page=prodtable&member=" + member + "&range=" + range,
-                        "page=updateprod&member=" + member + "&range=" + range + "action=changenm",
+                        getRequestParamsURL(CMD_PRODTABLE, member, range),
+                        getRequestParamsURL(CMD_UPDATE, member, range, null, ACTION_CHANGENAMEMAP),
                 });
         println();
-        printNewRecordTable(member, range, action);
+        printEditForm(member, range,null, action);
     }
-    
-    private void printNewRecordTable(String member, String range, String action) throws Exception {
-        startCreateForm(member, range, action);
-        printUpdatePageButtons();
 
-        out.println("<table>");
-        for (int i = 5; i < namesMap.length; i++) {
-            if (!namesMap[i].toLowerCase().contains("комментарий")) {
-                printTableRow(new Object[]{namesMap[i], "<input type='text' name=" + i + ">"}); //!SIC лучше i -> REC_PREFIX + i -> getFieldName(i)
+    private void printEditForm(String member, String range, String ZRID, String action) throws Exception {
+        if(ZRID == null || SZ_NULL.equals(ZRID)){
+            startCreateForm(member, range, action);
+            printUpdatePageButtons();
+
+            beginT();
+            for (int i = 5; i < namesMap.length; i++) {
+                if (!namesMap[i].toLowerCase().contains("комментарий")) {
+                    printTRow(new Object[]{namesMap[i], "<input type='text' name=" + i + ">"}); //!SIC лучше i -> REC_PREFIX + i -> getFieldName(i)
+                } else {
+                    printTRow(new Object[]{namesMap[i], "<textarea name=" + i + " " +
+                            "rows='5' cols='40'> </textarea>"});
+                }
+            }
+            endT();
+            endForm();
+        }else{
+            Integer numberOfRow = Integer.parseInt(ZRID);
+            ZCSVRow edittedRow = zcsvFile.editRowObjectByIndex(numberOfRow - 1);
+
+            if (edittedRow != null) {
+                if (edittedRow.getNames() != null) {
+                    startUpdateForm(member, range, ZRID, action);
+                    printUpdatePageButtons();
+                    beginT();
+                    for (int i = 5; i < edittedRow.getNames().length; i++) {
+                        String showingParameter = (edittedRow.get(i) == null || SZ_NULL.equals(edittedRow.get(i))) ? "" : edittedRow.get(i);
+                        if (!edittedRow.getNames()[i].toLowerCase().contains("комментарий")) {
+                            printTRow(new Object[]{edittedRow.getNames()[i], "<input type=\"text\" name=" + i + " value=" + showingParameter + ">"});
+                        } else {
+                            printTRow(new Object[]{edittedRow.getNames()[i], "<textarea name=" + i + " " +
+                                    "rows=\"5\" cols='40'>" + showingParameter + "</textarea>"});
+                        }
+                    }
+                    beginT();
+                    endForm();
+                } else
+                    throw new ZCSVException("Names won't be setted! Call the system administramtor!");
             } else {
-                printTableRow(new Object[]{namesMap[i], "<textarea name=" + i + " " +
-                        "rows='5' cols='40'> </textarea>"});
+                throw new Exception("Unknown exception");
             }
         }
-        out.println("</table>");
-        endForm();
     }
+
 
     private void printUpdatePageButtons() throws Exception {
         out.print("<input type=\"submit\" name=\"cancel\" value=\"Отмена\"/>&nbsp;");
@@ -252,12 +256,12 @@
 
     private void startCreateForm(String member, String range, String action) throws Exception {
         action = "save"; // !SIC строка внизу + member -> + encode_url_value(member) -> + euv(member) и так везде надо
-        out.println("<form action=\"" + CGI_NAME + "?page=updateprod&member=" + member + "&range=" + range + "&action=" + action + "\" method=\"POST\">");
+        out.println("<form action=\"" + getRequestParamsURL(CGI_NAME,CMD_UPDATE,member,range, null,action) + "\" method=\"POST\">");
     }
 
     private void startUpdateForm(String member, String range, String ZRID, String action) throws Exception {
         action = "save";
-        out.println("<form action=\"" + CGI_NAME + "?page=updateprod&member=" + member + "&range=" + range + "&zrid=" + ZRID + "&action=" + action + "\" method=\"POST\">");
+        out.println("<form action=\"" + getRequestParamsURL(CGI_NAME,CMD_UPDATE,member,range,ZRID,action) + "\" method=\"POST\">");
     }
 
     private void endForm() throws Exception {
@@ -271,7 +275,7 @@
         return file;
     }
 
-    private void printUpsideMenu(String[] menuItems, String[] menuReferences) throws IOException {
+    private void printUpsideMenu(String[] menuItems, String[] menuReferences) throws IOException, Exception {
         out.println("<ul>");
         for (int i = 0; i < menuItems.length; i++) {
             out.print("<li>");
@@ -279,34 +283,80 @@
             out.print("</li>");
         }
         out.println("</ul>");
-        out.println("<br/>");
+        println();
     }
 
-    private void printProductsTableUpsideString(String... outputString) throws Exception { //SIC! а так можно? за это уже не сажают? ;) - А раньше сажали? :)
-        out.println("<tr>");
+    private void printProductsTableUpsideString(String... outputString) throws Exception {
+        beginTRow();
         for (int i = 4; i < outputString.length; i++) {
             if (i == 4) printCell("Опции");
             else printCell(outputString[i]);
         }
-        out.println("</tr>");
+        endTRow();
     }
 
-    private void printTableRow(Object[] data) throws Exception { 
-        out.println("<tr>");
-        for (int i = 0; i < data.length; i++) {
-            printCell(data[i]);
-        }
-        out.println("</tr>");
-    }
-
-    private void printCell(Object tElement) throws IOException { 
+    private void beginTCell() throws Exception {
         out.println("<td>");
-        out.println(obj2str(tElement));
+    }
+
+    private void endTCell() throws Exception {
         out.println("</td>");
     }
 
+    private void beginTRow() throws Exception {
+        out.println("<tr>");
+    }
+
+    private void endTRow() throws Exception {
+        out.println("</tr>");
+    }
+
+    private void beginT() throws Exception {
+        out.print("<table>");
+    }
+
+    private void endT() throws Exception {
+        out.println("</table>");
+    }
+
+    private void printCell(Object tElement) throws IOException, Exception {
+        beginTCell();
+        out.println(obj2str(tElement));
+        endTCell();
+    }
+
+    private void printTRow(Object[] data) throws Exception {
+        beginTRow();
+        for (int i = 0; i < data.length; i++) {
+            printCell(data[i]);
+        }
+        endTRow();
+    }
+
+    private String getRequestParamsURL(String ... params){
+        if(params == null)
+            return (null);
+        StringBuffer buffer = new StringBuffer();
+        int i = 0;
+        if(CGI_NAME.equals(params[0])) {
+            buffer.append(CGI_NAME + "?");
+            i++;
+        }
+        for( int j = 0; i < params.length; i++, j++){
+            if(i != params.length - 1)
+                buffer.append(STD_REQUEST_PARAMETERS[j] +"=" + params[i] + "&");
+            else
+                buffer.append(STD_REQUEST_PARAMETERS[j] + "=" + params[i]);
+        }
+        return buffer.toString();
+    }
+
+    private boolean checkShellInjection(String parameter){
+        return parameter.contains("..");
+    }
+
     public static String getCurrentDate4ZDATE() throws Exception {
-        return (new SimpleDateFormat("y-MM-dd HH:mm:ss Z").format(new Date()));
+        return (new SimpleDateFormat("y-MM-dd HH:mm:ss").format(new Date()));
     }
 
     public static String getRequestUser4ZUID(HttpServletRequest request) throws Exception{
@@ -314,9 +364,11 @@
     }
 
     private String obj2str(Object obj) {
-        return obj.toString(); //SIC! ой, а если obj == null  будет NullPointerException...
+        if(obj == null)
+            obj = "";
+        return obj.toString();
     }
-    
+
     public void println() throws Exception {
         out.println("<br/>");
     }
@@ -343,7 +395,6 @@
     private void read_parameters_from_web_xml() {
         QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH");
     }
-
     private String[] NAILED_RANGE_DESC = { //!SIC прибивать гвоздями плохо, просто 31-го очень к столу успеть хотелось
             "01000", "(Пример) - по каждому объекту (QR-коду) ведется отдельная страница",
             "0100A", "(Пример) здесь будет пример информации защищенной паролем",
@@ -370,12 +421,6 @@
             "FFFF", ""
     };
 
-    private String[] namesMap = new String[]
-            {"ZRID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR  код", "№ договора", "Дата договора",
-                    "Деньги по договору", "Юр-лицо поставщик", "Юр-лицо клиент", "Тип продукта", "Модель продукта",
-                    "SN", "Дата производства", "Дата ввоза (ГТД)",
-                    "Дата продажи", "Дата отправки клиенту", "Дата начала гарантии",
-                    "Дата окончания гарантии", "Комментарий (для клиента)"};
 
     public String getNailedRangDesc(String r, String desc) {
         int i = 0;
@@ -403,7 +448,7 @@
 <hr>
 <div>
     <a href='<%= CGI_NAME %>'>Начало</a>&nbsp;
-    <a href='<%= CGI_NAME %>?page=test'>Тест</a>&nbsp;
+    <a href='<%= CGI_NAME %>?cmd=test'>Тест</a>&nbsp;
     <a href='test.jsp'>test.jsp</a>&nbsp;
     <!--
     -->
@@ -415,35 +460,24 @@
     String CMD = getRequestParameter(request, PARAM_CMD, CMD_MEMBERS);
 
     try {
-        read_parameters_from_web_xml(); //SIC! следующие 4 строки не в том порядке - раз, не защищают от пустого пути - два
-        Members.setWayToDB(QRDB_PATH);
+        read_parameters_from_web_xml();
         if (QRDB_PATH == null) {
-            printerr("QRDB_PATH параметр не задан! отредактируйте WEB-INF/web.xml"); //SIC! а если он будет не из web.xml кто всмомнит это переписать?
+            printerr("Путь к базе данных не задан!");
+            throw new ZCSVException("Не задан параметр пути к базе данных.");
         }
+        Members.setWayToDB(QRDB_PATH);
 
-        String p_member = getRequestParameter(request,PARAM_MEMBER); // shell injection checed inside getRequestParameter
-        String p_range = getRequestParameter(request,PARAM_RANGE); // shell injection checed inside getRequestParameter
+        String p_member = getRequestParameter(request,PARAM_MEMBER); // Check to SI
+        String p_range = getRequestParameter(request,PARAM_RANGE); // Check to SI
         String p_ZRID = getRequestParameter(request,PARAM_ZRID);
         String p_action = getRequestParameter(request,PARAM_ACTION);
-        String[] parameters = STD_REQUEST_PARAMETERS; // was: {"member", "range", "zrid", "action"};
-        for (int i = 0; i < parameters.length; i++) { // SIC! DEV_NULL этот блок кода уйдет в /dev/null и предыдущую строку возьмет с собой
-            String parameter = request.getParameter(parameters[i]);
-            if (parameter != null) {
-                if (parameter.contains("/") || parameter.contains("..")) {
-                    tryHack = true;
-                    response.sendRedirect("editqrpage.jsp"); //SIC! CGI_NAME у нас зачем ;)
-                } else {
-                    tryHack = false;
-                }
-            }
-        }
 
         switch (CMD) {
             case CMD_MEMBERS:
                 setMembersPage();
                 break;
             case CMD_RANGES:
-                setRangePage(p_member);
+                setRangesPage(p_member);
                 break;
             case CMD_PRODTABLE:
                 setProductsPage(p_member, p_range);
@@ -452,16 +486,15 @@
                 setProdViewPage(p_member, p_range, p_ZRID);
                 break;
             case CMD_UPDATE:
-                String action = p_action; //SIC! а теперь - упростить
-                if (ACTION_EDIT.equals(action))
+                if (ACTION_EDIT.equals(p_action))
                     setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
-                if (ACTION_NEWRECORD.equals(action))
+                if (ACTION_NEWRECORD.equals(p_action))
                     setNewRecordPage(p_member, p_range, p_action);
-                if (ACTION_SAVE.equals(action)) {
+                if (ACTION_SAVE.equals(p_action)) {
                     Integer zrdsLength = zcsvFile.getRowObjects().size();
                     ZCSVRow newRow;
                     System.out.println("saved");
-                    if(p_ZRID == null || "null".equals(p_ZRID)) {
+                    if(p_ZRID == null || SZ_NULL.equals(p_ZRID)) {
                         newRow = new ZCSVRow();
                         newRow.setNames(namesMap);
                         newRow.setStringSpecificIndex(0, zrdsLength.toString());
@@ -471,9 +504,9 @@
                         newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID)); //!SIC а здесь NumberFormatException словить только так
                         System.out.println("New row checked");
                     }
-/*
-                    newRow.setStringSpecificIndex(2, new Date().toString());
-                    newRow.setStringSpecificIndex(3, request.getRemoteUser().toString());
+
+                    newRow.setStringSpecificIndex(2, getCurrentDate4ZDATE());
+                    newRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
                     newRow.setStringSpecificIndex(4, "N");
 
                     for (Integer i = 5; i < namesMap.length; i++) {
@@ -482,28 +515,27 @@
                     zcsvFile.getRowObjects().add(newRow);
                     zcsvFile.appendChangedStringsToFile();
                     out.print("Saved");
-*/
                 }
                 break;
             case "test":
                 out.print("Hello test page!");
                 break;
             default:
-                request.getRequestDispatcher("editqrpage.jsp?page=members").forward(request, response); //SIC! CGI_NAME у нас зачем ;) forward - в топку
+                response.sendRedirect("editqrpage.jsp");
                 break;
         }
     } catch (IOException ex) {
-        if (ex.getMessage() != null && !("null".equals(ex.getMessage())))
+        if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
             out.println(ex.getMessage() + "Call the system administrator please.");
         else
             out.println("IO unexpected error occered! Call the system administrator please.");
     } catch (ZCSVException ex) {
-        if (ex.getMessage() != null && !("null".equals(ex.getMessage())))
+        if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
             out.println(ex.printError() + "Call the system administrator please.");
         else
             out.println("ZCSV unexpected error occered! Call the system administrator please.");
     } catch (Exception ex) {
-        if (ex.getMessage() != null && !("null".equals(ex.getMessage())))
+        if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
             out.print(ex.getMessage() + "Call the system administrator please.");
         else
             out.println("Unexpected error occured! Call the system administrator please.");
