@@ -22,7 +22,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>qrServlet</servlet-name>
-        <url-pattern>/engine/qr</url-pattern>
+        <url-pattern>/qr</url-pattern>
     </servlet-mapping>
 
 </web-app>

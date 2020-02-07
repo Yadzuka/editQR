@@ -15,9 +15,12 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Hashtable;
 
 public class QRcodeServlet extends HttpServlet {
+
+    private final String CODDING_SITE = "http://qr.qxyz.ru/?q=";
 
     private final String P_CODING_STRING = "p_codingString";
     private final String P_IMG_FORMAT = "p_imgFormat";
@@ -28,12 +31,17 @@ public class QRcodeServlet extends HttpServlet {
     private final String PNG_FORMAT = "PNG";
     private final String JPG_FORMAT = "JPG";
     private final String SVG_FORMAT = "SVG";
-    private final String [] IMG_FORMATS = {PNG_FORMAT,JPG_FORMAT,SVG_FORMAT};
+    private final String ESP_FORMAT = "ESP";
+    private final String PDF_FORMAT = "PDF";
+    private final String GIF_FORMAT = "GIF";
+    private final String APNG_FORMAT = "APNG";
 
-    private String codingString;
-    private String imgFormat;
-    private Color imgColor;
-    private int imgSize;
+    private final String [] IMG_FORMATS = {PNG_FORMAT,JPG_FORMAT,SVG_FORMAT, ESP_FORMAT, PDF_FORMAT, GIF_FORMAT, APNG_FORMAT};
+
+    private String codingParameter;
+    private String imgFormat = PNG_FORMAT;
+    private Color imgColor = Color.decode("0x00FF00");
+    private int imgSize = 125;
 
     //doGet method to create QR image (using engine/qr in jsp)
     @Override
@@ -42,28 +50,29 @@ public class QRcodeServlet extends HttpServlet {
         OutputStream str= resp.getOutputStream();
         try {
             setParameters(req);
-
-            String toQR = "http://qr.qxyz.ru/?q=" + codingString + "&f=" + imgFormat + "&s=" + imgSize + "&c=" + imgColor;
-
+            String toQR = CODDING_SITE + codingParameter;
             createQRImage(str, imgSize, imgFormat, imgColor, toQR);
-        } catch (WriterException e) {
-            e.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
+            PrintWriter writer = new PrintWriter(str);
+            writer.println("Unrecognized format!");
+            writer.flush();
+            writer.close();
         }
     }
 
     private void setParameters(HttpServletRequest request) throws Exception {
-        codingString = request.getParameter(P_CODING_STRING);
+        codingParameter= request.getParameter(P_CODING_STRING);
         imgSize = Integer.parseInt(request.getParameter(P_IMG_SIZE));
         imgFormat = request.getParameter(P_IMG_FORMAT);
+        imgColor = Color.decode(request.getParameter(P_IMG_COLOR));
         for(int i = 0; i < IMG_FORMATS.length; i++){
-            if(imgFormat.equals(IMG_FORMATS[i]))
+            if(imgFormat.equals(IMG_FORMATS[i])) {
                 break;
-            if(i == IMG_FORMATS.length - 1)
+            }
+            if(i == IMG_FORMATS.length - 1) {
                 throw new Exception("Unrecognized format!");
+            }
         }
-        imgColor = Color.getColor(request.getParameter(P_IMG_COLOR));
     }
 
     // Main method to create qr image
@@ -98,6 +107,7 @@ public class QRcodeServlet extends HttpServlet {
         }
         // Writing image finally
         ImageIO.write(image, fileType, outStream);
+
     }
 
 }

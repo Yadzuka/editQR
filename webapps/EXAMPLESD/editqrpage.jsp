@@ -9,7 +9,6 @@
          import="java.nio.file.Paths"
          import="java.nio.file.Files"
 %>
-
 <%!
     /// T - table
 
@@ -18,7 +17,6 @@
     private final static String JSP_VERSION = "$id$";
 
     private final String DB_FILENAME = "master.list.csv";
-
     private final String SZ_NULL = "null";
 
     public final String ACTION_EDIT = "edit";
@@ -63,7 +61,6 @@
     private String getRequestParameter(ServletRequest request, String param, String default_value)
     {
      String value = request.getParameter(param);
-
      if(value==null)
          value = default_value;
      if(value==null)
@@ -138,12 +135,13 @@
                     beginTRow();
                     printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i)) + "\'>" +
                                     "<карточка>" + "</a>");
-                    for (int j = 5; j < eachRow.getNames().length; j++) {
-                        printCell((eachRow.get(j) == null || SZ_NULL.equals(eachRow.get(j)) ? "" : eachRow.get(j)));
+                    for (int j = 5; j < namesMap.length; j++) {
+                        String wroteString = (eachRow.get(j) == null || SZ_NULL.equals(eachRow.get(j))) ? "" : eachRow.get(j);
+                        printCell(wroteString);
                     }
                     endTRow();
                 }
-                beginT();
+                endT();
             } else {
                 printerr("Can't open file! Call the system administrator!");
             }
@@ -166,7 +164,10 @@
 
         beginT();
         beginTRow();
-        out.print("<img src=\"engine/qr?codingString=" + row.get(5) + "\">");
+        printCell("QR картинка:");
+        beginTCell();
+        out.print("<img src=\"qr?p_codingString=" + row.get(5) + "&p_imgFormat=GIF&p_imgSize=150&p_imgColor=0xFF00FF\"/>");
+        endTCell();
         beginTRow();
         for (int i = 5; i < row.getNames().length; i++) {
             beginTRow();
@@ -264,9 +265,7 @@
         out.println("<form action=\"" + getRequestParamsURL(CGI_NAME,CMD_UPDATE,member,range,ZRID,action) + "\" method=\"POST\">");
     }
 
-    private void endForm() throws Exception {
-        out.println("</form>");
-    }
+    private void endForm() throws Exception { out.println("</form>"); }
 
     private ZCSVFile setupZCSVPaths(String rootPath, String fileName) {
         ZCSVFile file = new ZCSVFile();
@@ -295,29 +294,17 @@
         endTRow();
     }
 
-    private void beginTCell() throws Exception {
-        out.println("<td>");
-    }
+    private void beginTCell() throws Exception { out.println("<td>"); }
 
-    private void endTCell() throws Exception {
-        out.println("</td>");
-    }
+    private void endTCell() throws Exception { out.println("</td>"); }
 
-    private void beginTRow() throws Exception {
-        out.println("<tr>");
-    }
+    private void beginTRow() throws Exception { out.println("<tr>"); }
 
-    private void endTRow() throws Exception {
-        out.println("</tr>");
-    }
+    private void endTRow() throws Exception { out.println("</tr>"); }
 
-    private void beginT() throws Exception {
-        out.print("<table>");
-    }
+    private void beginT() throws Exception { out.print("<table>"); }
 
-    private void endT() throws Exception {
-        out.println("</table>");
-    }
+    private void endT() throws Exception { out.println("</table>"); }
 
     private void printCell(Object tElement) throws IOException, Exception {
         beginTCell();
@@ -351,9 +338,7 @@
         return buffer.toString();
     }
 
-    private boolean checkShellInjection(String parameter){
-        return parameter.contains("..");
-    }
+    private boolean checkShellInjection(String parameter){ return parameter.contains(".."); }
 
     public static String getCurrentDate4ZDATE() throws Exception {
         return (new SimpleDateFormat("y-MM-dd HH:mm:ss").format(new Date()));
@@ -369,18 +354,11 @@
         return obj.toString();
     }
 
-    public void println() throws Exception {
-        out.println("<br/>");
-    }
+    public void println() throws Exception { out.println("<br/>"); }
 
-    public void printerr(String msg) throws Exception {
-        out.print("<b>" + msg + "</b>");
-    }
+    public void printerr(String msg) throws Exception { out.print("<b>" + msg + "</b>"); }
 
-    public void printerrln(String msg) throws Exception {
-        printerr(msg);
-        println();
-    }
+    public void printerrln(String msg) throws Exception { printerr(msg);  println(); }
 
     public void set_request_hints(HttpServletRequest request, HttpServletResponse response)
             throws IOException { //SIC! этому куску кода уже 15 лет, надо разобраться как сделать лучше, он еще для NN 4.x
@@ -392,9 +370,8 @@
         request.setCharacterEncoding("UTF-8");
     }
 
-    private void read_parameters_from_web_xml() {
-        QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH");
-    }
+    private void read_parameters_from_web_xml() { QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH"); }
+
     private String[] NAILED_RANGE_DESC = { //!SIC прибивать гвоздями плохо, просто 31-го очень к столу успеть хотелось
             "01000", "(Пример) - по каждому объекту (QR-коду) ведется отдельная страница",
             "0100A", "(Пример) здесь будет пример информации защищенной паролем",
