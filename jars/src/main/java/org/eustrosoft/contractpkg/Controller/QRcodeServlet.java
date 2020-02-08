@@ -85,7 +85,6 @@ public class QRcodeServlet extends HttpServlet {
         // Get size of future picture
         // Set matrix parameters
         BitMatrix byteMatrix = qrCodeWriter.encode(qrCodeText, BarcodeFormat.QR_CODE, size, size, hintMap);
-
         int matrixWidth = byteMatrix.getWidth();
         // Create buff image
         BufferedImage image = new BufferedImage(matrixWidth, matrixWidth, BufferedImage.TYPE_INT_RGB);

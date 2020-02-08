@@ -26,12 +26,14 @@ public class ZCSVRow {
     private String[] nameMap = null;
     private ArrayList dataInRow = null;
 
+    protected void resetDirty(){
+        is_dirty = false;
+    }
+
     public void setStringSpecificIndex(int i, String str) throws ZCSVException {
         if (nameMap == null) throw new ZCSVException("NameMap не заполнен!");
-        if (i < 0 || i >= nameMap.length)
-            throw new ZCSVException("Индекс указан неправильно!");
-        if (is_row) return;
-        is_dirty = true;
+        if (i < 0 || i >= nameMap.length) throw new ZCSVException("Индекс указан неправильно!");
+        if (is_row) return;  is_dirty = true;
 
         if (dataInRow.isEmpty())
             for (int j = 0; j < nameMap.length; j++)
@@ -50,9 +52,9 @@ public class ZCSVRow {
     public String get(int i) throws ZCSVException {
             if (dataInRow == null)
                 throw new ZCSVException("Данные не загружены!");
-            if (!(nameMap == null))
+            if (nameMap != null)
                 if(i < nameMap.length & i > dataInRow.size() - 1)
-                    return null;
+                    return "";
             if ((i >= dataInRow.size() || i < 0))
                 throw new ZCSVException("Индекс задан неправильно!");
 

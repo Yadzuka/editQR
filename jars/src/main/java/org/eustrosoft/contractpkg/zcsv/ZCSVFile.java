@@ -68,7 +68,6 @@ public class ZCSVFile {
             if (mode > MODES_TO_FILE_ACCESS.length - 1 || mode < 0) {
                 throw new ZCSVException("Неприавльно указан мод работы с файлом!");
             }
-
             RandomAccessFile raf = new RandomAccessFile(rootPath + sourceFileName, MODES_TO_FILE_ACCESS[mode]);
             channel = raf.getChannel();
             return true;
@@ -219,6 +218,7 @@ public class ZCSVFile {
                 ZCSVRow row = (ZCSVRow) fileRows.get(i);
                 if (row.isDirty()) {
                     writer.write(row.toString() + NEXT_LINE_SYMBOL);
+                    row.resetDirty();
                 }
             }
             writer.flush();
