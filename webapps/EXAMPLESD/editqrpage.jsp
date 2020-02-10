@@ -8,7 +8,7 @@
          import="java.util.Date"
          import="java.nio.file.Paths"
          import="java.nio.file.Files"
-%>
+         import="java.math.BigDecimal" %>
 <%!
     /// Vocabulary:
     /// T - table
@@ -21,6 +21,7 @@
     private final String DB_FILENAME = "master.list.csv"; // Database name
     private final String SZ_NULL = "null"; // Just null parameter
     private final String REC_PREFIX = "param_pref_"; // Prefix for updateform parameters
+    private final String SZ_EMPTY = ""; // Empty string
     // All possible actions on update page
     public final String ACTION_EDIT = "edit"; // Simple state for updating product/contract page
     public final String ACTION_CREATE = "create"; // Action for creating new state of product/contract
@@ -46,6 +47,11 @@
     public final static String CMD_TEST="test"; // Testing page
     private final static String [] CMD_PARAMETERS = {CMD_MEMBERS,CMD_RANGES,CMD_PRODTABLE,CMD_PRODVIEW,CMD_UPDATE,CMD_TEST};
 
+    // Money counters
+    private BigDecimal allMoney = BigDecimal.ZERO;
+    private BigDecimal allMoneySent = BigDecimal.ZERO;
+    private BigDecimal allMoneyWait = BigDecimal.ZERO;
+
     private ZCSVFile zcsvFile;
     private String QRDB_PATH = null;
     private JspWriter out;
@@ -55,19 +61,23 @@
                     "SN", "Дата производства", "Дата ввоза (ГТД)",
                     "Дата продажи", "Дата отправки клиенту", "Дата начала гарантии",
                     "Дата окончания гарантии", "Комментарий (для клиента)"};
+    private String[] showedNames = new String[]{
+            "QR  код", "№ договора", "Деньги по договору", "Юр-лицо поставщик",
+            "Юр-лицо клиент", "Тип продукта", "Модель продукта", "SN", "Распознано как - руб."
+    };
 
     private String getRequestParameter(ServletRequest request, String param) {
         return(getRequestParameter(request,param,null));
     }
 
     private String getRequestParameter(ServletRequest request, String param, String default_value) {
-     String value = request.getParameter(param);
-     if(value==null)  value = default_value;
-     if(value==null)  return(null);
-     switch(param) {
-        case PARAM_MEMBER:
-        case PARAM_RANGE:
-            if (checkShellInjection(value)) { throw new RuntimeException("Shell injection detected"); } // SIC!
+        String value = request.getParameter(param);
+        if(value==null)  value = default_value;
+        if(value==null)  return(null);
+        switch(param) {
+            case PARAM_MEMBER:
+            case PARAM_RANGE:
+                if (checkShellInjection(value)) { throw new RuntimeException("Shell injection detected"); } // SIC!
         }
         return(value);
     }
@@ -126,20 +136,36 @@
             if (zcsvFile.tryOpenFile(1)) {
                 zcsvFile.loadFromFileValidVersions();
                 out.println("<table class=\"memberstable\" border=\"1\">");
-                printProductsTableUpsideString(namesMap);
-
+                printProductsTableUpsideString(showedNames);
                 for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
                     ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                     eachRow.setNames(namesMap);
                     beginTRow();
                     printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i)) + "\'>" +
-                                    "<карточка>" + "</a>");
-                    for (int j = 5; j < namesMap.length; j++) {
-                        String wroteString = (eachRow.get(j) == null || SZ_NULL.equals(eachRow.get(j))) ? "" : eachRow.get(j);
-                        printCell(wroteString);
+                            "<карточка>" + "</a>");
+
+                    for (int j = 0; j < showedNames.length; j++) {
+                        if(showedNames[j].equals(showedNames[showedNames.length - 1])) {
+                            printCell(MsgContract.str2dec(eachRow.get("Деньги по договору")));
+                        } else {
+                            String wroteString = eachRow.get(showedNames[j]);
+                            printCell(wroteString);
+                        }
                     }
                     endTRow();
+
+
+                    BigDecimal dec_money = MsgContract.str2dec(eachRow.get("Деньги по договору"));
+                    allMoney = allMoney.add(dec_money);
+                    if(isDate(eachRow.get("Дата отправки клиенту"))) {
+                        allMoneySent = allMoneySent.add(dec_money);
+                    } else {
+                        allMoneyWait = allMoneyWait.add(dec_money);
+                    }
                 }
+                beginTRow(); printCell("",8); printCell("Отгружено:");printCell(allMoneySent);endTRow();
+                beginTRow(); printCell("",8); printCell("Ждём:"); printCell(allMoneyWait);endTRow();
+                beginTRow(); printCell("",8); printCell("Всего:"); printCell(allMoney);endTRow();
                 endT();
             } else {
                 printerr("Can't open file! Call the system administrator!");
@@ -248,6 +274,15 @@
         return REC_PREFIX + String.valueOf(index);
     }
 
+    private boolean isDate(String date){
+        if(date == null) return(false);
+        date=date.trim();
+        if(date.equals("-")) date = SZ_EMPTY;
+        if(date.equals("null")) date = SZ_EMPTY;
+        if(date.equals("(null)")) date = SZ_EMPTY;
+        return(!date.equals(SZ_EMPTY));
+    }
+
     private void printUpdatePageButtons() throws Exception {
         out.print("<input type=\"submit\" name=\"cancel\" value=\"Отмена\"/>&nbsp;");
         out.print("<input type=\"submit\" name=\"refresh\" value=\"Сбросить\"/>&nbsp;");
@@ -286,8 +321,8 @@
 
     private void printProductsTableUpsideString(String... outputString) throws Exception {
         beginTRow();
-        for (int i = 4; i < outputString.length; i++) {
-            if (i == 4) printCell("Опции");
+        for (int i = -1; i < outputString.length; i++) {
+            if (i == -1) printCell("Опции");
             else printCell(outputString[i]);
         }
         endTRow();
@@ -307,6 +342,12 @@
 
     private void printCell(Object tElement) throws IOException, Exception {
         beginTCell();
+        out.println(obj2str(tElement));
+        endTCell();
+    }
+
+    private void printCell(Object tElement, int colspan) throws IOException, Exception {
+        out.println("<td colspan='"+colspan+"'>");
         out.println(obj2str(tElement));
         endTCell();
     }
@@ -424,18 +465,22 @@
     <link rel="stylesheet" type="text/css" href="css/head.css">
 </head>
 <body>
-    <h2><%= CGI_TITLE %></h2>
-    <hr>
-    <div>
+<h2><%= CGI_TITLE %></h2>
+<hr>
+<div>
     <a href='<%= CGI_NAME %>'>Начало</a>&nbsp;
     <a href='<%= CGI_NAME %>?cmd=test'>Тест</a>&nbsp;
     <a href='test.jsp'>test.jsp</a>&nbsp;
-    </div>
+</div>
 <%
     set_request_hints(request, response);
     long enter_time = System.currentTimeMillis();
     this.out = out;
     String CMD = getRequestParameter(request, PARAM_CMD, CMD_MEMBERS);
+
+    allMoney = BigDecimal.ZERO;
+    allMoneyWait = BigDecimal.ZERO;
+    allMoneySent = BigDecimal.ZERO;
 
     try {
         read_parameters_from_web_xml();
