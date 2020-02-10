@@ -38,6 +38,7 @@ usage:
 all:	
 	cd jars/src/main/java/ && make all
 	cp ${WORK_PATH}/${PKG_FILENAME}.jar webapps/EXAMPLESD/WEB-INF/lib/
+	cp contrib/*jar webapps/EXAMPLESD/WEB-INF/lib/
 mvn: maven
 maven:
 	cd jars && mvn package

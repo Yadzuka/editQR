@@ -1,6 +1,6 @@
 // EustroSoft.org PSPN/CSV project
 //
-// (c) Alex V Eustrop & EustroSoft.org 2020
+// (c) Alex V Eustrop & Pavle Seleznev & EustroSoft.org 2020
 // 
 // LICENSE: BALES, ISC, MIT, BSD on your choice
 //
@@ -12,12 +12,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Vector;
+import org.eustrosoft.contractpkg.Model.MsgContract;
 
 /**
  * single row from CSV file
  */
 public class ZCSVRow {
-    public String DELIMETER = ";";
+    public static final String DELIMITER_DEFAULT = ";"; 
+    public static final String DELIMITER2_DEFAULT = ":"; 
+    public static final String DELIMITER_INITEM_DEFAULT = ","; 
+    private String DELIMITER = ";"; 
+
+    public String getDelimiter(){return(DELIMITER);}
+    public String setDelimiter(String v){String ov=v;DELIMITER=v;return(ov);}
 
     private boolean is_row = false; //read only
     private boolean is_dirty = false; //read only
@@ -112,8 +119,8 @@ public class ZCSVRow {
 
             for (int i = 0; i < dataInRow.size(); i++) {
                 if (i < dataInRow.size() - 1) {
-                    returnString.append(dataInRow.get(i).toString());
-                    returnString.append(DELIMETER);
+                    returnString.append(MsgContract.value2csv(dataInRow.get(i).toString()));
+                    returnString.append(DELIMITER);
                 } else {
                     returnString.append(dataInRow.get(i).toString());
                 }
@@ -124,7 +131,7 @@ public class ZCSVRow {
         private void splitString (String str){
             dataInRow = new ArrayList();
 
-            Collections.addAll(dataInRow, str.split(DELIMETER));
+            Collections.addAll(dataInRow, str.split(DELIMITER));
         }
 
     public ZCSVRow() {
@@ -136,7 +143,7 @@ public class ZCSVRow {
         }
 
     public ZCSVRow(String row, String delimiter) {
-            DELIMETER = delimiter;
+            DELIMITER = delimiter;
             splitString(row);
         }
 
