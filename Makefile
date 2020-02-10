@@ -36,6 +36,10 @@ usage:
 	@echo "  usage - for this message"
 #all: depend build
 all:	
+	cd jars/src/main/java/ && make all
+	cp ${WORK_PATH}/${PKG_FILENAME}.jar webapps/EXAMPLESD/WEB-INF/lib/
+mvn: maven
+maven:
 	cd jars && mvn package
 	cp jars/target/jars-1.0-SNAPSHOT.jar webapps/EXAMPLESD/WEB-INF/lib/
 build:
