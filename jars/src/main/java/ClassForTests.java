@@ -20,7 +20,7 @@ public class ClassForTests {
                     "Дата окончания гарантии", "Комментарий (для клиента)"};
 
     public static void main(String[] args) throws Exception {
-        /*ZCSVFile zcsvFile = new ZCSVFile();
+        ZCSVFile zcsvFile;
         Members.setWayToDB("/s/qrdb/EXAMPLESD/members/");
         String rootPath = Members.getWayToDB() + "EXAMPLESD" + "/" + "0100D" + "/";
         zcsvFile = setupZCSVPaths(rootPath, "master.list.csv");
@@ -28,13 +28,13 @@ public class ClassForTests {
         for(int i = 0; i < zcsvFile.getRowObjects().size(); i++){
             ZCSVRow row = zcsvFile.getRowObjectByIndex(i);
             row.setNames(namesMap);
-            //System.out.println(row.toString());
+            System.out.println(row.toString());
             for(int j = 0; j < row.getNames().length; j++){
                 System.out.print(row.get(j)+" ");
             }
             System.out.println();
         }
-/*
+
         ZCSVRow newRow = new ZCSVRow();
         newRow.setNames(namesMap);
         for (Integer i = 0; i < namesMap.length; i++) {
@@ -43,9 +43,7 @@ public class ClassForTests {
         zcsvFile.getRowObjects().add(newRow);
         zcsvFile.appendChangedStringsToFile();
 
- */
-        Color cl = Color.decode("0x00FF00");
-        System.out.println(cl);
+
     }
 
     private static ZCSVFile setupZCSVPaths(String rootPath, String fileName) {
