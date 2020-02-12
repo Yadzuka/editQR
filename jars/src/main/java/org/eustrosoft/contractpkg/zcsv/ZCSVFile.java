@@ -1,6 +1,6 @@
 package org.eustrosoft.contractpkg.zcsv;// EustroSoft.org PSPN/CSV project
 //
-// (c) Alex V Eustrop & yadzuka & EustroSoft.org 2020
+// (c) Alex V Eustrop & Pavle Seleznev & EustroSoft.org 2020
 //
 // LICENSE: BALES, ISC, MIT, BSD on your choice
 //
@@ -35,26 +35,11 @@ public class ZCSVFile {
     private ArrayList fileRows = new ArrayList();
     private ArrayList allRows = new ArrayList();
 
-    public void setConfigureFilePath(String path) {
-        configureFilePath = path;
-    }
-
-    public void setRootPath(String rootPath) {
-        this.rootPath = rootPath;
-    }
-
-    public void setFileName(String fileName) {
-        sourceFileName = fileName;
-    }
-
-    public String getFileName() {
-        return sourceFileName;
-    }
-
-    public int getFileRowsLength() {
-        return fileRows.size();
-    }
-
+    public void setConfigureFilePath(String path) { configureFilePath = path; }
+    public void setRootPath(String rootPath) { this.rootPath = rootPath; }
+    public void setFileName(String fileName) { sourceFileName = fileName; }
+    public String getFileName() { return sourceFileName; }
+    public int getFileRowsLength() { return fileRows.size(); }
     public ArrayList getRowObjects() { return this.fileRows; }
 
     // READ SECTION
@@ -71,35 +56,23 @@ public class ZCSVFile {
             RandomAccessFile raf = new RandomAccessFile(rootPath + sourceFileName, MODES_TO_FILE_ACCESS[mode]);
             channel = raf.getChannel();
             return true;
-        } else {
-            throw new ZCSVException("Channel already opened!");
-        }
+        } else { throw new ZCSVException("Channel already opened!"); }
 
     }
 
     // exclusively lock file (can be used before update)
     // IT WORKS!
     public boolean tryFileLock() {
-        if (channel == null) {
-            return false;
-        }
+        if (channel == null) { return false; }
         try {
             lock = channel.tryLock(0, channel.size(), false);
             return true;
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return false;
-        }
+        } catch (IOException ex) { ex.printStackTrace(); return false; }
     }
 
     // close file and free it for others
     public boolean closeFile() throws IOException {
-        if (channel != null) {
-            if (channel.isOpen() || channel != null) {
-                channel.close();
-                return true;
-            }
-        }
+        if (channel != null) { if (channel.isOpen() || channel != null) { channel.close(); return true; } }
         return false;
     }
 
@@ -113,7 +86,7 @@ public class ZCSVFile {
                             equals(w))).forEach(w -> fileRows.add(new ZCSVRow(w.trim())));
 
         } catch (IOException | NullPointerException ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(); //SIC!
         }
     }
 
@@ -273,9 +246,7 @@ public class ZCSVFile {
     // GET ZCSVRow SECTION
 
     // get read-only row from loaded file by number (only proper rows, not commented lines)
-    public ZCSVRow getRowObjectByIndex(int i) {
-        return (ZCSVRow) fileRows.get(i);
-    }
+    public ZCSVRow getRowObjectByIndex(int i) { return (ZCSVRow) fileRows.get(i); }
 
     // the same as above but ready for update, change it and use update() method of parent ZCSVFile
     public ZCSVRow editRowObjectByIndex(int i) {
@@ -288,12 +259,8 @@ public class ZCSVFile {
     }
 
     @Override
-    public String toString() {
-        return rootPath + sourceFileName;
-    }
+    public String toString() { return rootPath + sourceFileName; } //SIC! надо подумать, может содиржимое файла...
 
     // constructors
-    public ZCSVFile() {
-
-    }
+    public ZCSVFile() { }
 } //ZCSVFile

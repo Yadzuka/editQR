@@ -33,13 +33,11 @@ public class ZCSVRow {
     private String[] nameMap = null;
     private ArrayList dataInRow = null;
 
-    protected void resetDirty(){
-        is_dirty = false;
-    }
+    protected void resetDirty(){ is_dirty = false; }
 
     public void setStringSpecificIndex(int i, String str) throws ZCSVException {
-        if (nameMap == null) throw new ZCSVException("NameMap не заполнен!");
-        if (i < 0 || i >= nameMap.length) throw new ZCSVException("Индекс указан неправильно!");
+        if (nameMap == null) throw new ZCSVException("NameMap не заполнен!"); //SIC! вынести сообщения в константы, не срочно
+        if (i < 0 || i >= nameMap.length) throw new ZCSVException("Индекс указан неправильно!"); //SIC!
         if (is_row) return;  is_dirty = true;
 
         if (dataInRow.isEmpty())
@@ -52,25 +50,23 @@ public class ZCSVRow {
     public void setNewName(String name, String dataInRow) throws ZCSVException {
         int index = name2column(name);
         if (index == -1)
-            throw new ZCSVException("Название параметра не найдено!");
+            throw new ZCSVException("Название параметра не найдено!"); //SIC!
         setStringSpecificIndex(index, dataInRow);
     }
 
     public String get(int i) throws ZCSVException {
             if (dataInRow == null)
-                throw new ZCSVException("Данные не загружены!");
+                throw new ZCSVException("Данные не загружены!"); //SIC!
             if (nameMap != null)
                 if(i < nameMap.length & i > dataInRow.size() - 1)
                     return "";
             if ((i >= dataInRow.size() || i < 0))
-                throw new ZCSVException("Индекс задан неправильно!");
+                throw new ZCSVException("Индекс задан неправильно!"); //SIC!
 
             return (String) dataInRow.get(i);
         }
 
-        public String get (String name) throws ZCSVException {
-            return get(name2column(name));
-        }
+        public String get (String name) throws ZCSVException { return get(name2column(name)); }
 
         public int name2column (String name){
             if (!(nameMap == null || name == null)) {
@@ -82,37 +78,15 @@ public class ZCSVRow {
             return (-1);
         }
 
-        public boolean isDirty () {
-            return is_dirty;
-        }
+        public boolean isDirty () { return is_dirty; }
+        public void setRow () { is_row = true; }
+        public boolean isRow () { return (is_row); }
+        public void setPrevious (ZCSVRow previous){ previousRow = previous; }
+        public ZCSVRow getPrevious () { return (previousRow); }
+        public void setNames (String[]names){ nameMap = names; }
+        public String[] getNames () { return nameMap; }
+        public int getDataLength () { return dataInRow.size(); }
 
-        public void setRow () {
-            is_row = true;
-        }
-
-        public boolean isRow () {
-            return (is_row);
-        }
-
-        public void setPrevious (ZCSVRow previous){
-            previousRow = previous;
-        }
-
-        public ZCSVRow getPrevious () {
-            return (previousRow);
-        }
-
-        public void setNames (String[]names){
-            nameMap = names;
-        }
-
-        public String[] getNames () {
-            return nameMap;
-        }
-
-        public int getDataLength () {
-            return dataInRow.size();
-        }
         @Override
         public String toString () {
             StringBuilder returnString = new StringBuilder();
@@ -134,27 +108,14 @@ public class ZCSVRow {
             Collections.addAll(dataInRow, str.split(DELIMITER));
         }
 
-    public ZCSVRow() {
-            dataInRow = new ArrayList();
-        }
+    // Constructors section
 
-    public ZCSVRow(String row) {
-            splitString(row);
-        }
-
-    public ZCSVRow(String row, String delimiter) {
-            DELIMITER = delimiter;
-            splitString(row);
-        }
-
-    public ZCSVRow(String[]values){
-            setNames(values);
-        }
-
+    public ZCSVRow() { dataInRow = new ArrayList(); }
+    public ZCSVRow(String row) { splitString(row); }
+    public ZCSVRow(String row, String delimiter) { DELIMITER = delimiter; splitString(row); }
+    public ZCSVRow(String[]values){ setNames(values); }
     public ZCSVRow(String[]values, String[]names){
             setNames(names);
-            for (String s : values) {
-                dataInRow.add(s);
-            }
+            for (String s : values) { dataInRow.add(s); }
         }
     } //ZCSVRow
