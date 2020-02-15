@@ -13,29 +13,28 @@ import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * work with File as CSV database
  */
 public class ZCSVFile {
 
+    private final static String CONFIGURE_FILE_DELIMITER = "\t";
+
     private final static String[] MODES_TO_FILE_ACCESS = {"r", "rw", "rws", "rwd"};
     private final static String NEXT_LINE_SYMBOL = "\n";
+    private final static String CONFIGURE_FILE_EXTENSION = ".tab";
+    private final static String [] CONFIGURE_FILE_NAME_MAP = {"Код","Поле","Тип","Атрибуты","Название","Описание"};
 
     private static FileLock lock;
     private FileChannel channel = null;
     private ByteBuffer buffer = null;
 
-    private String configureFilePath = null;
     private String rootPath = null;
     private String sourceFileName = null;
     private ArrayList fileRows = new ArrayList();
     private ArrayList allRows = new ArrayList();
 
-    public void setConfigureFilePath(String path) { configureFilePath = path; }
     public void setRootPath(String rootPath) { this.rootPath = rootPath; }
     public void setFileName(String fileName) { sourceFileName = fileName; }
     public String getFileName() { return sourceFileName; }
@@ -57,17 +56,13 @@ public class ZCSVFile {
             channel = raf.getChannel();
             return true;
         } else { throw new ZCSVException("Channel already opened!"); }
-
     }
 
     // exclusively lock file (can be used before update)
-    // IT WORKS!
-    public boolean tryFileLock() {
+    public boolean tryFileLock() throws Exception {
         if (channel == null) { return false; }
-        try {
-            lock = channel.tryLock(0, channel.size(), false);
-            return true;
-        } catch (IOException ex) { ex.printStackTrace(); return false; }
+        lock = channel.tryLock(0, channel.size(), false);
+        return true;
     }
 
     // close file and free it for others
@@ -76,22 +71,38 @@ public class ZCSVFile {
         return false;
     }
 
-    //actions on file content
-    // load all lines from file & parse valid rows
     // Load all strings ( also with any versions )
-    public void loadFromFile() {
-        try {
-            Files.lines(Paths.get(rootPath + sourceFileName), StandardCharsets.UTF_8).
-                    filter(w -> !(w.startsWith("#") || "".
-                            equals(w))).forEach(w -> fileRows.add(new ZCSVRow(w.trim())));
+    public void loadFromFile() throws IOException {
+        Files.lines(Paths.get(rootPath + sourceFileName), StandardCharsets.UTF_8).
+                filter(w -> !(w.trim().startsWith("#") || "".
+                        equals(w.trim()))).forEach(w -> fileRows.add(new ZCSVRow(w.trim())));
+    }
 
-        } catch (IOException | NullPointerException ex) {
-            ex.printStackTrace(); //SIC!
-        }
+    public void loadFromFile(String delimiter) throws IOException{
+        Files.lines(Paths.get(rootPath + sourceFileName), StandardCharsets.UTF_8).
+                filter(w -> !(w.trim().startsWith("#") || "".
+                        equals(w.trim()))).forEach(w -> {
+                            ZCSVRow newRow = new ZCSVRow(w.trim(), delimiter);
+                            newRow.setNames(CONFIGURE_FILE_NAME_MAP);
+                            fileRows.add(newRow);
+
+        });
+    }
+
+    public boolean loadConfigureFile() throws IOException, ZCSVException{
+            if (!sourceFileName.endsWith(CONFIGURE_FILE_EXTENSION))
+                throw new ZCSVException("Error with configure file format");
+            if (rootPath.equals("") | sourceFileName.equals(""))
+                throw new ZCSVException("Error with configure file paths");
+            loadFromFile(CONFIGURE_FILE_DELIMITER);
+            return true;
+    }
+
+    public void stateZCSVFile(){
+
     }
 
     // Load and show only last versions of contract
-    // 0 index - ZRID (row). 1 index - ZVER (version)
     public void loadFromFileValidVersions() throws Exception {
         ArrayList<Integer> zRIDS = new ArrayList<>();
 
@@ -145,7 +156,7 @@ public class ZCSVFile {
 
     // fully rewrite content of file with in-memory data
     // IT WORKS!
-    public int rewriteAllFile() {
+    public int rewriteAllFile() throws Exception {
         BufferedWriter writer = null;
         if (tryFileLock() && channel != null) {
             try {
@@ -249,7 +260,7 @@ public class ZCSVFile {
     public ZCSVRow getRowObjectByIndex(int i) { return (ZCSVRow) fileRows.get(i); }
 
     // the same as above but ready for update, change it and use update() method of parent ZCSVFile
-    public ZCSVRow editRowObjectByIndex(int i) {
+    public ZCSVRow editRowObjectByIndex(int i) throws Exception {
         if (tryFileLock()) {
             ZCSVRow newRow = (ZCSVRow) fileRows.get(i);
             return (ZCSVRow) fileRows.get(i);

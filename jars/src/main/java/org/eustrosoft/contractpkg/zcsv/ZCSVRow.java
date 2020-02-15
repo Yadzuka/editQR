@@ -18,10 +18,11 @@ import org.eustrosoft.contractpkg.Model.MsgContract;
  * single row from CSV file
  */
 public class ZCSVRow {
-    public static final String DELIMITER_DEFAULT = ";"; 
-    public static final String DELIMITER2_DEFAULT = ":"; 
-    public static final String DELIMITER_INITEM_DEFAULT = ","; 
-    private String DELIMITER = ";"; 
+    public static final String DELIMITER_DEFAULT = ";";
+    public static final String DELIMITER2_DEFAULT = ":";
+    public static final String DELIMITER_INITEM_DEFAULT = ",";
+    private char TAB = '\t';
+    private String DELIMITER = ";";
 
     public String getDelimiter(){return(DELIMITER);}
     public String setDelimiter(String v){String ov=v;DELIMITER=v;return(ov);}

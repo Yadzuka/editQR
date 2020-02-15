@@ -20,7 +20,7 @@ public class ClassForTests {
                     "Дата окончания гарантии", "Комментарий (для клиента)"};
 
     public static void main(String[] args) throws Exception {
-        ZCSVFile zcsvFile;
+        /*ZCSVFile zcsvFile;
         Members.setWayToDB("/s/qrdb/EXAMPLESD/members/");
         String rootPath = Members.getWayToDB() + "EXAMPLESD" + "/" + "0100D" + "/";
         zcsvFile = setupZCSVPaths(rootPath, "master.list.csv");
@@ -41,7 +41,19 @@ public class ClassForTests {
             newRow.setStringSpecificIndex(i, i.toString());
         }
         zcsvFile.getRowObjects().add(newRow);
-        zcsvFile.appendChangedStringsToFile();
+        zcsvFile.appendChangedStringsToFile();*/
+        ZCSVFile file;
+        Members.setWayToDB("/s/qrdb/EXAMPLESD/members/");
+        String rootPath = Members.getWayToDB() + "EXAMPLESD" + "/" + "0100D" + "/";
+        file = setupZCSVPaths(rootPath, "csv.tab");
+        file.loadConfigureFile();
+
+        for(int i = 0; i < file.getRowObjects().size(); i ++){
+            for(int j = 0; j < file.getRowObjectByIndex(i).getDataLength(); j ++)
+                System.out.print(file.getRowObjectByIndex(i).get(j));
+            System.out.println();
+        }
+
 
 
     }

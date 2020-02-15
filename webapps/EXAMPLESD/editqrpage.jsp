@@ -8,7 +8,8 @@
          import="java.util.Date"
          import="java.nio.file.Paths"
          import="java.nio.file.Files"
-         import="java.math.BigDecimal" %>
+         import="java.math.BigDecimal"
+%>
 <%!
     /// Vocabulary:
     /// T - table
@@ -19,9 +20,12 @@
     private final static String JSP_VERSION = "$id$"; // Id for jsp version
     // Other constants
     private final String DB_FILENAME = "master.list.csv"; // Database name
+    private final String DB_CONFIG_FILENAME = "csv.tab"; // Config name
     private final String SZ_NULL = "null"; // Just null parameter
     private final String REC_PREFIX = "param_pref_"; // Prefix for updateform parameters
     private final String SZ_EMPTY = ""; // Empty string
+    // Attributes of CSV config file
+    private final String SHOW_ATTRIBUTE = "SHOW";
     // All possible actions on update page
     public final String ACTION_EDIT = "edit"; // Simple state for updating product/contract page
     public final String ACTION_CREATE = "create"; // Action for creating new state of product/contract
@@ -41,11 +45,12 @@
     // All possible pages
     public final static String CMD_MEMBERS="members"; // Member's page
     public final static String CMD_RANGES="ranges"; // Range's page
+    public final static String CMD_CHANGE_CONFIG="chconfig"; // Change config page
     public final static String CMD_PRODTABLE="prodtable"; // Product's table
     public final static String CMD_PRODVIEW="prodview"; // Product's info
     public final static String CMD_UPDATE="updateprod"; // Update or create product's page
     public final static String CMD_TEST="test"; // Testing page
-    private final static String [] CMD_PARAMETERS = {CMD_MEMBERS,CMD_RANGES,CMD_PRODTABLE,CMD_PRODVIEW,CMD_UPDATE,CMD_TEST};
+    private final static String [] CMD_PARAMETERS = {CMD_MEMBERS,CMD_RANGES,CMD_CHANGE_CONFIG,CMD_PRODTABLE,CMD_PRODVIEW,CMD_UPDATE,CMD_TEST};
 
     // Money counters
     private BigDecimal allMoney = BigDecimal.ZERO;
@@ -55,16 +60,17 @@
     private ZCSVFile zcsvFile;
     private String QRDB_PATH = null;
     private JspWriter out;
-    private String[] namesMap = new String[]
+    private String [] namesMap = new String[]
             {"ZRID", "ZVER", "ZDATE", "ZUID", "ZSTA", "QR  код", "№ договора", "Дата договора",
                     "Деньги по договору", "Юр-лицо поставщик", "Юр-лицо клиент", "Тип продукта", "Модель продукта",
                     "SN", "Дата производства", "Дата ввоза (ГТД)",
                     "Дата продажи", "Дата отправки клиенту", "Дата начала гарантии",
                     "Дата окончания гарантии", "Комментарий (для клиента)"};
-    private String[] showedNames = new String[]{
+    private String [] showedNames = new String[]{
             "QR  код", "№ договора", "Деньги по договору", "Юр-лицо поставщик",
-            "Юр-лицо клиент", "Тип продукта", "Модель продукта", "SN", "Распознано как - руб."
-    };
+            "Юр-лицо клиент", "Тип продукта", "Модель продукта", "SN", "Распознано как - руб."};
+    private ArrayList<String> nameMap = new ArrayList();
+    private ArrayList<String> showNames = new ArrayList();
 
     private String getRequestParameter(ServletRequest request, String param) {
         return(getRequestParameter(request,param,null));
@@ -82,6 +88,8 @@
         return(value);
     }
 
+    /// PAGES
+
     private void setMembersPage() throws Exception {
         Members members = new Members();
         String[] allRegisteredMembers = members.getCompanyNames();
@@ -97,9 +105,9 @@
     private void setRangesPage(String member) throws Exception {
         printUpsideMenu(
                 new String[]{
-                        "Назад",
+                        "Назад", "Создать конфигурационный файл",
                 }, new String[]{
-                        getRequestParamsURL(CMD_MEMBERS),
+                        getRequestParamsURL(CMD_MEMBERS), getRequestParamsURL(CMD_CHANGE_CONFIG, member)
                 });
 
         RangesController rController = new RangesController(member);
@@ -119,14 +127,46 @@
         endT();
     }
 
+    private void setChangeConfigPage(String member, String range) throws Exception {
+        String goBackUrl;
+        if(range == null)
+            goBackUrl = getRequestParamsURL(CMD_RANGES, member);
+        else
+            goBackUrl = getRequestParamsURL(CMD_PRODTABLE, member,range);
+
+        printUpsideMenu(
+                new String[]{
+                        "Назад"
+                }, new String []{
+                        goBackUrl,
+                });
+
+        if(range == null) {
+            ZCSVFile configureFile = new ZCSVFile();
+            configureFile.setFileName("csv.tab");
+            if(configureFile.loadConfigureFile()){
+
+            }
+        }else{
+            ZCSVFile configureFile = new ZCSVFile();
+            configureFile.setFileName("csv.tab");
+            configureFile.setRootPath(Members.getWayToDB() + member + "/" + range + "/");
+            if(configureFile.loadConfigureFile()){
+
+            }
+        }
+    }
+
     private void setProductsPage(String member, String range) throws Exception {
         printUpsideMenu(
                 new String[]{
                         "Назад",
                         "Создать новую запись",
+                        "Изменить конфигурацию полей",
                 }, new String[]{
                         getRequestParamsURL(CMD_RANGES , member),
                         getRequestParamsURL(CMD_UPDATE , member, range, SZ_NULL, ACTION_NEWRECORD),
+                        getRequestParamsURL(CMD_CHANGE_CONFIG, member, range),
                 });
 
         String rootPath = Members.getWayToDB() + member + "/" + range + "/";
@@ -137,13 +177,14 @@
                 zcsvFile.loadFromFileValidVersions();
                 out.println("<table class=\"memberstable\" border=\"1\">");
                 printProductsTableUpsideString(showedNames);
+                out.println("Hey");
                 for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
                     ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                     eachRow.setNames(namesMap);
                     beginTRow();
-                    printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i)) + "\'>" +
+                    printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i + 1)) + "\'>" +
                             "<карточка>" + "</a>");
-
+                    out.println("hey");
                     for (int j = 0; j < showedNames.length; j++) {
                         if(showedNames[j].equals(showedNames[showedNames.length - 1])) {
                             printCell(MsgContract.str2dec(eachRow.get("Деньги по договору")));
@@ -153,8 +194,6 @@
                         }
                     }
                     endTRow();
-
-
                     BigDecimal dec_money = MsgContract.str2dec(eachRow.get("Деньги по договору"));
                     allMoney = allMoney.add(dec_money);
                     if(isDate(eachRow.get("Дата отправки клиенту"))) {
@@ -185,11 +224,11 @@
                         getRequestParamsURL(CMD_UPDATE, member, range, ZRID, ACTION_EDIT),
                 });
 
-        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID));
+        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
 
         beginT(); beginTRow(); printCell("QR картинка:");
         beginTCell();
-        out.print("<img src=\"qr?p_codingString=" + row.get(5) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x220CCA\"/>");
+        out.print("<img src=\"qr?p_codingString=" + row.get(5) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>");
         endTCell();
         beginTRow();
         for (int i = 5; i < row.getNames().length; i++) {
@@ -235,16 +274,18 @@
             beginT();
             for (int i = 5; i < namesMap.length; i++) {
                 parameterBuffer = getParameterName(i);
-                if (!namesMap[i].toLowerCase().contains("комментарий"))
+                if (!((String)namesMap[i]).toLowerCase().contains("комментарий")) {
                     printTRow(new Object[]{namesMap[i], "<input type='text' name=" + parameterBuffer + ">"});
-                else
+                }
+                else {
                     printTRow(new Object[]{namesMap[i], "<textarea name=" + parameterBuffer + " " +
                             "rows='5' cols='40'> </textarea>"});
+                }
             }
             endT();
             endForm();
         }else{
-            Integer numberOfRow = Integer.parseInt(ZRID);
+            Integer numberOfRow = Integer.parseInt(ZRID) - 1;
             ZCSVRow edittedRow = zcsvFile.getRowObjectByIndex(numberOfRow);
 
             if (edittedRow != null) {
@@ -270,6 +311,32 @@
         }
     }
 
+    /// END PAGES PART
+
+    private void loadDataFromConfigFile(String member, String range) throws IOException, ZCSVException {
+        String rootPath = Members.getWayToDB() + member + "/" + range + "/";
+        ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
+        if(configFile.loadConfigureFile()){
+            for(int i = 0; i < configFile.getFileRowsLength(); i++) {
+                ZCSVRow configRow = configFile.getRowObjectByIndex(i);
+                if(configRow.get(0).length() < 3){
+                    nameMap.add(configRow.get(4));
+                }
+                if(configRow.get(3).contains(SHOW_ATTRIBUTE)){
+                    showNames.add(configRow.get(4));
+                }
+            }
+            showedNames = (String [])showNames.toArray();
+            namesMap = (String [])nameMap.toArray();
+            
+        }else{
+            for(Integer i = 1; i < 25; i++){
+                nameMap.add(i.toString());
+                showNames.add(i.toString());
+            }
+        }
+    }
+
     private String getParameterName(int index){
         return REC_PREFIX + String.valueOf(index);
     }
@@ -287,6 +354,12 @@
         out.print("<input type=\"submit\" name=\"cancel\" value=\"Отмена\"/>&nbsp;");
         out.print("<input type=\"submit\" name=\"refresh\" value=\"Сбросить\"/>&nbsp;");
         out.print("<input type=\"submit\" name=\"save\" value=\"Сохранить\"/>&nbsp;");
+    }
+
+    private void printRedirectButton(String bName, String bValue, String bHref) throws Exception {
+        out.println("<a href=\"" + bHref + "/\">");
+        out.println("<input type=\"" + bName + "\" value=\"" + bValue + "\"/>");
+        out.println("</a>");
     }
 
     private void startCreateForm(String member, String range, String action) throws Exception {
@@ -319,7 +392,8 @@
         println();
     }
 
-    private void printProductsTableUpsideString(String... outputString) throws Exception {
+    private void printProductsTableUpsideString(Object... outputString) throws Exception {
+        String [] upsideMenus = (String [])outputString;
         beginTRow();
         for (int i = -1; i < outputString.length; i++) {
             if (i == -1) printCell("Опции");
@@ -501,8 +575,12 @@
             case CMD_RANGES:
                 setRangesPage(p_member);
                 break;
+            case CMD_CHANGE_CONFIG:
+                setChangeConfigPage(p_member, p_range);
+                break;
             case CMD_PRODTABLE:
-                setProductsPage(p_member, p_range);
+                loadDataFromConfigFile(p_member, p_range);
+                //setProductsPage(p_member, p_range);
                 break;
             case CMD_PRODVIEW:
                 setProdViewPage(p_member, p_range, p_ZRID);
@@ -517,15 +595,15 @@
                         break;
                     case ACTION_SAVE:
                         try {
-                            Integer zrdsLength = zcsvFile.getFileRowsLength();
                             ZCSVRow newRow;
                             if (p_ZRID == null || SZ_NULL.equals(p_ZRID)) {
+                                Integer zrdsLength = zcsvFile.getFileRowsLength();
                                 newRow = new ZCSVRow();
-                                newRow.setNames(namesMap);
+                                newRow.setNames((String[])namesMap);
                                 newRow.setStringSpecificIndex(0, String.valueOf(zrdsLength + 1));
                                 newRow.setStringSpecificIndex(1, "1");
                             } else {
-                                newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID));
+                                newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);
                                 Integer newVerion = Integer.parseInt(newRow.get(1)) + 1;
                                 newRow.setStringSpecificIndex(1, newVerion.toString());
                             }
@@ -538,12 +616,12 @@
                             }
                             zcsvFile.getRowObjects().add(newRow);
                             zcsvFile.appendChangedStringsToFile();
-                            sendAllert("Saved!");
+                            //sendAllert("Saved!");
 
-                            response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+                            //response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
                         }catch (Exception ex){
-                            sendAllert("Error!");
-                            response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+                            //sendAllert("Error!");
+                            ex.printStackTrace(response.getWriter());
                         }
                         break;
                 }
