@@ -3,7 +3,7 @@ package org.eustrosoft.contractpkg.config;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-public class GenerageConfigureFule {
+public class GenerateConfigureFile {
     private final static String [] FIRST_DESCRIPTION = {"Атрибут", "Значение", "Значение2/код"};
     private final static String [] ATTRIBUTE = {"NAME", "OBJECT", "HEADER", "PARENT", "CHILD"};
     private final static String [] ATTRIBUTE_VALUE = {"DRow", "Document", "STD_HEADER", "DDocument", "DRProperty"};
@@ -21,4 +21,7 @@ public class GenerageConfigureFule {
 
 
     }
+
+
+
 }
