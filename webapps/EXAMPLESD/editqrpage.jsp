@@ -15,7 +15,7 @@
     /// T - table
 
     // DOMINATOR SPECIFIC PARAMETERS
-    private final String MONEY_DOG = "Деньги по договору";
+    private final String MONEY_DOG = "Распознано как - руб.";
 
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
@@ -183,7 +183,7 @@
                     printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i + 1)) + "\'>" +
                             "<карточка>" + "</a>");
                     for (int j = 0; j < showedNames.length; j++) {
-                        if (showedNames[j].equals("Деньги по договору")) {
+                        if (showedNames[j].equals(MONEY_DOG)) {
                             printCell(MsgContract.str2dec(eachRow.get("Деньги по договору")));
                         } else {
                             String wroteString = eachRow.get(showedNames[j]);
@@ -191,12 +191,10 @@
                         }
                     }
                     endTRow();
-
                     BigDecimal dec_money = BigDecimal.ZERO;
                     try {
                         dec_money = MsgContract.str2dec(eachRow.get("Деньги по договору"));
                         allMoney = allMoney.add(dec_money);
-                        out.println("Hello2");
 
                         if (isDate(eachRow.get("Дата отправки клиенту"))) {
                             allMoneySent = allMoneySent.add(dec_money);
@@ -204,7 +202,7 @@
                             allMoneyWait = allMoneyWait.add(dec_money);
                         }
                     }catch (Exception ex){
-
+                        //out.println("Ошибка подсчета денег!");
                     }
                 }
                 beginTRow();printCell("", showedNames.length-1);printCell("Отгружено:");printCell(allMoneySent);endTRow();
@@ -329,9 +327,9 @@
                 ZCSVRow configRow = configFile.getRowObjectByIndex(i);
                 if (configRow.get(0).length() < 3) {
                     nameMap.add(configRow.get(4));
-                }
-                if (configRow.get(3).contains(SHOW_ATTRIBUTE)) {
-                    showNames.add(configRow.get(4));
+
+                    if (configRow.get(3).contains(SHOW_ATTRIBUTE))
+                        showNames.add(configRow.get(4));
                 }
             }
             showedNames = new String[showNames.size()];
