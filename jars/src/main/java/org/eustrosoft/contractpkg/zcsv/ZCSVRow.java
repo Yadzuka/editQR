@@ -32,7 +32,7 @@ public class ZCSVRow {
 
     private ZCSVRow previousRow = null;
     private String[] nameMap = null;
-    private ArrayList dataInRow = null;
+    private ArrayList dataInRow = new ArrayList(30);
 
     protected void resetDirty(){ is_dirty = false; }
 
@@ -41,11 +41,16 @@ public class ZCSVRow {
         if (i < 0 || i >= nameMap.length) throw new ZCSVException("Индекс указан неправильно!"); //SIC!
         if (is_row) return;  is_dirty = true;
 
-        if (dataInRow.isEmpty())
-            for (int j = 0; j < nameMap.length; j++)
+        if(dataInRow.isEmpty()){
+            for(int j = 0; j < nameMap.length; j++){
                 dataInRow.add("");
-
-        dataInRow.set(i, str);
+            }
+        }
+        if(i >= dataInRow.size()){
+            dataInRow.add(str);
+        }else {
+            dataInRow.set(i, str);
+        }
     }
 
     public void setNewName(String name, String dataInRow) throws ZCSVException {

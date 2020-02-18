@@ -13,6 +13,7 @@ import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * work with File as CSV database
@@ -32,8 +33,8 @@ public class ZCSVFile {
 
     private String rootPath = null;
     private String sourceFileName = null;
-    private ArrayList fileRows = new ArrayList();
-    private ArrayList allRows = new ArrayList();
+    private ArrayList fileRows = new ArrayList(65536);
+    private ArrayList allRows = new ArrayList(65536);
 
     public void setRootPath(String rootPath) { this.rootPath = rootPath; }
     public void setFileName(String fileName) { sourceFileName = fileName; }
@@ -98,10 +99,6 @@ public class ZCSVFile {
             return true;
     }
 
-    public void stateZCSVFile(){
-
-    }
-
     // Load and show only last versions of contract
     public void loadFromFileValidVersions() throws Exception {
         ArrayList<Integer> zRIDS = new ArrayList<>();
@@ -136,12 +133,6 @@ public class ZCSVFile {
             }
         }
     }
-
-    //reload data from file if changed
-    /*public int reloadFromFile() {
-        channel.force(true);
-        return 1;
-    }*/
 
     // update file content based on changes done on rows
     public int updateFromChannel() throws ClassCastException {
@@ -194,19 +185,44 @@ public class ZCSVFile {
 
     // write changes to file but do not touch any existing data (it's paranodal-safe version of update() method
     public void appendChangedStringsToFile() throws IOException {
-            BufferedWriter writer = new BufferedWriter
-                    (new OutputStreamWriter
-                            (new FileOutputStream(rootPath + sourceFileName
-                                    , true), StandardCharsets.UTF_8));
-            for (int i = 0; i < fileRows.size(); i++) {
-                ZCSVRow row = (ZCSVRow) fileRows.get(i);
-                if (row.isDirty()) {
-                    writer.write(row.toString() + NEXT_LINE_SYMBOL);
-                    row.resetDirty();
-                }
+        BufferedWriter writer = new BufferedWriter
+                (new OutputStreamWriter
+                        (new FileOutputStream(rootPath + sourceFileName
+                                , true), StandardCharsets.UTF_8));
+        for (int i = 0; i < fileRows.size(); i++) {
+            ZCSVRow row = (ZCSVRow) fileRows.get(i);
+            if (row.isDirty()) {
+                writer.write(row.toString() + NEXT_LINE_SYMBOL);
+                row.resetDirty();
             }
-            writer.flush();
-            writer.close();
+        }
+        writer.flush();
+        writer.close();
+    }
+
+    public void appendNewStringToFile(ZCSVRow newRow) throws IOException, ZCSVException {
+        int newObjectZRID = Integer.parseInt(newRow.get(0));
+        boolean flagForNewObj = true;
+        int index = 0;
+        for(; index < fileRows.size(); index++){
+            ZCSVRow buffer = (ZCSVRow) fileRows.get(index);
+            if(buffer.get(0).equals(newObjectZRID)) {
+                flagForNewObj = false;
+                break;
+            }
+        }
+
+        if(flagForNewObj){ fileRows.add(newRow); }
+        else{ fileRows.remove(index); fileRows.set(index, newRow); }
+
+        BufferedWriter writer = new BufferedWriter
+                (new OutputStreamWriter
+                        (new FileOutputStream(rootPath + sourceFileName
+                                , true), StandardCharsets.UTF_8));
+        writer.write(newRow.toString() + NEXT_LINE_SYMBOL);
+        newRow.resetDirty();
+        writer.flush();
+        writer.close();
     }
 
     // the same as as above but new file only

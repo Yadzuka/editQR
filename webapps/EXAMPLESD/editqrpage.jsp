@@ -15,7 +15,7 @@
     /// T - table
 
     // DOMINATOR SPECIFIC PARAMETERS
-    private final String MONEY_DOG = "Распознано как - руб.";
+    private final String MONEY_DOG = "Деньги по договору";
 
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
@@ -42,7 +42,7 @@
     public final static String PARAM_CMD = "cmd"; // Page parameter
     public final static String PARAM_MEMBER = "member"; // Specific member
     public final static String PARAM_RANGE = "range"; // Specific range
-    public final static String PARAM_ZRID = "zrid"; // Specific product/contract
+    public final static String PARAM_ZRID = "ZRID"; // Specific product/contract
     public final static String PARAM_ACTION = "action"; // Specific action
     public final static String[] STD_REQUEST_PARAMETERS = {PARAM_CMD, PARAM_MEMBER, PARAM_RANGE, PARAM_ZRID, PARAM_ACTION};
     // All possible pages
@@ -151,7 +151,14 @@
             configureFile.setFileName("csv.tab");
             configureFile.setRootPath(Members.getWayToDB() + member + "/" + range + "/");
             if (configureFile.loadConfigureFile()) {
+                ZCSVRow configureString = new ZCSVRow();
 
+
+                for (int i = 0; i < configureFile.getFileRowsLength(); i++) {
+                    configureString = configureFile.getRowObjectByIndex(i);
+                    if (configureString.get(0).length() < 3) {
+                    }
+                }
             }
         }
     } // End config page
@@ -183,12 +190,12 @@
                     printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i + 1)) + "\'>" +
                             "<карточка>" + "</a>");
                     for (int j = 0; j < showedNames.length; j++) {
-                        if (showedNames[j].equals(MONEY_DOG)) {
+                        /*if (showedNames[j].equals(MONEY_DOG)) {
                             printCell(MsgContract.str2dec(eachRow.get("Деньги по договору")));
-                        } else {
-                            String wroteString = eachRow.get(showedNames[j]);
-                            printCell(wroteString);
-                        }
+                        } else {*/
+                        String wroteString = MsgContract.csv2text(eachRow.get(showedNames[j]));
+                        printCell(wroteString);
+                        //}
                     }
                     endTRow();
                     BigDecimal dec_money = BigDecimal.ZERO;
@@ -196,25 +203,16 @@
                         dec_money = MsgContract.str2dec(eachRow.get("Деньги по договору"));
                         allMoney = allMoney.add(dec_money);
 
-                        if (isDate(eachRow.get("Дата отправки клиенту"))) {
-                            allMoneySent = allMoneySent.add(dec_money);
-                        } else {
-                            allMoneyWait = allMoneyWait.add(dec_money);
-                        }
-                    }catch (Exception ex){
-                        //out.println("Ошибка подсчета денег!");
-                    }
+                        if (isDate(eachRow.get("Дата отправки клиенту"))) { allMoneySent = allMoneySent.add(dec_money); }
+                        else { allMoneyWait = allMoneyWait.add(dec_money); }
+                    } catch (Exception ex) {/*out.println("Ошибка подсчета денег!");*/}
                 }
-                beginTRow();printCell("", showedNames.length-1);printCell("Отгружено:");printCell(allMoneySent);endTRow();
-                beginTRow();printCell("", showedNames.length-1);printCell("Ждём:");printCell(allMoneyWait);endTRow();
-                beginTRow();printCell("", showedNames.length-1);printCell("Всего:");printCell(allMoney);endTRow();
+                beginTRow();printCell("", showedNames.length - 1);printCell("Отгружено:");printCell(allMoneySent);endTRow();
+                beginTRow();printCell("", showedNames.length - 1);printCell("Ждём:");printCell(allMoneyWait);endTRow();
+                beginTRow();printCell("", showedNames.length - 1);printCell("Всего:");printCell(allMoney);endTRow();
                 endT();
-            } else {
-                printerr("Can't open file! Call the system administrator!");
-            }
-        } else {
-            printerr("File doesn't exists! Call the system administrator!");
-        }
+            } else { printerr("Can't open file! Call the system administrator!"); }
+        } else { printerr("File doesn't exists! Call the system administrator!"); }
     }
 
     private void setProdViewPage(String member, String range, String ZRID) throws Exception {
@@ -229,20 +227,16 @@
 
         ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
 
-        beginT();
-        beginTRow();
-        printCell("QR картинка:");
-        beginTCell();
+        beginT();beginTRow();printCell("QR картинка:");beginTCell();
         out.print("<img src=\"qr?p_codingString=" + row.get(5) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>");
-        endTCell();
-        beginTRow();
+        endTCell();beginTRow();
         for (int i = 5; i < row.getNames().length; i++) {
             beginTRow();
-            printCell((row.getNames()[i] == null) ? "" : row.getNames()[i]);
-            printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : row.get(i));
+            printCell((row.getNames()[i] == null) ? "Не определенное имя" : row.getNames()[i]);
+            printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : MsgContract.csv2text(row.get(i)));
             endTRow();
         }
-        beginT();
+        endT();
     }
 
     private void setUpdateProductPage(String member, String range, String ZRID, String action) throws Exception {
@@ -274,20 +268,26 @@
     private void printEditForm(String member, String range, String ZRID, String action) throws Exception {
         String parameterBuffer;
         if (ZRID == null || SZ_NULL.equals(ZRID)) {
-            startCreateForm(member, range, action);
-            printUpdatePageButtons();
-            beginT();
-            for (int i = 5; i < namesMap.length; i++) {
-                parameterBuffer = getParameterName(i);
-                if (!(namesMap[i]).toLowerCase().contains("комментарий")) {
-                    printTRow(new Object[]{namesMap[i], "<input type='text' name=" + parameterBuffer + ">"});
-                } else {
-                    printTRow(new Object[]{namesMap[i], "<textarea name=" + parameterBuffer + " " +
-                            "rows='5' cols='40'> </textarea>"});
+            try {
+                startCreateForm(member, range, action);
+                printUpdatePageButtons();
+                if (namesMap == null)
+                    out.println("null");
+                beginT();
+                for (int i = 5; i < namesMap.length; i++) {
+                    parameterBuffer = getParameterName(i);
+                    if (!(namesMap[i]).toLowerCase().contains("комментарий")) {
+                        printTRow(new Object[]{namesMap[i], "<input type='text' name=" + parameterBuffer + ">"});
+                    } else {
+                        printTRow(new Object[]{namesMap[i], "<textarea name=" + parameterBuffer + " " +
+                                "rows='5' cols='40'> </textarea>"});
+                    }
                 }
+                endT();
+                endForm();
+            } catch (Exception ex) {
+                out.println("An eror");
             }
-            endT();
-            endForm();
         } else {
             Integer numberOfRow = Integer.parseInt(ZRID) - 1;
             ZCSVRow edittedRow = zcsvFile.getRowObjectByIndex(numberOfRow);
@@ -299,17 +299,17 @@
                     beginT();
                     for (int i = 5; i < edittedRow.getNames().length; i++) {
                         parameterBuffer = getParameterName(i);
-                        String showingParameter = (edittedRow.get(i) == null || SZ_NULL.equals(edittedRow.get(i))) ? "" : edittedRow.get(i);
+                        String showingParameter = edittedRow.get(i);
                         if (!edittedRow.getNames()[i].toLowerCase().contains("комментарий"))
-                            printTRow(new Object[]{edittedRow.getNames()[i], "<input type=\"text\" name=" + parameterBuffer + " value=" + showingParameter + ">"});
+                            printTRow(new Object[]{edittedRow.getNames()[i], "<input type=\"text\" name=" + parameterBuffer + " value=" + MsgContract.csv2text(showingParameter) + ">"});
                         else
                             printTRow(new Object[]{edittedRow.getNames()[i], "<textarea name=" + parameterBuffer + " " +
-                                    "rows=\"5\" cols='40'>" + showingParameter + "</textarea>"});
+                                    "rows=\"5\" cols='40'>" + MsgContract.csv2text(showingParameter) + "</textarea>"});
                     }
                     beginT();
                     endForm();
                 } else
-                    throw new ZCSVException("Names won't be setted! Call the system administramtor!");
+                    throw new ZCSVException("Names didn't set! Call the system administramtor!");
             } else
                 throw new Exception("Unknown exception");
         }
@@ -406,7 +406,6 @@
     }
 
     private void printProductsTableUpsideString(Object... outputString) throws Exception {
-        String[] upsideMenus = (String[]) outputString;
         beginTRow();
         for (int i = -1; i < outputString.length; i++) {
             if (i == -1) printCell("Опции");
@@ -567,6 +566,24 @@
         out.println("alert('" + msg + "');");
         out.println("</script>");
     }
+
+    private boolean checkNewRecord(ZCSVRow rowToCheck) throws Exception {
+        int zrid = Integer.parseInt(rowToCheck.get(0));
+        boolean flagForSave = false;
+        ZCSVRow row;
+
+        try {
+            row = zcsvFile.getRowObjectByIndex(zrid - 1);
+        } catch (IndexOutOfBoundsException | NullPointerException ex) {
+            return true;
+        }
+
+        for (int i = 0; i < row.getDataLength(); i++) {
+            if (!rowToCheck.get(i).equals(row.get(i)))
+                flagForSave = true;
+        }
+        return flagForSave;
+    }
 %>
 <html>
 <head>
@@ -622,15 +639,17 @@
             case CMD_PRODTABLE:
                 try {
                     loadDataFromConfigFile(p_member, p_range);
-                }catch (Exception ex){
+                } catch (Exception ex) {
                     out.println("CSV.TAB не определён!");
                 }
                 setProductsPage(p_member, p_range);
                 break;
             case CMD_PRODVIEW:
+                loadDataFromConfigFile(p_member, p_range);
                 setProdViewPage(p_member, p_range, p_ZRID);
                 break;
             case CMD_UPDATE:
+                loadDataFromConfigFile(p_member,p_range);
                 switch (p_action) {
                     case ACTION_EDIT:
                         setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
@@ -644,7 +663,7 @@
                             if (p_ZRID == null || SZ_NULL.equals(p_ZRID)) {
                                 Integer zrdsLength = zcsvFile.getFileRowsLength();
                                 newRow = new ZCSVRow();
-                                newRow.setNames((String[]) namesMap);
+                                newRow.setNames(namesMap);
                                 newRow.setStringSpecificIndex(0, String.valueOf(zrdsLength + 1));
                                 newRow.setStringSpecificIndex(1, "1");
                             } else {
@@ -656,16 +675,14 @@
                             newRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
                             newRow.setStringSpecificIndex(4, "N");
 
-                            for (Integer i = 5; i < namesMap.length; i++) {
-                                newRow.setStringSpecificIndex(i, request.getParameter(getParameterName(i)));
+                            for (Integer i = 5; i < newRow.getNames().length; i++) {
+                                newRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
                             }
-                            zcsvFile.getRowObjects().add(newRow);
-                            zcsvFile.appendChangedStringsToFile();
-                            //sendAllert("Saved!");
 
-                            //response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+                            zcsvFile.appendNewStringToFile(newRow);
+                            response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+
                         } catch (Exception ex) {
-                            //sendAllert("Error!");
                             ex.printStackTrace(response.getWriter());
                         }
                         break;
