@@ -121,8 +121,8 @@ public class MsgContract {
     }
 
 
-    public final static String[] CSV_UNSAFE_CHARACTERS = {";", "\\n", "\\r"};
-    public final static String[] CSV_UNSAFE_CHARACTERS_SUBST = {"\\.,", "\\.n", "\\.r"};
+    public final static String[] CSV_UNSAFE_CHARACTERS = {";", "\n", "\r"};
+    public final static String[] CSV_UNSAFE_CHARACTERS_SUBST = {"\\.,", "\\n", "\\r"};
 
     public static String value2csv(String text) {
         return (translate_tokens(obj2text(text), CSV_UNSAFE_CHARACTERS, CSV_UNSAFE_CHARACTERS_SUBST));
