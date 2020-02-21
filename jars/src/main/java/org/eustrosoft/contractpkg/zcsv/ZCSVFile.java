@@ -21,20 +21,18 @@ import java.util.Iterator;
 public class ZCSVFile {
 
     private final static String CONFIGURE_FILE_DELIMITER = "\t";
-
-    private final static String[] MODES_TO_FILE_ACCESS = {"r", "rw", "rws", "rwd"};
-    private final static String NEXT_LINE_SYMBOL = "\n";
     private final static String CONFIGURE_FILE_EXTENSION = ".tab";
     private final static String [] CONFIGURE_FILE_NAME_MAP = {"Код","Поле","Тип","Атрибуты","Название","Описание"};
 
+    private final static String NEXT_LINE_SYMBOL = "\n";
+    private final static String[] MODES_TO_FILE_ACCESS = {"r", "rw", "rws", "rwd"};
+
     private static FileLock lock;
     private FileChannel channel = null;
-    private ByteBuffer buffer = null;
 
     private String rootPath = null;
     private String sourceFileName = null;
     private ArrayList fileRows = new ArrayList(65536);
-    private ArrayList allRows = new ArrayList(65536);
 
     public void setRootPath(String rootPath) { this.rootPath = rootPath; }
     public void setFileName(String fileName) { sourceFileName = fileName; }
@@ -46,8 +44,6 @@ public class ZCSVFile {
 
     // actions on file
     // open file for read (or write, or append, or lock)
-    // ALL FILE STRINGS NOW DOWNLOADED TO THE ARRAY LIST AND CHANNEL OPENED
-    // IT WORKS! (in my opinion)
     public boolean tryOpenFile(int mode) throws Exception {
         if (channel == null) {
             if (mode > MODES_TO_FILE_ACCESS.length - 1 || mode < 0) {
@@ -62,7 +58,7 @@ public class ZCSVFile {
     // exclusively lock file (can be used before update)
     public boolean tryFileLock() throws Exception {
         if (channel == null) { return false; }
-        lock = channel.tryLock(0, channel.size(), false);
+        lock = channel.tryLock();
         return true;
     }
 
@@ -120,6 +116,7 @@ public class ZCSVFile {
                             if (Integer.parseInt(newRow.get(1)) > Integer.parseInt(row.get(1))) {
                                 fileRows.remove(i);
                                 fileRows.add(i, newRow);
+                                newRow.setPrevious(row);
                                 break;
                             } else if (Integer.parseInt(newRow.get(1)) == Integer.parseInt(row.get(1))) {
                                 break;

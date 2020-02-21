@@ -17,6 +17,12 @@
     // DOMINATOR SPECIFIC PARAMETERS
     private final String MONEY_DOG = "Деньги по договору";
 
+    private final String OPTIONAL_PRODUCTS_TABLE_PARAM = "Опции";
+
+    private final static String DELETED_RECORD_STATUS = "D";
+    private final static String NEW_RECORD_STATUS = "N";
+    private final static String OLD_RECORD_STATUS = "O";
+
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий"; // Upper page info
@@ -37,6 +43,8 @@
     public final String ACTION_REFRESH = "refresh"; // Refresh data in table into starting position
     public final String ACTION_CANCEL = "cancel"; // Cancel all updates and go back
     public final String ACTION_GENERATEQR = "genqr"; // Generate new QR code action
+    public final String ACTION_DELETE = "delete";
+    public final String ACTION_SEEHISTORY = "seehistory"; // See full history of the record
     public final String ACTION_CHANGENAMEMAP = "changenamemap"; // EXPERIMENTAL! Page with creating new name's map
     // All possible page parameters
     public final static String PARAM_CMD = "cmd"; // Page parameter
@@ -144,7 +152,7 @@
             ZCSVFile configureFile = new ZCSVFile();
             configureFile.setFileName("csv.tab");
             if (configureFile.loadConfigureFile()) {
-
+                
             }
         } else {
             ZCSVFile configureFile = new ZCSVFile();
@@ -182,20 +190,18 @@
             if (zcsvFile.tryOpenFile(1)) {
                 zcsvFile.loadFromFileValidVersions();
                 out.println("<table class=\"memberstable\" border=\"1\">");
-                printProductsTableUpsideString(showedNames);
+                printTableUpsideString(OPTIONAL_PRODUCTS_TABLE_PARAM, showedNames);
                 for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
                     ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                     eachRow.setNames(namesMap);
+                    if(eachRow.get(4).equals(DELETED_RECORD_STATUS))
+                        continue;
                     beginTRow();
                     printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i + 1)) + "\'>" +
-                            "<карточка>" + "</a>");
+                            "<карточка>" + "</a>" +"<br/>"+ "<input type=\"button\"value=\"Удалить\" onclick=\"allertToDeleteRecord()\">");
                     for (int j = 0; j < showedNames.length; j++) {
-                        /*if (showedNames[j].equals(MONEY_DOG)) {
-                            printCell(MsgContract.str2dec(eachRow.get("Деньги по договору")));
-                        } else {*/
                         String wroteString = MsgContract.csv2text(eachRow.get(showedNames[j]));
                         printCell(wroteString);
-                        //}
                     }
                     endTRow();
                     BigDecimal dec_money = BigDecimal.ZERO;
@@ -205,7 +211,7 @@
 
                         if (isDate(eachRow.get("Дата отправки клиенту"))) { allMoneySent = allMoneySent.add(dec_money); }
                         else { allMoneyWait = allMoneyWait.add(dec_money); }
-                    } catch (Exception ex) {/*out.println("Ошибка подсчета денег!");*/}
+                    } catch (Exception ex) {/*out.println("Ошибка подсчета денег!");*/} // SIC!
                 }
                 beginTRow();printCell("", showedNames.length - 1);printCell("Отгружено:");printCell(allMoneySent);endTRow();
                 beginTRow();printCell("", showedNames.length - 1);printCell("Ждём:");printCell(allMoneyWait);endTRow();
@@ -220,9 +226,11 @@
                 new String[]{
                         "Назад",
                         "Изменить запись",
+                        "Посмотреть историю изменений"
                 }, new String[]{
                         getRequestParamsURL(CMD_PRODTABLE, member, range),
                         getRequestParamsURL(CMD_UPDATE, member, range, ZRID, ACTION_EDIT),
+                        getRequestParamsURL(CMD_UPDATE, member,range, ZRID, ACTION_SEEHISTORY)
                 });
 
         ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
@@ -306,13 +314,39 @@
                             printTRow(new Object[]{edittedRow.getNames()[i], "<textarea name=" + parameterBuffer + " " +
                                     "rows=\"5\" cols='40'>" + MsgContract.csv2text(showingParameter) + "</textarea>"});
                     }
-                    beginT();
+                    endT();
                     endForm();
                 } else
                     throw new ZCSVException("Names didn't set! Call the system administramtor!");
             } else
                 throw new Exception("Unknown exception");
         }
+    }
+
+    public void setHistoryPage(String member, String range, String ZRID, String action) throws Exception {
+        printUpsideMenu(
+                new String[]{
+                        "Назад",
+                }, new String[]{
+                        getRequestParamsURL(CMD_PRODVIEW, member, range, ZRID),
+                });
+        if(!action.equals(ACTION_SEEHISTORY))
+            return;
+
+        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
+        beginT();
+        printTableUpsideString("", namesMap);
+
+        while(row != null){
+            beginTRow();
+            if(row.getNames() == null)
+                row.setNames(namesMap);
+            for(int i =0;i < row.getNames().length;i++)
+                printCell(MsgContract.csv2text(row.get(i)));
+            endTRow();
+            row = row.getPrevious();
+        }
+        endT();
     }
 
     /// END PAGES PART
@@ -405,38 +439,27 @@
         println();
     }
 
-    private void printProductsTableUpsideString(Object... outputString) throws Exception {
+    private void printTableUpsideString(String optionalParam, Object... outputString) throws Exception {
         beginTRow();
-        for (int i = -1; i < outputString.length; i++) {
-            if (i == -1) printCell("Опции");
-            else printCell(outputString[i]);
+        if(!(optionalParam.equals("") | optionalParam == null | optionalParam.equals("null")))
+            printCell(optionalParam);
+        for (int i = 0; i < outputString.length; i++) {
+            printCell(outputString[i]);
         }
         endTRow();
     }
 
-    private void beginTCell() throws Exception {
-        out.println("<td>");
-    }
+    private void beginTCell() throws Exception { out.println("<td>"); }
 
-    private void endTCell() throws Exception {
-        out.println("</td>");
-    }
+    private void endTCell() throws Exception { out.println("</td>"); }
 
-    private void beginTRow() throws Exception {
-        out.println("<tr>");
-    }
+    private void beginTRow() throws Exception { out.println("<tr>"); }
 
-    private void endTRow() throws Exception {
-        out.println("</tr>");
-    }
+    private void endTRow() throws Exception { out.println("</tr>"); }
 
-    private void beginT() throws Exception {
-        out.print("<table>");
-    }
+    private void beginT() throws Exception { out.print("<table>"); }
 
-    private void endT() throws Exception {
-        out.println("</table>");
-    }
+    private void endT() throws Exception { out.println("</table>"); }
 
     private void printCell(Object tElement) throws IOException, Exception {
         beginTCell();
@@ -494,13 +517,9 @@
         return obj.toString();
     }
 
-    public void println() throws Exception {
-        out.println("<br/>");
-    }
+    public void println() throws Exception { out.println("<br/>"); }
 
-    public void printerr(String msg) throws Exception {
-        out.print("<b>" + msg + "</b>");
-    }
+    public void printerr(String msg) throws Exception { out.print("<b>" + msg + "</b>"); }
 
     public void printerrln(String msg) throws Exception {
         printerr(msg);
@@ -517,9 +536,7 @@
         request.setCharacterEncoding("UTF-8");
     }
 
-    private void read_parameters_from_web_xml() {
-        QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH");
-    }
+    private void read_parameters_from_web_xml() { QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH"); }
 
     private String[] NAILED_RANGE_DESC = { //!SIC прибивать гвоздями плохо, просто 31-го очень к столу успеть хотелось
             "01000", "(Пример) - по каждому объекту (QR-коду) ведется отдельная страница",
@@ -569,20 +586,23 @@
 
     private boolean checkNewRecord(ZCSVRow rowToCheck) throws Exception {
         int zrid = Integer.parseInt(rowToCheck.get(0));
-        boolean flagForSave = false;
         ZCSVRow row;
+        if(zcsvFile != null) {
+            try {
+                row = zcsvFile.getRowObjectByIndex(zrid - 1);
+            } catch (IndexOutOfBoundsException | NullPointerException ex) {
+                return true;
+            }
 
-        try {
-            row = zcsvFile.getRowObjectByIndex(zrid - 1);
-        } catch (IndexOutOfBoundsException | NullPointerException ex) {
-            return true;
+            for (int i = 0; i < row.getDataLength(); i++) {
+                String s1 = rowToCheck.get(i).toString();
+                String s2 = row.get(i).toString();
+                if (!s1.equals(s2)) {
+                    return true;
+                }
+            }
         }
-
-        for (int i = 0; i < row.getDataLength(); i++) {
-            if (!rowToCheck.get(i).equals(row.get(i)))
-                flagForSave = true;
-        }
-        return flagForSave;
+        return false;
     }
 %>
 <html>
@@ -591,6 +611,7 @@
     </title>
     <link rel="stylesheet" type="text/css" href="css/webcss.css">
     <link rel="stylesheet" type="text/css" href="css/head.css">
+    <script src="js/notifications.js"></script>
 </head>
 <body>
 <h2><%= CGI_TITLE %>
@@ -627,29 +648,15 @@
         String p_action = getRequestParameter(request, PARAM_ACTION);
 
         switch (CMD) {
-            case CMD_MEMBERS:
-                setMembersPage();
-                break;
-            case CMD_RANGES:
-                setRangesPage(p_member);
-                break;
-            case CMD_CHANGE_CONFIG:
-                setChangeConfigPage(p_member, p_range);
-                break;
+            case CMD_MEMBERS: setMembersPage(); break;
+            case CMD_RANGES: setRangesPage(p_member); break;
+            case CMD_CHANGE_CONFIG: setChangeConfigPage(p_member, p_range); break;
             case CMD_PRODTABLE:
-                try {
-                    loadDataFromConfigFile(p_member, p_range);
-                } catch (Exception ex) {
-                    out.println("CSV.TAB не определён!");
-                }
-                setProductsPage(p_member, p_range);
-                break;
-            case CMD_PRODVIEW:
-                loadDataFromConfigFile(p_member, p_range);
-                setProdViewPage(p_member, p_range, p_ZRID);
-                break;
-            case CMD_UPDATE:
-                loadDataFromConfigFile(p_member,p_range);
+                try { loadDataFromConfigFile(p_member, p_range); }
+                catch (Exception ex) { out.println("CSV.TAB не определён!"); }
+                setProductsPage(p_member, p_range);  break;
+            case CMD_PRODVIEW: loadDataFromConfigFile(p_member, p_range); setProdViewPage(p_member, p_range, p_ZRID); break;
+            case CMD_UPDATE: loadDataFromConfigFile(p_member,p_range);
                 switch (p_action) {
                     case ACTION_EDIT:
                         setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
@@ -685,6 +692,14 @@
                         } catch (Exception ex) {
                             ex.printStackTrace(response.getWriter());
                         }
+                        break;
+                    case ACTION_SEEHISTORY:
+                        setHistoryPage(p_member,p_range,p_ZRID,p_action);
+                        break;
+                    case ACTION_DELETE:
+                        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);
+                        row.setStringSpecificIndex(4,"D");
+                        zcsvFile.appendNewStringToFile(row);
                         break;
                 }
                 break;

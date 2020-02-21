@@ -87,10 +87,13 @@ public class ZCSVRow {
         public boolean isDirty () { return is_dirty; }
         public void setRow () { is_row = true; }
         public boolean isRow () { return (is_row); }
+
         public void setPrevious (ZCSVRow previous){ previousRow = previous; }
         public ZCSVRow getPrevious () { return (previousRow); }
+
         public void setNames (String[]names){ nameMap = names; }
         public String[] getNames () { return nameMap; }
+
         public int getDataLength () { return dataInRow.size(); }
 
         @Override
