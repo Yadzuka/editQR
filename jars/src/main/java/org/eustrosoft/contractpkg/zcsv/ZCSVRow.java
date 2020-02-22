@@ -75,7 +75,7 @@ public class ZCSVRow {
         public String get (String name) throws ZCSVException { return get(name2column(name)); }
 
         public int name2column (String name){
-            if (!(nameMap == null || name == null)) {
+            if (nameMap != null & name != null) {
                 for (int i = 0; i < nameMap.length; i++) {
                     if (name.equals(nameMap[i]))
                         return (i);

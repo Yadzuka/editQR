@@ -169,49 +169,31 @@ public class zcsvFileTest {
         }
     }
 
-   /* @Test
-    public void rewriteAllFile() {
-        ArrayList listOfStrings = new ArrayList();
+    @Test
+    public void testGetFileRowsLength() throws Exception {
         ZCSVFile testingFile = new ZCSVFile();
-        ZCSVRow row;
-        try {
-            testingFile.setRootPath(getTestDBFileName());
-            testingFile.setFileName("testingData");
-            testingFile.tryOpenFile(1);
-            testingFile.loadFromFile();
-            testingFile.tryFileLock();
-            for(int i = 0; i < testingFile.getFileRowsLength(); i++){
-                row = testingFile.getRowObjectByIndex(i);
-                listOfStrings.add(row);
-            }
-            testingFile.rewriteAllFile();
-            /*for(int i = 0; i < listOfStrings.size(); i++){
-                if()
-            }
-        }catch (Exception ex){
-            ex.printStackTrace();
-            Assert.fail();
-        }finally {
-            try {
-                testingFile.closeFile();
-                Assert.assertTrue(true);
-            }catch (Exception ex){
-                ex.printStackTrace();
-                Assert.fail();
-            }
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
+        testingFile.loadFromFileValidVersions();
+
+        Assert.assertTrue(testingFile.getFileRowsLength() == 9);
+    }
+
+    @Test
+    public void tryFileLock() throws Exception {
+        ZCSVFile testingFile = new ZCSVFile();
+        testingFile.setRootPath(getTestDBFileName());
+        testingFile.setFileName(TESTINGDATA_CSV);
+        testingFile.tryOpenFile(1);
+
+        ZCSVFile testingFile2 = new ZCSVFile();
+        testingFile2.setRootPath(getTestDBFileName());
+        testingFile2.setFileName(TESTINGDATA_CSV);
+
+        if(testingFile.tryFileLock()){
+            testingFile2.appendNewStringToFile(new ZCSVRow("10;hey hey;"));
         }
-    }*/
-
-    @Test
-    public void testGetFileRowsLength() {
-    }
-
-    @Test
-    public void tryOpenFile() {
-    }
-
-    @Test
-    public void tryFileLock() {
+        Assert.assertTrue(true);
     }
 
     @Test

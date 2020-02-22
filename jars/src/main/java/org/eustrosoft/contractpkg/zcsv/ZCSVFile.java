@@ -6,6 +6,7 @@ package org.eustrosoft.contractpkg.zcsv;// EustroSoft.org PSPN/CSV project
 //
 //
 
+import javax.swing.plaf.nimbus.AbstractRegionPainter;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -182,6 +183,9 @@ public class ZCSVFile {
 
     // write changes to file but do not touch any existing data (it's paranodal-safe version of update() method
     public void appendChangedStringsToFile() throws IOException {
+        if(lock != null)
+            if(lock.isValid())
+                return;
         BufferedWriter writer = new BufferedWriter
                 (new OutputStreamWriter
                         (new FileOutputStream(rootPath + sourceFileName
@@ -198,6 +202,9 @@ public class ZCSVFile {
     }
 
     public void appendNewStringToFile(ZCSVRow newRow) throws IOException, ZCSVException {
+        if(lock != null)
+            if(lock.isValid())
+                return;
         int newObjectZRID = Integer.parseInt(newRow.get(0));
         boolean flagForNewObj = true;
         int index = 0;
@@ -224,6 +231,9 @@ public class ZCSVFile {
 
     // the same as as above but new file only
     public int writeNewFile(String newFileName) throws IOException {
+        if(lock != null)
+            if(lock.isValid())
+                return 0;
         ZCSVRow row;
         String fullPath = rootPath + newFileName;
 
@@ -247,7 +257,9 @@ public class ZCSVFile {
 
     // fully rewrite file with in memory data
     public void rewriteFile() throws Exception {
-        if (lock == null) {
+        if (lock != null)
+            if(lock.isValid())
+                return;
             String[] firstFileMassiveOfStrings = new String[fileRows.size()];
 
             if (tryFileLock()) {
@@ -262,9 +274,6 @@ public class ZCSVFile {
                 writer.flush();
                 writer.close();
             }
-        } else {
-            throw new ZCSVException("File is opened");
-        }
     }
 
     // GET ZCSVRow SECTION
