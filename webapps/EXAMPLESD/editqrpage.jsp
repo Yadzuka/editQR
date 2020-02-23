@@ -22,6 +22,7 @@
     private final static String DELETED_RECORD_STATUS = "D";
     private final static String NEW_RECORD_STATUS = "N";
     private final static String OLD_RECORD_STATUS = "O";
+    private final static String QR_CODE_RECORD_STATUS = "QR код";
 
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
@@ -275,6 +276,7 @@
 
     private void printEditForm(String member, String range, String ZRID, String action) throws Exception {
         String parameterBuffer;
+        String newqr = genNewQr(range);
         if (ZRID == null || SZ_NULL.equals(ZRID)) {
             try {
                 startCreateForm(member, range, action);
@@ -284,11 +286,14 @@
                 beginT();
                 for (int i = 5; i < namesMap.length; i++) {
                     parameterBuffer = getParameterName(i);
-                    if (!(namesMap[i]).toLowerCase().contains("комментарий")) {
-                        printTRow(new Object[]{namesMap[i], "<input type='text' name=" + parameterBuffer + ">"});
-                    } else {
+                    if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
+                        printTRow(new Object[]{namesMap[i], "<input type='text' id='qrcode' name=" + parameterBuffer + ">",
+                                "&nbsp;<input type=\"submit\" value=\"Сгенерировать новый код\" onclick=\"newQR("+newqr+")\"/>"});
+                    }else if (namesMap[i].toLowerCase().contains("комментарий")) {
                         printTRow(new Object[]{namesMap[i], "<textarea name=" + parameterBuffer + " " +
                                 "rows='5' cols='40'> </textarea>"});
+                    } else {
+                        printTRow(new Object[]{namesMap[i], "<input type='text' name=" + parameterBuffer + ">"});
                     }
                 }
                 endT();
@@ -308,11 +313,18 @@
                     for (int i = 5; i < edittedRow.getNames().length; i++) {
                         parameterBuffer = getParameterName(i);
                         String showingParameter = edittedRow.get(i);
-                        if (!edittedRow.getNames()[i].toLowerCase().contains("комментарий"))
-                            printTRow(new Object[]{edittedRow.getNames()[i], "<input type=\"text\" name=" + parameterBuffer + " value=" + MsgContract.csv2text(showingParameter) + ">"});
-                        else
+                        if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
+                            printTRow(new Object[]{namesMap[i], "<input type='text' id='qrcode' name=" + parameterBuffer +
+                                    " value="+MsgContract.csv2text(showingParameter)+">", "&nbsp;" +
+                                    "&nbsp;<input type=\"button\" value=\"Новый код\" onclick=newQR("+newqr+")>"});
+                        } else if(edittedRow.getNames()[i].toLowerCase().contains("комментарий")) {
                             printTRow(new Object[]{edittedRow.getNames()[i], "<textarea name=" + parameterBuffer + " " +
                                     "rows=\"5\" cols='40'>" + MsgContract.csv2text(showingParameter) + "</textarea>"});
+                        } else{
+                            printTRow(new Object[]{edittedRow.getNames()[i], "<input type=\"text\" " +
+                                    "name=" + parameterBuffer + " value=" + MsgContract.csv2text(showingParameter) + ">"});
+                        }
+
                     }
                     endT();
                     endForm();
@@ -396,9 +408,9 @@
     }
 
     private void printUpdatePageButtons() throws Exception {
-        out.print("<input type=\"submit\" name=\"cancel\" value=\"Отмена\"/>&nbsp;");
-        out.print("<input type=\"submit\" name=\"refresh\" value=\"Сбросить\"/>&nbsp;");
-        out.print("<input type=\"submit\" name=\"save\" value=\"Сохранить\"/>&nbsp;");
+        out.print("<input type=\"submit\" name=\""+ACTION_CANCEL+"\" value=\"Отмена\"/>&nbsp;");
+        out.print("<input type=\"submit\" name=\""+ACTION_REFRESH+"\" value=\"Обновить\"/>&nbsp;");
+        out.print("<input type=\"submit\" name=\""+ACTION_SAVE+"\" value=\"Сохранить\"/>&nbsp;");
     }
 
     private void printRedirectButton(String bName, String bValue, String bHref) throws Exception {
@@ -604,6 +616,17 @@
         }
         return false;
     }
+
+    private String genNewQr(String p_range) throws IOException, ZCSVException {
+        Integer maxZOID = Integer.parseInt(zcsvFile.getRowObjectByIndex(0).get(0));
+        for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
+            if(Integer.parseInt(zcsvFile.getRowObjectByIndex(i).get(0)) > maxZOID)
+                maxZOID = Integer.parseInt(zcsvFile.getRowObjectByIndex(i).get(0));
+        }
+        maxZOID++;
+        String s =  String.format("%s%03X",p_range, Long.valueOf(maxZOID));
+        return s;
+    }
 %>
 <html>
 <head>
@@ -611,7 +634,7 @@
     </title>
     <link rel="stylesheet" type="text/css" href="css/webcss.css">
     <link rel="stylesheet" type="text/css" href="css/head.css">
-    <script src="js/notifications.js"></script>
+    <script src="js/javascript.js"></script>
 </head>
 <body>
 <h2><%= CGI_TITLE %>
@@ -664,6 +687,10 @@
                     case ACTION_NEWRECORD:
                         setNewRecordPage(p_member, p_range, p_action);
                         break;
+                    case ACTION_CANCEL:
+                        break;
+                    case ACTION_REFRESH:
+                        break;
                     case ACTION_SAVE:
                         try {
                             ZCSVRow newRow;
@@ -688,7 +715,6 @@
 
                             zcsvFile.appendNewStringToFile(newRow);
                             response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
-
                         } catch (Exception ex) {
                             ex.printStackTrace(response.getWriter());
                         }

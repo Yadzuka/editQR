@@ -1,4 +1,6 @@
-package org.eustrosoft.contractpkg.zcsv;// EustroSoft.org PSPN/CSV project
+package org.eustrosoft.contractpkg.zcsv;
+
+// EustroSoft.org PSPN/CSV project
 //
 // (c) Alex V Eustrop & Pavle Seleznev & EustroSoft.org 2020
 //
@@ -6,15 +8,12 @@ package org.eustrosoft.contractpkg.zcsv;// EustroSoft.org PSPN/CSV project
 //
 //
 
-import javax.swing.plaf.nimbus.AbstractRegionPainter;
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * work with File as CSV database

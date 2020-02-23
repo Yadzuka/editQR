@@ -49,7 +49,7 @@ public class ZCSVRowTest {
 
     @Test
     public void get() throws ZCSVException {
-        ZCSVRow row = new ZCSVRow(new String("1234abcd;4321rewq;"));
+        ZCSVRow row = new ZCSVRow("1234abcd;4321rewq;");
         row.setNames(new String[]{"1","2"});
 
         Assert.assertTrue("4321rewq".equals(row.get(1)) & "4321rewq".equals(row.get("2")));

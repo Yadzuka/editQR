@@ -1,6 +1,5 @@
 package org.eustrosoft.contractpkg.zcsv;
 
-import org.eustrosoft.contractpkg.Model.Members;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -8,10 +7,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 public class zcsvFileTest {
-    //public static final String DEFAULT_TESTDB_ROOT="/s/proj/yadzuka/edit.qr.qxyz.ru/jars/src/test/resources/";
     public static final String DEFAULT_TESTDB_ROOT="./src/test/resources/";
     public static final String TESTINGDATA_CSV="testingData.csv";
     public static String getTestDBFileName(String file_name){ return(DEFAULT_TESTDB_ROOT + file_name); }
@@ -242,9 +239,5 @@ public class zcsvFileTest {
 
     @Test
     public void editRowObjectByIndex() {
-    }
-
-    @Test
-    public void testToString() {
     }
 }

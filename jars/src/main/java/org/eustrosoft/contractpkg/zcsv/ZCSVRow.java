@@ -9,9 +9,7 @@
 package org.eustrosoft.contractpkg.zcsv;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Vector;
 import org.eustrosoft.contractpkg.Model.MsgContract;
 
 /**
