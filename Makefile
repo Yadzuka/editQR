@@ -39,6 +39,14 @@ all:
 	cd jars/src/main/java/ && make all
 	cp ${WORK_PATH}/${PKG_FILENAME}.jar webapps/EXAMPLESD/WEB-INF/lib/
 	cp contrib/*jar webapps/EXAMPLESD/WEB-INF/lib/
+	mkdir -p  ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/lib
+	#DOMINATOR
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/DOMINATOR
+	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/css/
+	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/lib/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/DOMINATOR/css/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/lib/
+	${INSTALL} webapps/DOMINATOR/WEB-INF/web.xml ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/
 mvn: maven
 maven:
 	cd jars && mvn package

@@ -4,14 +4,14 @@
 # 
 
 PKG_PATH=org/eustrosoft/contractpkg/
-PKG_SRC_ALL=${PKG_PATH}/Controller/*.java \
-	${PKG_PATH}/Model/*.java ${PKG_PATH}/zcsv/*.java
-PKG_CLASS_ALL=${PKG_PATH}/Controller/*.class \
-	${PKG_PATH}/Model/*.class
+PKG_SRC_ALL=${PKG_PATH}/Controller/*.java ${PKG_PATH}/pageInners/*.java \
+	${PKG_PATH}/Model/*.java ${PKG_PATH}/zcsv/*.java ${PKG_PATH}/config/*.java
+PKG_CLASS_ALL=${PKG_PATH}/Controller/*.class ${PKG_PATH}/pageInners/*.class \
+	${PKG_PATH}/Model/*.class ${PKG_PATH}/zcsv/*.class ${PKG_PATH}/config/*.class
 PKG_FILENAME=QREdit
 #PGSQL_JDBC_CLASSPATH?=/usr/local/share/java/classes/postgresql.jar
 #SERVLET_CLASSPATH?=/usr/local/apache-tomcat4.1/common/lib/servlet.jar
-CONTRIBLIB=contrib/core-3.4.0.jar:contrib/javax.servlet-api-4.0.1.jar
+CONTRIBLIB=contrib/core-3.4.0.jar:contrib/javax.servlet-api-4.0.1.jar:contrib/jsp-api.jar
 WORK_PATH=../../../../work/
 WORKDOC_PATH=${WORK_PATH}/javadoc
 INSTALL=install -m 644
