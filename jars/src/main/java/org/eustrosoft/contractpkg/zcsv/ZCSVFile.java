@@ -14,6 +14,7 @@ import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.stream.*;
 
 /**
  * work with File as CSV database
@@ -69,15 +70,17 @@ public class ZCSVFile {
     }
 
     // Load all strings ( also with any versions )
-    public void loadFromFile() throws IOException {
+    public void loadFromFile() throws IOException { //SIC! это надо переделать через loadFromFile(String delimiter)
         Files.lines(Paths.get(rootPath + sourceFileName), StandardCharsets.UTF_8).
                 filter(w -> !(w.trim().startsWith("#") || "".
                         equals(w.trim()))).forEach(w -> fileRows.add(new ZCSVRow(w.trim())));
     }
 
     public void loadFromFile(String delimiter) throws IOException{
-        Files.lines(Paths.get(rootPath + sourceFileName), StandardCharsets.UTF_8).
-                filter(w -> !(w.trim().startsWith("#") || "".
+        loadFromStream(Files.lines(Paths.get(rootPath + sourceFileName), StandardCharsets.UTF_8),delimiter);
+    }
+    public void loadFromStream(Stream<String> ss, String delimiter) throws IOException{
+                ss.filter(w -> !(w.trim().startsWith("#") || "".
                         equals(w.trim()))).forEach(w -> {
                             ZCSVRow newRow = new ZCSVRow(w.trim(), delimiter);
                             newRow.setNames(CONFIGURE_FILE_NAME_MAP);
@@ -93,6 +96,11 @@ public class ZCSVFile {
                 throw new ZCSVException("Error with configure file paths");
             loadFromFile(CONFIGURE_FILE_DELIMITER);
             return true;
+    }
+    public boolean loadConfigFromString(String conf) throws IOException, ZCSVException{
+    BufferedReader sr = new BufferedReader(new StringReader(conf));
+    loadFromStream(sr.lines(),CONFIGURE_FILE_DELIMITER);
+    return(true);
     }
 
     // Load and show only last versions of contract

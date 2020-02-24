@@ -77,6 +77,36 @@
     private ArrayList<String> nameMap = new ArrayList();
     private ArrayList<String> showNames = new ArrayList();
 
+    private String DEFAULT_CSV_TAB = 
+"#Атрибут\tЗначение        Значение2/код\n" +
+"NAME\tTISC.DRow\tDW\n" +
+"OBJECT\tDocument        D\n" +
+"HEADER\tSTD_HEADER\n" +
+"PARENT\tTISC.DDocument  DD\n" +
+"CHILD\tTISC.DRProperty DP\n" +
+"#Код\tПоле    Тип     Атрибуты        Название        Описание\n" +
+"01\tnum\ttext\tNN,UNIQ=OBJECT\tZRID\n" +
+"03\titem\ttext\tNUL\tZVER\n" +
+"04\titem\ttext\tNUL\tZDATE\n" +
+"05\titem\ttext\tNUL\tZUID\n" +
+"06\titem\ttext\tNUL\tZSTA\n" +
+"07\titem\ttext\tSHOW,NUL\tQR код\n" +
+"08\titem\ttext\tSHOW,NUL\t№ договора\n" +
+"09\titem\ttext\tNUL\tДата договора\n" +
+"10\titem\ttext\tSHOW,NUL\tДеньги по договору\n" +
+"11\titem\ttext\tSHOW,NUL\tЮр-лицо поставщик\n" +
+"12\titem\ttext\tSHOW,NUL\tЮр-лицо клиент\n" +
+"13\titem\ttext\tNUL\tТип продукта\n" +
+"14\titem\ttext\tSHOW,NUL\tМодель продукта\n" +
+"15\titem\ttext\tSHOW,NUL\tSN\n" +
+"16\titem\ttext\tNUL\tДата производства\n" +
+"17\titem\ttext\tNUL\tДата ввода (ГТД)\n" +
+"18\titem\ttext\tNUL\tДата продажи\n" +
+"19\titem\ttext\tNUL\tДата отправки клиенту\n" +
+"20\titem\ttext\tNUL\tДата начала гарантии\n" +
+"21\titem\ttext\tNUL\tДата окончания гарантии\n" +
+"22\titem\ttext\tNUL\tКомментарий (для клиента)\n";
+
     private String getRequestParameter(ServletRequest request, String param) {
         return (getRequestParameter(request, param, null));
     }
@@ -187,10 +217,10 @@
         String rootPath = Members.getWayToDB() + member + "/" + range + "/";
         zcsvFile = setupZCSVPaths(rootPath, DB_FILENAME);
 
-        if (Files.exists(Paths.get(zcsvFile.toString()))) {
+        if (Files.exists(Paths.get(zcsvFile.toString()))) { //SIC! if(!..) then err is better
             if (zcsvFile.tryOpenFile(1)) {
                 zcsvFile.loadFromFileValidVersions();
-                out.println("<table class=\"memberstable\" border=\"1\">");
+                out.println("<table class='memberstable' border='1'>"); //SIC! println Evil, '1' is better \"1\"
                 printTableUpsideString(OPTIONAL_PRODUCTS_TABLE_PARAM, showedNames);
                 for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
                     ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
@@ -362,13 +392,18 @@
     }
 
     /// END PAGES PART
+    private void createDefaultConfig()
+    {
+    }
 
-    private void loadDataFromConfigFile(String member, String range) throws IOException, ZCSVException, Exception {
+    private void loadDataFromConfigFile(String member, String range)
+     throws IOException, ZCSVException, Exception 
+    {
         String rootPath = Members.getWayToDB() + member + "/" + range + "/";
         ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
         nameMap = new ArrayList<>();
         showNames = new ArrayList<>();
-        if (configFile.loadConfigureFile()) {
+        try {configFile.loadConfigureFile();} catch(Exception e) {configFile.loadConfigFromString(DEFAULT_CSV_TAB);}
             for (int i = 0; i < configFile.getFileRowsLength(); i++) {
                 ZCSVRow configRow = configFile.getRowObjectByIndex(i);
                 if (configRow.get(0).length() < 3) {
@@ -382,6 +417,7 @@
             showNames.toArray(showedNames);
             namesMap = new String[nameMap.size()];
             nameMap.toArray(namesMap);
+/* this code don't work prop-ly
         } else {
             for (Integer i = 1; i < 25; i++) {
                 nameMap.add(i.toString());
@@ -392,6 +428,7 @@
             namesMap = new String[nameMap.size()];
             nameMap.toArray(namesMap);
         }
+*/
     }
 
     private String getParameterName(int index) {
@@ -637,7 +674,7 @@
     <script src="js/javascript.js"></script>
 </head>
 <body>
-<h2><%= CGI_TITLE %>
+<h2><a href="/"><%= CGI_TITLE %></a> <!-- href to start page of system -->
 </h2>
 <hr>
 <div>
@@ -676,7 +713,10 @@
             case CMD_CHANGE_CONFIG: setChangeConfigPage(p_member, p_range); break;
             case CMD_PRODTABLE:
                 try { loadDataFromConfigFile(p_member, p_range); }
-                catch (Exception ex) { out.println("CSV.TAB не определён!"); }
+                catch (Exception ex) {
+		      out.println("CSV.TAB не определён!"); // SIC! out.println is Evil!
+		      createDefaultConfig();
+		 }
                 setProductsPage(p_member, p_range);  break;
             case CMD_PRODVIEW: loadDataFromConfigFile(p_member, p_range); setProdViewPage(p_member, p_range, p_ZRID); break;
             case CMD_UPDATE: loadDataFromConfigFile(p_member,p_range);
