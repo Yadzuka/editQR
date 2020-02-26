@@ -76,6 +76,98 @@
     private String[] showedNames;
     private ArrayList<String> nameMap = new ArrayList();
     private ArrayList<String> showNames = new ArrayList();
+private static String FieldNames[] ={
+"ZOID",
+"ZVER",
+"ZDATE",
+"ZUID",
+"ZSTA",
+"QR",
+"CONTRACTNUM",
+"contractdate",
+"MONEY",
+"SUPPLIER",
+"CLIENT",
+"PRODTYPE",
+"MODEL",
+"SN",
+"prodate",
+"shipdate",
+"SALEDATE",
+"DEPARTUREDATE",
+"WARRANTYSTART",
+"WARRANTYEND",
+"COMMENT"
+};
+private static String FieldOptions[] ={
+"NN", // "ZOID",
+"NUL", // "ZVER",
+"NUL", // "ZDATE",
+"NUL", // "ZUID",
+"NUL", // "ZSTA",
+"NUL", // "QR",
+"NUL", // "CONTRACTNUM",
+"NUL", // "contractdate",
+"NUL", // "MONEY",
+"NUL", // "SUPPLIER",
+"NUL", // "CLIENT",
+"NUL", // "PRODTYPE",
+"NUL", // "MODEL",
+"NUL", // "SN",
+"NUL", // "prodate",
+"NUL", // "shipdate",
+"NUL", // "SALEDATE",
+"NUL", // "DEPARTUREDATE",
+"NUL", // "WARRANTYSTART",
+"NUL", // "WARRANTYEND",
+"NUL" // "COMMENT"
+};
+private static String FieldCaptions[] ={
+"ZOID",
+"ZVER",
+"ZDATE",
+"ZUID",
+"ZSTA",
+"QR код",
+"№ договора",
+"дата договора",
+"Деньги по договору",
+"Юр-лицо поставщик",
+"Юр-лицо клиент",
+"Тип продукта",
+"Модель продукта",
+"SN",
+"Дата производства",
+"Дата ввоза (ГТД)",
+"Дата продажи",
+"Дата отправки клиенту",
+"Дата начала гарантии",
+"Дата окончания гарантии",
+"Комментарий (для клиента)"
+};
+private static String FieldComments[] ={
+"ZOID - идентификатор объекта (записи) в файле, записи с одинаковым ZOID - разные версии одной записи",
+"ZVER - номер версии записи ",
+"ZDATE - дата порождения данной версии",
+"ZUID - пользователь, записавший версию",
+"ZSTA - статус 'N' - актуальная, 'C' - устаревшая, 'D' - удаленная",
+"QR код должен содержать ровно 8 символов, алфавит [0-9,A-F], первые 5 - это диапазон, оставшиеся 3 - номер внутри диапазона в 16-ричном",
+"для новых номеров можно использовать последние 4 символа QR-кода. допустимо несколько карточек с одним номером договора",
+"дата заключения договора",
+"Деньги, причитающиеся поставщику, по договору за это изделие. Если изделий по договору несколько - заполняйте отдельные карточки",
+"кто исполнитель по договору, если у нас более одного юр-лица или ИП",
+"Юр-лицо клиента, пока только название, но можете добавить ИНН, через запятую, или еще что-то. Последним укажите город. Напр: EustroSoft,...,Москва",
+"Тип продукта.",
+"Модель продукта",
+"Серийный номер изделия. Возможно - серийные номера агрегатов через запятую. Потом разберемся",
+"Дата производства изделия",
+"Сейчас - номер ГТД. Изначально хотели указывать дату ввоза в Россию, или дату поступления на склад.",
+"Дата продажи - видимо дата поступления денег или гарантийного письма об оплате ",
+"Дата отправки клиенту/отгрузки со склада. Обычно - это-же дата начала гарантии",
+"Дата начала гарантии для конечного пользователя. т.е. при продажи дилером - задается им",
+"Дата окончания гарантии. Обычно + 1 год, но нет правил без исключений",
+"Этот комментарий виден клиенту! конфиденциальное пишите в поле Деньги"
+};
 
     private String DEFAULT_CSV_TAB = 
 "#Атрибут\tЗначение        Значение2/код\n" +
@@ -85,27 +177,36 @@
 "PARENT\tTISC.DDocument  DD\n" +
 "CHILD\tTISC.DRProperty DP\n" +
 "#Код\tПоле    Тип     Атрибуты        Название        Описание\n" +
-"01\tnum\ttext\tNN,UNIQ=OBJECT\tZRID\n" +
-"03\titem\ttext\tNUL\tZVER\n" +
-"04\titem\ttext\tNUL\tZDATE\n" +
-"05\titem\ttext\tNUL\tZUID\n" +
-"06\titem\ttext\tNUL\tZSTA\n" +
-"07\titem\ttext\tSHOW,NUL\tQR код\n" +
-"08\titem\ttext\tSHOW,NUL\t№ договора\n" +
-"09\titem\ttext\tNUL\tДата договора\n" +
-"10\titem\ttext\tSHOW,NUL\tДеньги по договору\n" +
-"11\titem\ttext\tSHOW,NUL\tЮр-лицо поставщик\n" +
-"12\titem\ttext\tSHOW,NUL\tЮр-лицо клиент\n" +
-"13\titem\ttext\tNUL\tТип продукта\n" +
-"14\titem\ttext\tSHOW,NUL\tМодель продукта\n" +
-"15\titem\ttext\tSHOW,NUL\tSN\n" +
-"16\titem\ttext\tNUL\tДата производства\n" +
-"17\titem\ttext\tNUL\tДата ввода (ГТД)\n" +
-"18\titem\ttext\tNUL\tДата продажи\n" +
-"19\titem\ttext\tNUL\tДата отправки клиенту\n" +
-"20\titem\ttext\tNUL\tДата начала гарантии\n" +
-"21\titem\ttext\tNUL\tДата окончания гарантии\n" +
-"22\titem\ttext\tNUL\tКомментарий (для клиента)\n";
+"01\tZRID\ttext\tNN,UNIQ=OBJECT\tZRID\n" +
+"02\tZVER\ttext\tNUL\tZVER\n" +
+"03\tZDATE\ttext\tNUL\tZDATE\n" +
+"04\tZUID\ttext\tNUL\tZUID\n" +
+"05\tZSTA\ttext\tNUL\tZSTA\n" +
+"06\tQR\ttext\tSHOW,NUL,QR\tQR код\n" +
+"07\tcnum\ttext\tSHOW,NUL\t№ договора\n" +
+"08\tcdate\ttext\tNUL\tДата договора\n" +
+"09\tcmoney\ttext\tSHOW,NUL,QRMONEY\tДеньги по договору\n" +
+"10\tsupplyer\ttext\tSHOW,NUL\tЮр-лицо поставщик\n" +
+"11\tclient\ttext\tSHOW,NUL\tЮр-лицо клиент\n" +
+"12\tprodtype\ttext\tNUL\tТип продукта\n" +
+"13\tprodmodel\ttext\tSHOW,NUL\tМодель продукта\n" +
+"14\tsn\ttext\tSHOW,NUL\tSN\n" +
+"15\tprodate\ttext\tNUL\tДата производства\n" +
+"16\tGTD\ttext\tNUL\tДата ввоза (ГТД)\n" +
+"17\tsaledate\ttext\tNUL\tДата продажи\n" +
+"18\tsendate\ttext\tNUL\tДата отправки клиенту\n" +
+"19\twarstart\ttext\tNUL\tДата начала гарантии\n" +
+"20\twarend\ttext\tNUL\tДата окончания гарантии\n" +
+"21\tcomment\ttext\tNUL\tКомментарий (для клиента)\n";
+/*
+*/
+    private String szDefaultCSVConf=null;
+    public String getDefaultCSVConf()
+    {
+    if(szDefaultCSVConf != null) return(szDefaultCSVConf);
+    szDefaultCSVConf = DEFAULT_CSV_TAB;
+    return(szDefaultCSVConf);
+    }
 
     private String getRequestParameter(ServletRequest request, String param) {
         return (getRequestParameter(request, param, null));
@@ -228,8 +329,9 @@
                     if(eachRow.get(4).equals(DELETED_RECORD_STATUS))
                         continue;
                     beginTRow();
-                    printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i + 1)) + "\'>" +
-                            "<карточка>" + "</a>" +"<br/>"+ "<input type=\"button\"value=\"Удалить\" onclick=\"allertToDeleteRecord()\">");
+                    //printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i + 1)) + "\'>" +
+                    //        "<карточка>" + "</a>" +"<br/>"+ "<input type=\"button\"value=\"Удалить\" onclick=\"allertToDeleteRecord()\">");
+                    printCellCardTools(member,range,new Long(i+1));
                     for (int j = 0; j < showedNames.length; j++) {
                         String wroteString = MsgContract.csv2text(eachRow.get(showedNames[j]));
                         printCell(wroteString);
@@ -403,7 +505,7 @@
         ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
         nameMap = new ArrayList<>();
         showNames = new ArrayList<>();
-        try {configFile.loadConfigureFile();} catch(Exception e) {configFile.loadConfigFromString(DEFAULT_CSV_TAB);}
+        try {configFile.loadConfigureFile();} catch(Exception e) {configFile.loadConfigFromString(getDefaultCSVConf());}
             for (int i = 0; i < configFile.getFileRowsLength(); i++) {
                 ZCSVRow configRow = configFile.getRowObjectByIndex(i);
                 if (configRow.get(0).length() < 3) {
@@ -514,6 +616,12 @@
         beginTCell();
         out.println(obj2str(tElement));
         endTCell();
+    }
+    public void printCellCardTools(String member, String range, Long ZRID) throws IOException, Exception
+    {
+      printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, ZRID.toString()) + "\'>" +
+                            "&lt;карточка&gt;" + "</a>"); //SIC! а вообще, надо делать немного по-другому
+	// +"<br/>"+ "<input type=\"button\"value=\"Удалить\" onclick=\"allertToDeleteRecord()\">");
     }
 
     private void printCell(Object tElement, int colspan) throws IOException, Exception {
