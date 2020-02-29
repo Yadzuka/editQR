@@ -32,7 +32,6 @@ public class ZCSVRowTest {
         }catch (Exception ex){
             ex.printStackTrace();
         }
-
     }
 
     @Test
@@ -79,26 +78,6 @@ public class ZCSVRowTest {
 
     @Test
     public void setRow() {
-    }
-
-    @Test
-    public void isRow() {
-    }
-
-    @Test
-    public void setPrevious() {
-    }
-
-    @Test
-    public void getPrevious() {
-    }
-
-    @Test
-    public void setNames() {
-    }
-
-    @Test
-    public void getNames() {
     }
 
     @Test

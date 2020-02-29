@@ -14,9 +14,6 @@
     /// Vocabulary:
     /// T - table
 
-    // DOMINATOR SPECIFIC PARAMETERS
-    private final String MONEY_DOG = "Деньги по договору";
-
     private final String OPTIONAL_PRODUCTS_TABLE_PARAM = "Опции";
 
     private final static String DELETED_RECORD_STATUS = "D";
@@ -420,7 +417,8 @@ private static String FieldComments[] ={
                     parameterBuffer = getParameterName(i);
                     if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
                         printTRow(new Object[]{namesMap[i], "<input type='text' id='qrcode' name=" + parameterBuffer + ">",
-                                "&nbsp;<input type=\"submit\" value=\"Сгенерировать новый код\" onclick=\"newQR("+newqr+")\"/>"});
+                                String.format("<input type=\"button\" onclick=\"newQR('%s')\" name="+ACTION_REFRESH+" value=\"Обновить\"/>",newqr),
+                        });
                     }else if (namesMap[i].toLowerCase().contains("комментарий")) {
                         printTRow(new Object[]{namesMap[i], "<textarea name=" + parameterBuffer + " " +
                                 "rows='5' cols='40'> </textarea>"});
@@ -448,7 +446,8 @@ private static String FieldComments[] ={
                         if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
                             printTRow(new Object[]{namesMap[i], "<input type='text' id='qrcode' name=" + parameterBuffer +
                                     " value="+MsgContract.csv2text(showingParameter)+">", "&nbsp;" +
-                                    "&nbsp;<input type=\"button\" value=\"Новый код\" onclick=newQR("+newqr+")>"});
+                                    String.format("<input type=\"button\" onclick=\"newQR('%s')\" name="+ACTION_REFRESH+" value=\"Обновить\"/>",newqr),
+                            });
                         } else if(edittedRow.getNames()[i].toLowerCase().contains("комментарий")) {
                             printTRow(new Object[]{edittedRow.getNames()[i], "<textarea name=" + parameterBuffer + " " +
                                     "rows=\"5\" cols='40'>" + MsgContract.csv2text(showingParameter) + "</textarea>"});
@@ -494,8 +493,7 @@ private static String FieldComments[] ={
     }
 
     /// END PAGES PART
-    private void createDefaultConfig()
-    {
+    private void createDefaultConfig() {
     }
 
     private void loadDataFromConfigFile(String member, String range)
@@ -669,8 +667,7 @@ private static String FieldComments[] ={
     }
 
     private String obj2str(Object obj) {
-        if (obj == null)
-            obj = "";
+        if (obj == null) obj = "";
         return obj.toString();
     }
 
@@ -763,10 +760,13 @@ private static String FieldComments[] ={
     }
 
     private String genNewQr(String p_range) throws IOException, ZCSVException {
-        Integer maxZOID = Integer.parseInt(zcsvFile.getRowObjectByIndex(0).get(0));
+        if(zcsvFile.getFileRowsLength() == 0){
+            return String.format("%s%03X",p_range, 1);
+        }
+        Long maxZOID = Long.parseLong(zcsvFile.getRowObjectByIndex(0).get(5).substring(p_range.length()),16);
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
-            if(Integer.parseInt(zcsvFile.getRowObjectByIndex(i).get(0)) > maxZOID)
-                maxZOID = Integer.parseInt(zcsvFile.getRowObjectByIndex(i).get(0));
+            if(Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()), 16) > maxZOID)
+                maxZOID = Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()),16);
         }
         maxZOID++;
         String s =  String.format("%s%03X",p_range, Long.valueOf(maxZOID));
@@ -807,7 +807,6 @@ private static String FieldComments[] ={
         read_parameters_from_web_xml();
         if (QRDB_PATH == null)
             throw new ZCSVException("Не задан параметр пути к базе данных.");
-
         Members.setWayToDB(QRDB_PATH);
 
         String p_member = getRequestParameter(request, PARAM_MEMBER); // Check to SI
@@ -821,10 +820,7 @@ private static String FieldComments[] ={
             case CMD_CHANGE_CONFIG: setChangeConfigPage(p_member, p_range); break;
             case CMD_PRODTABLE:
                 try { loadDataFromConfigFile(p_member, p_range); }
-                catch (Exception ex) {
-		      out.println("CSV.TAB не определён!"); // SIC! out.println is Evil!
-		      createDefaultConfig();
-		 }
+                catch (Exception e){createDefaultConfig();}
                 setProductsPage(p_member, p_range);  break;
             case CMD_PRODVIEW: loadDataFromConfigFile(p_member, p_range); setProdViewPage(p_member, p_range, p_ZRID); break;
             case CMD_UPDATE: loadDataFromConfigFile(p_member,p_range);
@@ -855,7 +851,7 @@ private static String FieldComments[] ={
                             }
                             newRow.setStringSpecificIndex(2, getCurrentDate4ZDATE());
                             newRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
-                            newRow.setStringSpecificIndex(4, "N");
+                            newRow.setStringSpecificIndex(4, NEW_RECORD_STATUS);
 
                             for (Integer i = 5; i < newRow.getNames().length; i++) {
                                 newRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
@@ -863,6 +859,7 @@ private static String FieldComments[] ={
 
                             zcsvFile.appendNewStringToFile(newRow);
                             response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+
                         } catch (Exception ex) {
                             ex.printStackTrace(response.getWriter());
                         }

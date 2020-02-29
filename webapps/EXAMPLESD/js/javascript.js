@@ -7,8 +7,11 @@ function allertToDeleteRecord(){
         return false;
 }
 
+function f() {
+    alert("Hello");
+}
+
 function newQR(qr) {
-    var qrfield = document.getElementById(qrcode);
-    qrfield.innerText = qr;
-    qrfield.innerHTML = qr;
+    let qrfield = document.getElementById("qrcode");
+    qrfield.value = qr;
 }
