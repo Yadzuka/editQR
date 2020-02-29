@@ -416,14 +416,24 @@ private static String FieldComments[] ={
                 for (int i = 5; i < namesMap.length; i++) {
                     parameterBuffer = getParameterName(i);
                     if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
-                        printTRow(new Object[]{namesMap[i], "<input type='text' id='qrcode' name=" + parameterBuffer + ">",
-                                String.format("<input type=\"button\" onclick=\"newQR('%s')\" name="+ACTION_REFRESH+" value=\"Обновить\"/>",newqr),
+                        printTRow(new Object[]{
+                                namesMap[i],
+                                "<input type='text' id='qrcode' name=" + parameterBuffer + ">",
+                                String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>",newqr),
+                                FieldComments[i],
                         });
                     }else if (namesMap[i].toLowerCase().contains("комментарий")) {
-                        printTRow(new Object[]{namesMap[i], "<textarea name=" + parameterBuffer + " " +
-                                "rows='5' cols='40'> </textarea>"});
+                        printTRow(new Object[]{
+                                namesMap[i],
+                                "<textarea name=" + parameterBuffer + " " + "rows='5' cols='40'> </textarea>",
+                                FieldComments[i],
+                        });
                     } else {
-                        printTRow(new Object[]{namesMap[i], "<input type='text' name=" + parameterBuffer + ">"});
+                        printTRow(new Object[]{
+                                namesMap[i],
+                                "<input type='text' name=" + parameterBuffer + ">",
+                                FieldComments[i],
+                        });
                     }
                 }
                 endT();
@@ -444,18 +454,25 @@ private static String FieldComments[] ={
                         parameterBuffer = getParameterName(i);
                         String showingParameter = edittedRow.get(i);
                         if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
-                            printTRow(new Object[]{namesMap[i], "<input type='text' id='qrcode' name=" + parameterBuffer +
-                                    " value="+MsgContract.csv2text(showingParameter)+">", "&nbsp;" +
-                                    String.format("<input type=\"button\" onclick=\"newQR('%s')\" name="+ACTION_REFRESH+" value=\"Обновить\"/>",newqr),
+                            printTRow(new Object[]{
+                                    namesMap[i],
+                                    "<input type='text' id='qrcode' name=" + parameterBuffer + " value="+MsgContract.csv2text(showingParameter)+">",
+                                    String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>",newqr),
+                                    FieldComments[i],
                             });
                         } else if(edittedRow.getNames()[i].toLowerCase().contains("комментарий")) {
-                            printTRow(new Object[]{edittedRow.getNames()[i], "<textarea name=" + parameterBuffer + " " +
-                                    "rows=\"5\" cols='40'>" + MsgContract.csv2text(showingParameter) + "</textarea>"});
+                            printTRow(new Object[]{
+                                    edittedRow.getNames()[i],
+                                    "<textarea name=" + parameterBuffer + " " + "rows=\"5\" cols='40'>" + MsgContract.csv2text(showingParameter) + "</textarea>",
+                                    FieldComments[i],
+                            });
                         } else{
-                            printTRow(new Object[]{edittedRow.getNames()[i], "<input type=\"text\" " +
-                                    "name=" + parameterBuffer + " value=" + MsgContract.csv2text(showingParameter) + ">"});
+                            printTRow(new Object[]{
+                                    edittedRow.getNames()[i],
+                                    "<input type=\"text\" " + "name=" + parameterBuffer + " value=" + MsgContract.csv2text(showingParameter) + ">",
+                                    FieldComments[i],
+                            });
                         }
-
                     }
                     endT();
                     endForm();
