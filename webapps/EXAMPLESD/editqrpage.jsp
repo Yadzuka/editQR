@@ -366,7 +366,7 @@ private static String FieldComments[] ={
         ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
 
         beginT();beginTRow();printCell("QR картинка:");beginTCell();
-        out.print("<img src=\"qr?p_codingString=" + row.get(5) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>");
+        out.print("<img src=\"qr?p_codingString=" + row.get(QR_CODE_RECORD_STATUS) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>");
         endTCell();beginTRow();
         for (int i = 5; i < row.getNames().length; i++) {
             beginTRow();
