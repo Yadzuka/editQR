@@ -15,6 +15,7 @@
     /// T - table
 
     private final String OPTIONAL_PRODUCTS_TABLE_PARAM = "Опции";
+    private final String ADDITION_TO_REFERENCE = "http://qr.qxyz.ru/?q=";
 
     private final static String DELETED_RECORD_STATUS = "D";
     private final static String NEW_RECORD_STATUS = "N";
@@ -33,6 +34,7 @@
     private final String SZ_EMPTY = ""; // Empty string
     // Attributes of CSV config file
     private final String SHOW_ATTRIBUTE = "SHOW";
+    private final String QR_ATTRIBUTE = "QR";
     // All possible actions on update page
     public final String ACTION_EDIT = "edit"; // Simple state for updating product/contract page
     public final String ACTION_CREATE = "create"; // Action for creating new state of product/contract
@@ -166,7 +168,7 @@ private static String FieldComments[] ={
 "Этот комментарий виден клиенту! конфиденциальное пишите в поле Деньги"
 };
 
-    private String DEFAULT_CSV_TAB = 
+    private String DEFAULT_CSV_TAB =
 "#Атрибут\tЗначение        Значение2/код\n" +
 "NAME\tTISC.DRow\tDW\n" +
 "OBJECT\tDocument        D\n" +
@@ -281,7 +283,7 @@ private static String FieldComments[] ={
             ZCSVFile configureFile = new ZCSVFile();
             configureFile.setFileName("csv.tab");
             if (configureFile.loadConfigureFile()) {
-                
+
             }
         } else {
             ZCSVFile configureFile = new ZCSVFile();
@@ -326,8 +328,6 @@ private static String FieldComments[] ={
                     if(eachRow.get(4).equals(DELETED_RECORD_STATUS))
                         continue;
                     beginTRow();
-                    //printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, String.valueOf(i + 1)) + "\'>" +
-                    //        "<карточка>" + "</a>" +"<br/>"+ "<input type=\"button\"value=\"Удалить\" onclick=\"allertToDeleteRecord()\">");
                     printCellCardTools(member,range,new Long(i+1));
                     for (int j = 0; j < showedNames.length; j++) {
                         String wroteString = MsgContract.csv2text(eachRow.get(showedNames[j]));
@@ -439,7 +439,7 @@ private static String FieldComments[] ={
                 endT();
                 endForm();
             } catch (Exception ex) {
-                out.println("An eror");
+                out.println("An error");
             }
         } else {
             Integer numberOfRow = Integer.parseInt(ZRID) - 1;
@@ -514,7 +514,7 @@ private static String FieldComments[] ={
     }
 
     private void loadDataFromConfigFile(String member, String range)
-     throws IOException, ZCSVException, Exception 
+     throws IOException, ZCSVException, Exception
     {
         String rootPath = Members.getWayToDB() + member + "/" + range + "/";
         ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
@@ -534,22 +534,14 @@ private static String FieldComments[] ={
             showNames.toArray(showedNames);
             namesMap = new String[nameMap.size()];
             nameMap.toArray(namesMap);
-/* this code don't work prop-ly
-        } else {
-            for (Integer i = 1; i < 25; i++) {
-                nameMap.add(i.toString());
-                showNames.add(i.toString());
-            }
-            showedNames = new String[showNames.size()];
-            showNames.toArray(showedNames);
-            namesMap = new String[nameMap.size()];
-            nameMap.toArray(namesMap);
-        }
-*/
     }
 
     private String getParameterName(int index) {
         return REC_PREFIX + String.valueOf(index);
+    }
+
+    private String getReference(String code){
+        return ADDITION_TO_REFERENCE + code;
     }
 
     private boolean isDate(String date) {
@@ -777,17 +769,14 @@ private static String FieldComments[] ={
     }
 
     private String genNewQr(String p_range) throws IOException, ZCSVException {
-        if(zcsvFile.getFileRowsLength() == 0){
-            return String.format("%s%03X",p_range, 1);
-        }
-        Long maxZOID = Long.parseLong(zcsvFile.getRowObjectByIndex(0).get(5).substring(p_range.length()),16);
+        long maxZOID = 0;//Long.parseLong(zcsvFile.getRowObjectByIndex(0).get(5).substring(p_range.length()),16);
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
-            if(Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()), 16) > maxZOID)
-                maxZOID = Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()),16);
+            if(!zcsvFile.getRowObjectByIndex(i).get(5).equals("") & !zcsvFile.getRowObjectByIndex(i).get(5).equals(null))
+                if(Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()), 16) > maxZOID)
+                    maxZOID = Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()),16);
         }
         maxZOID++;
-        String s =  String.format("%s%03X",p_range, Long.valueOf(maxZOID));
-        return s;
+        return String.format("%s%03X",p_range, maxZOID);
     }
 %>
 <html>
