@@ -137,8 +137,7 @@ public class ZCSVFile {
                 }
             }
         }
-        if(reader != null)
-            reader.close();
+        reader.close();
     }
 
     // update file content based on changes done on rows

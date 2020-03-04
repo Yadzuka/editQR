@@ -902,6 +902,8 @@ private static String FieldComments[] ={
             out.print(ex.getMessage() + "Call the system administrator please.");
         else
             out.println("Unexpected error occured! Call the system administrator please.");
+    } finally {
+        zcsvFile.closeFile();
     }
 %>
 <hr>
