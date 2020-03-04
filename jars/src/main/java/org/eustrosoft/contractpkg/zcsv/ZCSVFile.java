@@ -80,13 +80,12 @@ public class ZCSVFile {
         loadFromStream(Files.lines(Paths.get(rootPath + sourceFileName), StandardCharsets.UTF_8),delimiter);
     }
     public void loadFromStream(Stream<String> ss, String delimiter) throws IOException{
-                ss.filter(w -> !(w.trim().startsWith("#") || "".
-                        equals(w.trim()))).forEach(w -> {
-                            ZCSVRow newRow = new ZCSVRow(w.trim(), delimiter);
-                            newRow.setNames(CONFIGURE_FILE_NAME_MAP);
-                            fileRows.add(newRow);
-
-        });
+        ss.filter(w -> !(w.trim().startsWith("#") || "".
+                equals(w.trim()))).forEach(w -> {
+                    ZCSVRow newRow = new ZCSVRow(w.trim(), delimiter);
+                    newRow.setNames(CONFIGURE_FILE_NAME_MAP);
+                    fileRows.add(newRow); });
+        ss.close();
     }
 
     public boolean loadConfigureFile() throws IOException, ZCSVException{
@@ -100,6 +99,7 @@ public class ZCSVFile {
     public boolean loadConfigFromString(String conf) throws IOException, ZCSVException{
     BufferedReader sr = new BufferedReader(new StringReader(conf));
     loadFromStream(sr.lines(),CONFIGURE_FILE_DELIMITER);
+    sr.close();
     return(true);
     }
 
@@ -137,6 +137,8 @@ public class ZCSVFile {
                 }
             }
         }
+        if(reader != null)
+            reader.close();
     }
 
     // update file content based on changes done on rows
