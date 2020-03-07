@@ -775,6 +775,7 @@ private static String FieldComments[] ={
     }
 
     private boolean checkNewRecord(ZCSVRow rowToCheck) throws Exception {
+        sendAllert(rowToCheck.get(0));
         int zrid = Integer.parseInt(rowToCheck.get(0));
         ZCSVRow row;
         if(zcsvFile != null) {
@@ -784,7 +785,8 @@ private static String FieldComments[] ={
                 return true;
             }
 
-            for (int i = 0; i < row.getDataLength(); i++) {
+            for (int i = 5; i < row.getNames().length; i++) {
+                sendAllert(rowToCheck.get(i) +" " + row.get(i));
                 String s1 = rowToCheck.get(i).toString();
                 String s2 = row.get(i).toString();
                 if (!s1.equals(s2)) {
@@ -897,7 +899,7 @@ private static String FieldComments[] ={
                                 newRow.setStringSpecificIndex(0, String.valueOf(zrdsLength + 1));
                                 newRow.setStringSpecificIndex(1, "1");
                             } else {
-                                newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);
+                                newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1).clone();
                                 Integer newVerion = Integer.parseInt(newRow.get(1)) + 1;
                                 newRow.setStringSpecificIndex(1, newVerion.toString());
                             }
@@ -908,17 +910,11 @@ private static String FieldComments[] ={
                             for (Integer i = 5; i < newRow.getNames().length; i++) {
                                 newRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
                             }
-
-                            zcsvFile.appendNewStringToFile(newRow);
+                            if(checkNewRecord(newRow)) { zcsvFile.appendNewStringToFile(newRow); }
                             response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
-
-                        } catch (Exception ex) {
-                            ex.printStackTrace(response.getWriter());
-                        }
+                        } catch (Exception ex) { ex.printStackTrace(response.getWriter()); }
                         break;
-                    case ACTION_SEEHISTORY:
-                        setHistoryPage(p_member,p_range,p_ZRID,p_action);
-                        break;
+                    case ACTION_SEEHISTORY: setHistoryPage(p_member,p_range,p_ZRID,p_action); break;
                     case ACTION_DELETE:
                         try {
                             ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);

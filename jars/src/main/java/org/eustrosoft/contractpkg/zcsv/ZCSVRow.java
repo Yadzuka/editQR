@@ -70,50 +70,59 @@ public class ZCSVRow {
             return (String) dataInRow.get(i);
         }
 
-        public String get (String name) throws ZCSVException { return get(name2column(name)); }
+    public String get (String name) throws ZCSVException { return get(name2column(name)); }
 
-        public int name2column (String name){
-            if (nameMap != null & name != null) {
-                for (int i = 0; i < nameMap.length; i++) {
-                    if (name.equals(nameMap[i]))
-                        return (i);
-                }
+    public int name2column (String name){
+        if (nameMap != null & name != null) {
+            for (int i = 0; i < nameMap.length; i++) {
+                if (name.equals(nameMap[i]))
+                    return (i);
             }
-            return (-1);
         }
+        return (-1);
+    }
 
-        public boolean isDirty () { return is_dirty; }
-        public void setRow () { is_row = true; }
-        public boolean isRow () { return (is_row); }
+    public boolean isDirty () { return is_dirty; }
+    public void setRow () { is_row = true; }
+    public boolean isRow () { return (is_row); }
 
-        public void setPrevious (ZCSVRow previous){ previousRow = previous; }
-        public ZCSVRow getPrevious () { return (previousRow); }
+    public void setPrevious (ZCSVRow previous){ previousRow = previous; }
+    public ZCSVRow getPrevious () { return (previousRow); }
 
-        public void setNames (String[]names){ nameMap = names; }
-        public String[] getNames () { return nameMap; }
+    public void setNames (String[]names){ nameMap = names; }
+    public String[] getNames () { return nameMap; }
 
-        public int getDataLength () { return dataInRow.size(); }
+    public int getDataLength () { return dataInRow.size(); }
 
-        @Override
-        public String toString () {
-            StringBuilder returnString = new StringBuilder();
+    @Override
+    public String toString () {
+        StringBuilder returnString = new StringBuilder();
 
-            for (int i = 0; i < dataInRow.size(); i++) {
-                if (i < dataInRow.size() - 1) {
-                    returnString.append(MsgContract.value2csv(dataInRow.get(i).toString()));
-                    returnString.append(DELIMITER);
-                } else {
-                    returnString.append(dataInRow.get(i).toString());
-                }
+        for (int i = 0; i < dataInRow.size(); i++) {
+            if (i < dataInRow.size() - 1) {
+                returnString.append(MsgContract.value2csv(dataInRow.get(i).toString()));
+                returnString.append(DELIMITER);
+            } else {
+                returnString.append(dataInRow.get(i).toString());
             }
-            return returnString.toString();
         }
+        return returnString.toString();
+    }
 
-        private void splitString (String str){
-            dataInRow = new ArrayList();
+    @Override
+    public ZCSVRow clone(){
+        ZCSVRow clone = new ZCSVRow();
+        clone.setNames(this.getNames());
+        clone.previousRow = this.previousRow;
+        clone.dataInRow = (ArrayList) this.dataInRow.clone();
+        return clone;
+    }
 
-            Collections.addAll(dataInRow, str.split(DELIMITER));
-        }
+    private void splitString (String str){
+        dataInRow = new ArrayList();Collections.addAll(dataInRow, str.split(DELIMITER));
+    }
+
+
 
     // Constructors section
 
