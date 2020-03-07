@@ -10,6 +10,7 @@
          import="java.nio.file.Files"
          import="java.math.BigDecimal"
 %>
+<%@ page import="java.net.http.HttpRequest" %>
 <%!
     /// Vocabulary:
     /// T - table
@@ -221,12 +222,20 @@ private static String FieldComments[] ={
                 if (checkShellInjection(value)) {
                     throw new RuntimeException("Shell injection detected");
                 } // SIC!
+                break;
+            case PARAM_ACTION:
+                if (request.getParameter(ACTION_SAVE) != null) value = ACTION_SAVE;
+                if (request.getParameter(ACTION_REFRESH) != null) value = ACTION_REFRESH;
+                if (request.getParameter(ACTION_CANCEL) != null) value = ACTION_CANCEL;
+                if (request.getParameter(ACTION_DELETE) != null) value = ACTION_DELETE;
+                if (request.getParameter(ACTION_NEWRECORD) != null) value = ACTION_NEWRECORD;
+                if (request.getParameter(ACTION_GENERATEQR) != null) value = ACTION_GENERATEQR;
+                if(request.getParameter(ACTION_SEEHISTORY) != null) value = ACTION_SEEHISTORY;
+                break;
         }
         return (value);
     }
-
     /// PAGES
-
     private void setMembersPage() throws Exception {
         Members members = new Members();
         String[] allRegisteredMembers = members.getCompanyNames();
@@ -568,12 +577,10 @@ private static String FieldComments[] ={
     }
 
     private void startCreateForm(String member, String range, String action) throws Exception {
-        action = "save"; // !SIC строка внизу + member -> + encode_url_value(member) -> + euv(member) и так везде надо
         out.println("<form action=\"" + getRequestParamsURL(CGI_NAME, CMD_UPDATE, member, range, null, action) + "\" method=\"POST\">");
     }
 
     private void startUpdateForm(String member, String range, String ZRID, String action) throws Exception {
-        action = "save";
         out.println("<form action=\"" + getRequestParamsURL(CGI_NAME, CMD_UPDATE, member, range, ZRID, action) + "\" method=\"POST\">");
     }
 
@@ -770,6 +777,16 @@ private static String FieldComments[] ={
         return false;
     }
 
+    private boolean checkForCorrectness(HttpServletRequest request, ZCSVRow rowToCheck) throws Exception {
+        Integer qrCode = Integer.parseInt
+                (rowToCheck.get(5).substring
+                        (Integer.parseInt(request.getParameter("range"), 16)));
+        sendAllert(qrCode.toString());
+        Integer range = Integer.parseInt(request.getParameter("range"), 16);
+        sendAllert(range.toString());
+        return true;
+    }
+
     private String genNewQr(String p_range) throws IOException, ZCSVException {
         long maxZOID = 0;
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
@@ -825,13 +842,16 @@ private static String FieldComments[] ={
         switch (CMD) {
             case CMD_MEMBERS: setMembersPage(); break;
             case CMD_RANGES: setRangesPage(p_member); break;
-            case CMD_CHANGE_CONFIG: setChangeConfigPage(p_member, p_range); break;
             case CMD_PRODTABLE:
                 try { loadDataFromConfigFile(p_member, p_range); }
                 catch (Exception e){createDefaultConfig();}
                 setProductsPage(p_member, p_range);  break;
-            case CMD_PRODVIEW: loadDataFromConfigFile(p_member, p_range); setProdViewPage(p_member, p_range, p_ZRID); break;
-            case CMD_UPDATE: loadDataFromConfigFile(p_member,p_range);
+            case CMD_CHANGE_CONFIG:
+                loadDataFromConfigFile(p_member, p_range); setChangeConfigPage(p_member, p_range); break;
+            case CMD_PRODVIEW:
+                loadDataFromConfigFile(p_member, p_range); setProdViewPage(p_member, p_range, p_ZRID); break;
+            case CMD_UPDATE:
+                loadDataFromConfigFile(p_member,p_range);
                 switch (p_action) {
                     case ACTION_EDIT:
                         setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
@@ -840,8 +860,11 @@ private static String FieldComments[] ={
                         setNewRecordPage(p_member, p_range, p_action);
                         break;
                     case ACTION_CANCEL:
+                        sendAllert("Hello");
                         break;
                     case ACTION_REFRESH:
+                        if(checkForCorrectness(request, zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1)))
+                            sendAllert("True");
                         break;
                     case ACTION_SAVE:
                         try {
