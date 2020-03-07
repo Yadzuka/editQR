@@ -356,11 +356,13 @@ private static String FieldComments[] ={
                 new String[]{
                         "Назад",
                         "Изменить запись",
-                        "Посмотреть историю изменений"
+                        "Посмотреть историю изменений",
+                        "Удалить запись"
                 }, new String[]{
                         getRequestParamsURL(CMD_PRODTABLE, member, range),
                         getRequestParamsURL(CMD_UPDATE, member, range, ZRID, ACTION_EDIT),
-                        getRequestParamsURL(CMD_UPDATE, member,range, ZRID, ACTION_SEEHISTORY)
+                        getRequestParamsURL(CMD_UPDATE, member,range, ZRID, ACTION_SEEHISTORY),
+                        getRequestParamsURL(CMD_UPDATE, member,range,ZRID, ACTION_DELETE)
                 });
 
         ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
@@ -769,7 +771,7 @@ private static String FieldComments[] ={
     }
 
     private String genNewQr(String p_range) throws IOException, ZCSVException {
-        long maxZOID = 0;//Long.parseLong(zcsvFile.getRowObjectByIndex(0).get(5).substring(p_range.length()),16);
+        long maxZOID = 0;
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
             if(!zcsvFile.getRowObjectByIndex(i).get(5).equals("") & !zcsvFile.getRowObjectByIndex(i).get(5).equals(null))
                 if(Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()), 16) > maxZOID)
@@ -874,9 +876,18 @@ private static String FieldComments[] ={
                         setHistoryPage(p_member,p_range,p_ZRID,p_action);
                         break;
                     case ACTION_DELETE:
-                        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);
-                        row.setStringSpecificIndex(4,"D");
-                        zcsvFile.appendNewStringToFile(row);
+                        try {
+                            ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);
+                            Integer newVersion = Integer.parseInt(row.get(1)) + 1;
+                            row.setStringSpecificIndex(1, newVersion.toString());
+                            row.setStringSpecificIndex(2, getCurrentDate4ZDATE());
+                            row.setStringSpecificIndex(3, getRequestUser4ZUID(request));
+                            row.setStringSpecificIndex(4, "D");
+                            zcsvFile.appendNewStringToFile(row);
+                            response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+                        }catch (Exception ex){
+                            sendAllert("Error with deleting! Please call the system admitistrator!");
+                        }
                         break;
                 }
                 break;
@@ -903,7 +914,7 @@ private static String FieldComments[] ={
         else
             out.println("Unexpected error occured! Call the system administrator please.");
     } finally {
-        zcsvFile.closeFile();
+        if(zcsvFile != null) zcsvFile.closeFile();
     }
 %>
 <hr>
