@@ -10,7 +10,6 @@
          import="java.nio.file.Files"
          import="java.math.BigDecimal"
 %>
-<%@ page import="java.net.http.HttpRequest" %>
 <%!
     /// Vocabulary:
     /// T - table
@@ -76,6 +75,7 @@
     private String[] showedNames;
     private ArrayList<String> nameMap = new ArrayList();
     private ArrayList<String> showNames = new ArrayList();
+    private ArrayList<Integer> referencesIndex = new ArrayList();
 private static String FieldNames[] ={
 "ZOID",
 "ZVER",
@@ -340,7 +340,11 @@ private static String FieldComments[] ={
                     printCellCardTools(member,range,new Long(i+1));
                     for (int j = 0; j < showedNames.length; j++) {
                         String wroteString = MsgContract.csv2text(eachRow.get(showedNames[j]));
-                        printCell(wroteString);
+                        if(referencesIndex.contains(j + 5)){
+                            beginTCell();setReference(getReference(wroteString), wroteString);endTCell();
+                        } else {
+                            printCell(wroteString);
+                        }
                     }
                     endTRow();
                     BigDecimal dec_money = BigDecimal.ZERO;
@@ -377,12 +381,20 @@ private static String FieldComments[] ={
         ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
 
         beginT();beginTRow();printCell("QR картинка:");beginTCell();
-        out.print("<img src=\"qr?p_codingString=" + row.get(QR_CODE_RECORD_STATUS) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>");
+        setReference(
+                getReference(row.get(QR_CODE_RECORD_STATUS)) ,
+                "<img src=\"qr?p_codingString=" + row.get(QR_CODE_RECORD_STATUS) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>"
+        );
         endTCell();beginTRow();
         for (int i = 5; i < row.getNames().length; i++) {
             beginTRow();
             printCell((row.getNames()[i] == null) ? "Не определенное имя" : row.getNames()[i]);
-            printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : MsgContract.csv2text(row.get(i)));
+            if(referencesIndex.contains(i)) {
+                beginTCell();
+                setReference((row.get(i) == null | SZ_NULL.equals(row.get(i))) ?
+                "" : getReference(MsgContract.csv2text(row.get(i))), MsgContract.csv2text(row.get(i)));
+                endTCell();
+            } else { printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : MsgContract.csv2text(row.get(i))); }
             endTRow();
         }
         endT();
@@ -537,8 +549,8 @@ private static String FieldComments[] ={
                 if (configRow.get(0).length() < 3) {
                     nameMap.add(configRow.get(4));
 
-                    if (configRow.get(3).contains(SHOW_ATTRIBUTE))
-                        showNames.add(configRow.get(4));
+                    if (configRow.get(3).contains(SHOW_ATTRIBUTE)) { showNames.add(configRow.get(4)); }
+                    if(configRow.get(3).contains(QR_ATTRIBUTE)) { referencesIndex.add(i); }
                 }
             }
             showedNames = new String[showNames.size()];
@@ -553,6 +565,12 @@ private static String FieldComments[] ={
 
     private String getReference(String code){
         return ADDITION_TO_REFERENCE + code;
+    }
+
+    private void setReference(String reference, String insides) throws IOException {
+        out.print("<a href=\""+reference+"\">");
+        out.print(insides);
+        out.print("</a>");
     }
 
     private boolean isDate(String date) {
@@ -777,14 +795,16 @@ private static String FieldComments[] ={
         return false;
     }
 
-    private boolean checkForCorrectness(HttpServletRequest request, ZCSVRow rowToCheck) throws Exception {
-        Integer qrCode = Integer.parseInt
-                (rowToCheck.get(5).substring
-                        (Integer.parseInt(request.getParameter("range"), 16)));
-        sendAllert(qrCode.toString());
-        Integer range = Integer.parseInt(request.getParameter("range"), 16);
-        sendAllert(range.toString());
-        return true;
+    private boolean checkForCorrectness(HttpServletRequest request) throws Exception {
+        String bufferParameter = new String();
+        boolean answer = true;
+        for (Integer i = 5; i < namesMap.length; i++) {
+            bufferParameter = request.getParameter(REC_PREFIX + i);
+            if(i == 5)
+                if(bufferParameter.startsWith(request.getParameter(PARAM_RANGE)));
+                    answer = false;
+        }
+        return answer;
     }
 
     private String genNewQr(String p_range) throws IOException, ZCSVException {
@@ -861,10 +881,11 @@ private static String FieldComments[] ={
                         break;
                     case ACTION_CANCEL:
                         sendAllert("Hello");
-                        break;
                     case ACTION_REFRESH:
-                        if(checkForCorrectness(request, zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1)))
+                        if(checkForCorrectness(request))
                             sendAllert("True");
+                        else
+                            sendAllert("False");
                         break;
                     case ACTION_SAVE:
                         try {
