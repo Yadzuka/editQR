@@ -75,7 +75,7 @@
     private String[] showedNames;
     private ArrayList<String> nameMap = new ArrayList();
     private ArrayList<String> showNames = new ArrayList();
-    private ArrayList<Integer> referencesIndex = new ArrayList();
+    private ArrayList<String> referencesIndex = new ArrayList();
 private static String FieldNames[] ={
 "ZOID",
 "ZVER",
@@ -340,7 +340,7 @@ private static String FieldComments[] ={
                     printCellCardTools(member,range,new Long(i+1));
                     for (int j = 0; j < showedNames.length; j++) {
                         String wroteString = MsgContract.csv2text(eachRow.get(showedNames[j]));
-                        if(referencesIndex.contains(j + 5)){
+                        if(referencesIndex.contains(showedNames[j])){
                             beginTCell();setReference(getReference(wroteString), wroteString);endTCell();
                         } else {
                             printCell(wroteString);
@@ -389,7 +389,7 @@ private static String FieldComments[] ={
         for (int i = 5; i < row.getNames().length; i++) {
             beginTRow();
             printCell((row.getNames()[i] == null) ? "Не определенное имя" : row.getNames()[i]);
-            if(referencesIndex.contains(i)) {
+            if(referencesIndex.contains(row.getNames()[i])) {
                 beginTCell();
                 setReference((row.get(i) == null | SZ_NULL.equals(row.get(i))) ?
                 "" : getReference(MsgContract.csv2text(row.get(i))), MsgContract.csv2text(row.get(i)));
@@ -543,14 +543,15 @@ private static String FieldComments[] ={
         ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
         nameMap = new ArrayList<>();
         showNames = new ArrayList<>();
-        try {configFile.loadConfigureFile();} catch(Exception e) {configFile.loadConfigFromString(getDefaultCSVConf());}
+        try {configFile.loadConfigureFile();}
+        catch(Exception e) {configFile.loadConfigFromString(getDefaultCSVConf());}
             for (int i = 0; i < configFile.getFileRowsLength(); i++) {
                 ZCSVRow configRow = configFile.getRowObjectByIndex(i);
                 if (configRow.get(0).length() < 3) {
                     nameMap.add(configRow.get(4));
 
                     if (configRow.get(3).contains(SHOW_ATTRIBUTE)) { showNames.add(configRow.get(4)); }
-                    if(configRow.get(3).contains(QR_ATTRIBUTE)) { referencesIndex.add(i); }
+                    if(configRow.get(3).contains(QR_ATTRIBUTE)) { referencesIndex.add(configRow.get(4)); }
                 }
             }
             showedNames = new String[showNames.size()];
