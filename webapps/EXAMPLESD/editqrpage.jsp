@@ -786,7 +786,6 @@ private static String FieldComments[] ={
             }
 
             for (int i = 5; i < row.getNames().length; i++) {
-                sendAllert(rowToCheck.get(i) +" " + row.get(i));
                 String s1 = rowToCheck.get(i).toString();
                 String s2 = row.get(i).toString();
                 if (!s1.equals(s2)) {
