@@ -367,7 +367,7 @@ private static String FieldComments[] ={
                     for (int j = 0; j < showedNames.length; j++) {
                         String wroteString = MsgContract.csv2text(eachRow.get(showedNames[j]));
                         if(referencesIndex.contains(showedNames[j])){
-                            beginTCell();setReference(getReference(wroteString), wroteString);endTCell();
+                            beginTCell();setReferenceQRView(getReference(wroteString), wroteString);endTCell();
                         } else {
                             printCell(wroteString);
                         }
@@ -407,7 +407,7 @@ private static String FieldComments[] ={
         ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
 
         beginT();beginTRow();printCell("QR картинка:");beginTCell();
-        setReference(
+        setReferenceQRView(
                 getReference(row.get(QR_CODE_RECORD_STATUS)) ,
                 "<img src=\"qr?p_codingString=" + row.get(QR_CODE_RECORD_STATUS) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>"
         );
@@ -417,7 +417,7 @@ private static String FieldComments[] ={
             printCell((row.getNames()[i] == null) ? "Не определенное имя" : row.getNames()[i]);
             if(referencesIndex.contains(row.getNames()[i])) {
                 beginTCell();
-                setReference((row.get(i) == null | SZ_NULL.equals(row.get(i))) ?
+                setReferenceQRView((row.get(i) == null | SZ_NULL.equals(row.get(i))) ?
                 "" : getReference(MsgContract.csv2text(row.get(i))), MsgContract.csv2text(row.get(i)));
                 endTCell();
             } else { printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : MsgContract.csv2text(row.get(i))); }
@@ -596,6 +596,11 @@ private static String FieldComments[] ={
 
     private void setReference(String reference, String insides) throws IOException {
         out.print("<a href=\""+reference+"\">");
+        out.print(insides);
+        out.print("</a>");
+    }
+    private void setReferenceQRView(String reference, String insides) throws IOException {
+        out.print("<a href='"+reference+"' target='_qrview'>");
         out.print(insides);
         out.print("</a>");
     }
