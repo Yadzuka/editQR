@@ -34,7 +34,7 @@
     private final String SZ_EMPTY = ""; // Empty string
     // Attributes of CSV config file
     private final String SHOW_ATTRIBUTE = "SHOW";
-    private final String QR_ATTRIBUTE = "QR";
+    private final String QR_ATTRIBUTE = "QR,";
     // All possible actions on update page
     public final String ACTION_EDIT = "edit"; // Simple state for updating product/contract page
     public final String ACTION_CREATE = "create"; // Action for creating new state of product/contract
@@ -61,7 +61,8 @@
     public final static String CMD_PRODVIEW = "prodview"; // Product's info
     public final static String CMD_UPDATE = "updateprod"; // Update or create product's page
     public final static String CMD_TEST = "test"; // Testing page
-    private final static String[] CMD_PARAMETERS = {CMD_MEMBERS, CMD_RANGES, CMD_CHANGE_CONFIG, CMD_PRODTABLE, CMD_PRODVIEW, CMD_UPDATE, CMD_TEST};
+    public final static String CMD_TESTTAB = "testtab"; // Testing page
+    //private final static String[] CMD_PARAMETERS = {CMD_MEMBERS, CMD_RANGES, CMD_CHANGE_CONFIG, CMD_PRODTABLE, CMD_PRODVIEW, CMD_UPDATE, CMD_TEST};
 
     // Money counters
     private BigDecimal allMoney = BigDecimal.ZERO;
@@ -105,22 +106,22 @@ private static String FieldOptions[] ={
 "NUL", // "ZDATE",
 "NUL", // "ZUID",
 "NUL", // "ZSTA",
-"NUL", // "QR",
-"NUL", // "CONTRACTNUM",
+"NUL,SHOW,HEX,QR,QRANGE_WARN", // "QR",
+"NUL,SHOW", // "CONTRACTNUM",
 "NUL", // "contractdate",
-"NUL", // "MONEY",
+"NUL,SHOW,QRMONEY", // "MONEY",
 "NUL", // "SUPPLIER",
-"NUL", // "CLIENT",
-"NUL", // "PRODTYPE",
-"NUL", // "MODEL",
-"NUL", // "SN",
+"NUL,SHOW", // "CLIENT",
+"NUL,SHOW,QRPRODTYPE", // "PRODTYPE",
+"NUL,SHOW,QRPRODMODEL", // "MODEL",
+"NUL,SHOW,EN", // "SN",
 "NUL", // "prodate",
 "NUL", // "shipdate",
 "NUL", // "SALEDATE",
-"NUL", // "DEPARTUREDATE",
+"NUL,QRMONEYGOT", // "DEPARTUREDATE",
 "NUL", // "WARRANTYSTART",
 "NUL", // "WARRANTYEND",
-"NUL" // "COMMENT"
+"NUL,TEXTAREA" // "COMMENT"
 };
 private static String FieldCaptions[] ={
 "ZOID",
@@ -169,6 +170,7 @@ private static String FieldComments[] ={
 "Этот комментарий виден клиенту! конфиденциальное пишите в поле Деньги"
 };
 
+/*
     private String DEFAULT_CSV_TAB =
 "#Атрибут\tЗначение        Значение2/код\n" +
 "NAME\tTISC.DRow\tDW\n" +
@@ -192,21 +194,45 @@ private static String FieldComments[] ={
 "13\tprodmodel\ttext\tSHOW,NUL\tМодель продукта\n" +
 "14\tsn\ttext\tSHOW,NUL\tSN\n" +
 "15\tprodate\ttext\tNUL\tДата производства\n" +
-"16\tGTD\ttext\tNUL\tДата ввоза (ГТД)\n" +
+"16\tGTD\ttext\tNUL\tНомер ГТД\n" +
 "17\tsaledate\ttext\tNUL\tДата продажи\n" +
 "18\tsendate\ttext\tNUL\tДата отправки клиенту\n" +
 "19\twarstart\ttext\tNUL\tДата начала гарантии\n" +
 "20\twarend\ttext\tNUL\tДата окончания гарантии\n" +
 "21\tcomment\ttext\tNUL\tКомментарий (для клиента)\n";
-/*
 */
     private String szDefaultCSVConf=null;
     public String getDefaultCSVConf()
     {
     if(szDefaultCSVConf != null) return(szDefaultCSVConf);
-    szDefaultCSVConf = DEFAULT_CSV_TAB;
+    szDefaultCSVConf = makeDefaultQRCSVConf();
     return(szDefaultCSVConf);
     }
+    public String makeDefaultQRCSVConf()
+    {
+    StringBuffer sb = new StringBuffer();
+    sb.append("# Default master.list.csv.tab for edit.qr.qxyz.ru\n");
+    sb.append("#Атрибут\tЗначение\tЗначение2/код\n");
+    sb.append("NAME\tQR_QXYZ.Item\tDW\n");
+    sb.append("OBJECT\tNone        D\n");
+    sb.append("HEADER\tSTD_PSPNHEANOR\n");
+    sb.append("PARENT\tnone  NN\n");
+    sb.append("CHILD\tnone NN\n");
+    sb.append("#Код\tПоле\tТип\tАтрибуты\tНазвание\tОписание\n");
+    int num_fields = FieldNames.length; 
+    int i=0;
+    for(i=0;i<num_fields;i++)
+    {
+     sb.append(String.format("%02d",new Integer(i+1))); sb.append("\t");
+     sb.append(FieldNames[i]); sb.append("\t");
+     sb.append("text"); sb.append("\t");
+     sb.append(FieldOptions[i]); sb.append(",\t");
+     sb.append(FieldCaptions[i]); sb.append("\t");
+     sb.append(FieldComments[i]);
+     sb.append("\n");
+    }
+    return(sb.toString());
+    } // makeDefaultQRCSVConf
 
     private String getRequestParameter(ServletRequest request, String param) {
         return (getRequestParameter(request, param, null));
@@ -931,8 +957,12 @@ private static String FieldComments[] ={
                         break;
                 }
                 break;
-            case "test":
-                out.print("Hello test page!");
+            case CMD_TEST:
+                out.println("Hello test page!<br>");
+            case CMD_TESTTAB:
+                out.println("<pre>");
+                out.print(makeDefaultQRCSVConf());
+                out.println("</pre>");
                 break;
             default:
                 response.sendRedirect("editqrpage.jsp");
