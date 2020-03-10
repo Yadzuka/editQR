@@ -471,7 +471,7 @@ private static String FieldComments[] ={
                                 String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>",newqr),
                                 FieldComments[i],
                         });
-                    }else if (namesMap[i].toLowerCase().contains("комментарий")) {
+                    }else if (namesMap[i].toLowerCase().contains("комментарий")) { //SIC! так не надо! см опции поля!
                         printTRow(new Object[]{
                                 namesMap[i],
                                 "<textarea name='" + parameterBuffer + "' " + "rows='5' cols='40'> </textarea>",
@@ -509,7 +509,7 @@ private static String FieldComments[] ={
                                     String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>",newqr),
                                     FieldComments[i],
                             });
-                        } else if(edittedRow.getNames()[i].toLowerCase().contains("комментарий")) {
+                        } else if(edittedRow.getNames()[i].toLowerCase().contains("комментарий")) { //SIC! не надо так! см опции поля!
                             printTRow(new Object[]{
                                     edittedRow.getNames()[i],
                                     "<textarea name=" + parameterBuffer + " " + "rows=\"5\" cols='40'>" + showingParameter + "</textarea>",
@@ -530,7 +530,24 @@ private static String FieldComments[] ={
             } else
                 throw new Exception("Unknown exception");
         }
+    }//printEditForm()
+    // printEditForm() - получает _снаружи_ все данные, необходимые для отображения формы редактирования
+    // 			ни в какие файлы оно уже не лазает, ни в какие глобальные переменные тоже,
+    //                  оно просто рисует форму, и ему _абсолютно_ все-равно, это новая запись, запись прочитанная из файла,
+    //                  или запись реконструированная из данных html формы пришедшей методом POST
+    //                  и ТОГДА кнопка "обновить" работает абсолютно естественно, а также абсолютно естественно реализуется
+    //                  процедура контроля качества (QC), если она не проходит, пользователь получает обратно сообщение об
+    //                  ошибке и форму со своими данными, которые он может продолжить редактировать,
+    //                  и пихать в систему до посинения, пока не исправит _все_ свои ошибки
+    //                  И НИКАКИХ EXCEPTION ТАКАЯ ФУКНЦИЯ ПОРОЖДАТЬ НЕ МОЖЕТ! .
+    //
+    //			P.S. а ещо при изменении JSP я постоянно получаю "Unexpected error occured! Call the system administrator please."
+    //			сейчас этого НЕ ДОЛЖНО БЫТЬ. Пользователь редактирует форму, она не проходит потомучтоошибкавjsp, он поворачивается
+    //			к нам и говорит - "поправте", мы правим и говорим "повторяй" он повторяет - и все должно работать!
+    //private void printEditForm(String member, String range, String ZRID, zCSVFile config, zCSVRow rec) throws Exception {
+    private void printEditForm(String member, String range, String ZRID, ZCSVFile config, ZCSVRow rec) throws Exception {
     }
+    
 
     public void setHistoryPage(String member, String range, String ZRID, String action) throws Exception {
         printUpsideMenu(
@@ -914,6 +931,8 @@ private static String FieldComments[] ={
                         break;
                     case ACTION_CANCEL:
                         sendAllert("Hello");
+                        response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, p_member, p_range,p_ZRID)); //SIC! возможна атака
+                        break;
                     case ACTION_REFRESH:
                         if(checkForCorrectness(request))
                             sendAllert("True");
@@ -970,7 +989,7 @@ private static String FieldComments[] ={
                 out.println("</pre>");
                 break;
             default:
-                response.sendRedirect("editqrpage.jsp");
+                response.sendRedirect("editqrpage.jsp"); //SIC! я кажется это уже помечал...
                 break;
         }
     } catch (IOException ex) {
