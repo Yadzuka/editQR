@@ -69,6 +69,7 @@
     private BigDecimal allMoneySent = BigDecimal.ZERO;
     private BigDecimal allMoneyWait = BigDecimal.ZERO;
 
+    private ZCSVRow edittedRow;
     private ZCSVFile zcsvFile;
     private String QRDB_PATH = null;
     private JspWriter out;
@@ -357,7 +358,7 @@ private static String FieldComments[] ={
                 zcsvFile.loadFromFileValidVersions();
                 out.println("<table class='memberstable' border='1'>"); //SIC! println Evil, '1' is better \"1\"
                 printTableUpsideString(OPTIONAL_PRODUCTS_TABLE_PARAM, showedNames);
-                for (int i = 0; i < zcsvFile.getFileRowsLength(); i++) {
+                for (int i = zcsvFile.getFileRowsLength() - 1; i >= 0; i--) {
                     ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
                     eachRow.setNames(namesMap);
                     if(eachRow.get(4).equals(DELETED_RECORD_STATUS))
@@ -431,14 +432,18 @@ private static String FieldComments[] ={
                 new String[]{
                         "Назад",
                         "change name map(Experimental)",
-                }, new String[]{
-                        getRequestParamsURL(CMD_PRODVIEW, member, range, ZRID),
+                }, new String[] {
+                        !ZRID.equals(SZ_NULL) ? getRequestParamsURL(CMD_PRODVIEW, member, range, ZRID)
+                        : getRequestParamsURL(CMD_PRODTABLE, member, range),
                         getRequestParamsURL(CMD_UPDATE, member, range, ZRID, ACTION_CHANGENAMEMAP),
                 });
         println();
-        printEditForm(member, range, ZRID, action);
-    }
 
+        if(!ZRID.equals(SZ_NULL) & edittedRow == null)
+            edittedRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1).clone();
+        printEditForm(member, range, ZRID, action, namesMap, edittedRow);
+    }
+/*
     private void setNewRecordPage(String member, String range, String action) throws Exception {
         printUpsideMenu(
                 new String[]{
@@ -449,9 +454,8 @@ private static String FieldComments[] ={
                         getRequestParamsURL(CMD_UPDATE, member, range, null, ACTION_CHANGENAMEMAP),
                 });
         println();
-        printEditForm(member, range, null, action);
+        printEditForm(member, range, "", namesMap, edittedRow);
     }
-
     private void printEditForm(String member, String range, String ZRID, String action) throws Exception {
         String parameterBuffer;
         String newqr = genNewQr(range);
@@ -530,7 +534,7 @@ private static String FieldComments[] ={
             } else
                 throw new Exception("Unknown exception");
         }
-    }//printEditForm()
+    }*///printEditForm()
     // printEditForm() - получает _снаружи_ все данные, необходимые для отображения формы редактирования
     // 			ни в какие файлы оно уже не лазает, ни в какие глобальные переменные тоже,
     //                  оно просто рисует форму, и ему _абсолютно_ все-равно, это новая запись, запись прочитанная из файла,
@@ -545,11 +549,119 @@ private static String FieldComments[] ={
     //			сейчас этого НЕ ДОЛЖНО БЫТЬ. Пользователь редактирует форму, она не проходит потомучтоошибкавjsp, он поворачивается
     //			к нам и говорит - "поправте", мы правим и говорим "повторяй" он повторяет - и все должно работать!
     //private void printEditForm(String member, String range, String ZRID, zCSVFile config, zCSVRow rec) throws Exception {
-    private void printEditForm(String member, String range, String ZRID, ZCSVFile config, ZCSVRow rec) throws Exception {
-    }
-    
+    private void printEditForm(String member, String range, String ZRID, String action, String [] config, ZCSVRow rec) throws Exception {
+        try {
+            edittedRow = rec;
+            if (edittedRow.getNames() == null) {
+                edittedRow.setNames(config);
+            }
 
-    public void setHistoryPage(String member, String range, String ZRID, String action) throws Exception {
+
+            startUpdateForm(member, range, ZRID, ACTION_EDIT);
+            String newqr = genNewQr(range);
+            String parameterBuffer;
+            printUpdatePageButtons();
+
+            beginT();
+            for(int i = 5; i < namesMap.length; i++) {
+                parameterBuffer = getParameterName(i);
+                if (edittedRow.getNames()[i].equals(QR_CODE_RECORD_STATUS)) {
+                    if(edittedRow.get(i).equals(SZ_EMPTY))
+                        edittedRow.setStringSpecificIndex(i, newqr);
+                    printTRow(new Object[]{
+                            edittedRow.getNames()[i],
+                            printInput("text", "qrcode", parameterBuffer, edittedRow.get(i)),
+                            String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>", newqr),
+                            FieldComments[i],
+                    });
+                } else if (edittedRow.getNames()[i].toLowerCase().contains("комментарий")) { //SIC! так не надо! см опции поля!
+                    printTRow(new Object[]{
+                            edittedRow.getNames()[i],
+                            "<textarea name='" + parameterBuffer + "' " + "rows='5' cols='40'>" + edittedRow.get(i) + "</textarea>",
+                            FieldComments[i],
+                    });
+                } else {
+                    printTRow(new Object[]{
+                            edittedRow.getNames()[i],
+                            printInput("text", "", parameterBuffer, edittedRow.get(i)),
+                            FieldComments[i],
+                    });
+                }
+            }
+            endT();
+            endForm();
+        } catch (Exception ex) {
+            sendAllert("An error occured");
+        }
+    }
+
+    private void setActions(String p_member, String p_range, String p_ZRID, String p_action, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        switch (p_action){
+            case ACTION_EDIT:
+                edittedRow = null;
+                setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
+                break;
+            case ACTION_NEWRECORD:
+                edittedRow = new ZCSVRow();
+                setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
+                break;
+            case ACTION_CANCEL:
+                if(p_ZRID.equals(SZ_NULL))
+                    response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+                else
+                    response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, p_member, p_range,p_ZRID));
+                break;
+            case ACTION_REFRESH:
+                for(Integer i = 5; i < edittedRow.getNames().length; i++) {
+                    edittedRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
+                }
+                setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
+                //setActions(p_member, p_range, p_ZRID, ACTION_EDIT, request, response);
+                break;
+            case ACTION_SAVE:
+                try {
+                    ZCSVRow newRow;
+                    if (p_ZRID == null || SZ_NULL.equals(p_ZRID)) {
+                        Integer zrdsLength = zcsvFile.getFileRowsLength();
+                        newRow = new ZCSVRow();
+                        newRow.setNames(namesMap);
+                        newRow.setStringSpecificIndex(0, String.valueOf(zrdsLength + 1));
+                        newRow.setStringSpecificIndex(1, "1");
+                    } else {
+                        newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1).clone();
+                        Integer newVerion = Integer.parseInt(newRow.get(1)) + 1;
+                        newRow.setStringSpecificIndex(1, newVerion.toString());
+                    }
+                    newRow.setStringSpecificIndex(2, getCurrentDate4ZDATE());
+                    newRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
+                    newRow.setStringSpecificIndex(4, NEW_RECORD_STATUS);
+
+                    for (Integer i = 5; i < newRow.getNames().length; i++) {
+                        newRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
+                    }
+                    if(checkNewRecord(newRow)) { zcsvFile.appendNewStringToFile(newRow); }
+                    response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+                } catch (Exception ex) { ex.printStackTrace(response.getWriter()); }
+                break;
+            case ACTION_SEEHISTORY: setHistoryPage(p_member,p_range,p_ZRID,p_action); break;
+            case ACTION_DELETE:
+                try {
+                    ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);
+                    Integer newVersion = Integer.parseInt(row.get(1)) + 1;
+                    row.setStringSpecificIndex(1, newVersion.toString());
+                    row.setStringSpecificIndex(2, getCurrentDate4ZDATE());
+                    row.setStringSpecificIndex(3, getRequestUser4ZUID(request));
+                    row.setStringSpecificIndex(4, "D");
+                    zcsvFile.appendNewStringToFile(row);
+                    response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+                }catch (Exception ex){
+                    sendAllert("Error with deleting! Please call the system admitistrator!");
+                }
+                break;
+        }
+    }
+
+    private void setHistoryPage(String member, String range, String ZRID, String action) throws Exception {
         printUpsideMenu(
                 new String[]{
                         "Назад",
@@ -642,11 +754,11 @@ private static String FieldComments[] ={
         out.println("<input type=\"" + bName + "\" value=\"" + bValue + "\"/>");
         out.println("</a>");
     }
-
+/*
     private void startCreateForm(String member, String range, String action) throws Exception {
         out.println("<form action=\"" + getRequestParamsURL(CGI_NAME, CMD_UPDATE, member, range, null, action) + "\" method=\"POST\">");
     }
-
+*/
     private void startUpdateForm(String member, String range, String ZRID, String action) throws Exception {
         out.println("<form action=\"" + getRequestParamsURL(CGI_NAME, CMD_UPDATE, member, range, ZRID, action) + "\" method=\"POST\">");
     }
@@ -671,6 +783,10 @@ private static String FieldComments[] ={
         }
         out.println("</ul>");
         println();
+    }
+
+    private String printInput(String type, String id,String name, String value) throws Exception {
+        return new String("<input type='" + type + "' id='" + id + "' name='" + name + "' value='" + value + "'/>");
     }
 
     private void printTableUpsideString(String optionalParam, Object... outputString) throws Exception {
@@ -825,11 +941,11 @@ private static String FieldComments[] ={
 
     private boolean checkNewRecord(ZCSVRow rowToCheck) throws Exception {
         sendAllert(rowToCheck.get(0));
-        int zrid = Integer.parseInt(rowToCheck.get(0));
+        int ZRID = Integer.parseInt(rowToCheck.get(0));
         ZCSVRow row;
         if(zcsvFile != null) {
             try {
-                row = zcsvFile.getRowObjectByIndex(zrid - 1);
+                row = zcsvFile.getRowObjectByIndex(ZRID - 1);
             } catch (IndexOutOfBoundsException | NullPointerException ex) {
                 return true;
             }
@@ -922,7 +1038,8 @@ private static String FieldComments[] ={
                 loadDataFromConfigFile(p_member, p_range); setProdViewPage(p_member, p_range, p_ZRID); break;
             case CMD_UPDATE:
                 loadDataFromConfigFile(p_member,p_range);
-                switch (p_action) {
+                setActions(p_member, p_range, p_ZRID, p_action, request, response);
+                /*switch (p_action) {
                     case ACTION_EDIT:
                         setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
                         break;
@@ -934,10 +1051,7 @@ private static String FieldComments[] ={
                         response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, p_member, p_range,p_ZRID)); //SIC! возможна атака
                         break;
                     case ACTION_REFRESH:
-                        if(checkForCorrectness(request))
-                            sendAllert("True");
-                        else
-                            sendAllert("False");
+                        setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
                         break;
                     case ACTION_SAVE:
                         try {
@@ -979,7 +1093,7 @@ private static String FieldComments[] ={
                             sendAllert("Error with deleting! Please call the system admitistrator!");
                         }
                         break;
-                }
+                }*/
                 break;
             case CMD_TEST:
                 out.println("Hello test page!<br>");
