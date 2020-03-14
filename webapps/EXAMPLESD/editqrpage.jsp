@@ -1034,7 +1034,7 @@ private static String FieldComments[] ={
 </div>
 <%
     set_request_hints(request, response);
-    //initJSPGlobals();
+    initJSPGlobals();
     long enter_time = System.currentTimeMillis();
     this.out = out;
     String CMD = getRequestParameter(request, PARAM_CMD, CMD_MEMBERS);
