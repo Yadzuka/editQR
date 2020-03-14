@@ -78,8 +78,46 @@
     private ArrayList<String> nameMap = new ArrayList();
     private ArrayList<String> showNames = new ArrayList();
     private ArrayList<String> referencesIndex = new ArrayList();
+    //
+    private int csv_header_length=-1;
+    private int csv_QRfield_index=-1;
+    private String szDefaultCSVConf=null;
+    public void initJSPGlobals() // it's constructor-like method, use it before process any request
+    {
+    // Money counters
+     allMoney = BigDecimal.ZERO;
+     allMoneySent = BigDecimal.ZERO;
+     allMoneyWait = BigDecimal.ZERO;
+
+     edittedRow = null;
+     zcsvFile = null;
+     QRDB_PATH = null;
+     out = null;
+     namesMap = null;
+     showedNames = null;
+     nameMap = new ArrayList();
+     showNames = new ArrayList();
+     referencesIndex = new ArrayList();
+     //
+     csv_header_length=-1;
+     csv_QRfield_index=-1;
+     szDefaultCSVConf=null;
+    } // initJSPGlobals
+
+    public int getCSVHeaderLength(){if(csv_header_length<0) return(STD_QRHEANOR_FIELDS_NUM); return(csv_header_length);}
+    public int getQRFieldIndex(){if(csv_header_length<0 && csv_QRfield_index<0)return(getCSVHeaderLength());return(csv_QRfield_index);}
+    public String getDefaultCSVConf()
+    {
+    if(szDefaultCSVConf != null) return(szDefaultCSVConf);
+    szDefaultCSVConf = makeDefaultQRCSVConf();
+    return(szDefaultCSVConf);
+    }
+// набор структур для описания структуры файла по-умолчанию, унаследованного от первой версии системы edit-qr
+// используется как подрузумеваемый, если нет специального файла *.tab
+//
+public static int STD_QRHEANOR_FIELDS_NUM=5;
 private static String FieldNames[] ={
-"ZOID",
+"ZRID",
 "ZVER",
 "ZDATE",
 "ZUID",
@@ -102,7 +140,7 @@ private static String FieldNames[] ={
 "COMMENT"
 };
 private static String FieldOptions[] ={
-"NN", // "ZOID",
+"NN", // "ZRID",
 "NUL", // "ZVER",
 "NUL", // "ZDATE",
 "NUL", // "ZUID",
@@ -125,7 +163,7 @@ private static String FieldOptions[] ={
 "NUL,TEXTAREA" // "COMMENT"
 };
 private static String FieldCaptions[] ={
-"ZOID",
+"ZRID",
 "ZVER",
 "ZDATE",
 "ZUID",
@@ -148,7 +186,7 @@ private static String FieldCaptions[] ={
 "Комментарий (для клиента)"
 };
 private static String FieldComments[] ={
-"ZOID - идентификатор объекта (записи) в файле, записи с одинаковым ZOID - разные версии одной записи",
+"ZRID - идентификатор объекта (записи) в файле, записи с одинаковым ZRID - разные версии одной записи",
 "ZVER - номер версии записи ",
 "ZDATE - дата порождения данной версии",
 "ZUID - пользователь, записавший версию",
@@ -202,13 +240,6 @@ private static String FieldComments[] ={
 "20\twarend\ttext\tNUL\tДата окончания гарантии\n" +
 "21\tcomment\ttext\tNUL\tКомментарий (для клиента)\n";
 */
-    private String szDefaultCSVConf=null;
-    public String getDefaultCSVConf()
-    {
-    if(szDefaultCSVConf != null) return(szDefaultCSVConf);
-    szDefaultCSVConf = makeDefaultQRCSVConf();
-    return(szDefaultCSVConf);
-    }
     public String makeDefaultQRCSVConf()
     {
     StringBuffer sb = new StringBuffer();
@@ -413,7 +444,7 @@ private static String FieldComments[] ={
                 "<img src=\"qr?p_codingString=" + row.get(QR_CODE_RECORD_STATUS) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>"
         );
         endTCell();beginTRow();
-        for (int i = 5; i < row.getNames().length; i++) {
+        for (int i = getCSVHeaderLength(); i < row.getNames().length; i++) {
             beginTRow();
             printCell((row.getNames()[i] == null) ? "Не определенное имя" : row.getNames()[i]);
             if(referencesIndex.contains(row.getNames()[i])) {
@@ -466,7 +497,7 @@ private static String FieldComments[] ={
                 if (namesMap == null)
                     out.println("null");
                 beginT();
-                for (int i = 5; i < namesMap.length; i++) {
+                for (int i = getCSVHeaderLength(); i < namesMap.length; i++) {
                     parameterBuffer = getParameterName(i);
                     if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
                         printTRow(new Object[]{
@@ -503,7 +534,7 @@ private static String FieldComments[] ={
                     startUpdateForm(member, range, ZRID, action);
                     printUpdatePageButtons();
                     beginT();
-                    for (int i = 5; i < edittedRow.getNames().length; i++) {
+                    for (int i = getCSVHeaderLength(); i < edittedRow.getNames().length; i++) {
                         parameterBuffer = getParameterName(i);
                         String showingParameter = MsgContract.text2value(MsgContract.csv2text(edittedRow.get(i))); // SIC!!!!!
                         if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
@@ -563,7 +594,7 @@ private static String FieldComments[] ={
             printUpdatePageButtons();
 
             beginT();
-            for(int i = 5; i < namesMap.length; i++) {
+            for(int i = getCSVHeaderLength(); i < namesMap.length; i++) {
                 parameterBuffer = getParameterName(i);
                 if (edittedRow.getNames()[i].equals(QR_CODE_RECORD_STATUS)) {
                     if(edittedRow.get(i).equals(SZ_EMPTY))
@@ -612,7 +643,7 @@ private static String FieldComments[] ={
                     response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, p_member, p_range,p_ZRID));
                 break;
             case ACTION_REFRESH:
-                for(Integer i = 5; i < edittedRow.getNames().length; i++) {
+                for(Integer i = getCSVHeaderLength(); i < edittedRow.getNames().length; i++) {
                     edittedRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
                 }
                 setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
@@ -636,7 +667,7 @@ private static String FieldComments[] ={
                     newRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
                     newRow.setStringSpecificIndex(4, NEW_RECORD_STATUS);
 
-                    for (Integer i = 5; i < newRow.getNames().length; i++) {
+                    for (Integer i = getCSVHeaderLength(); i < newRow.getNames().length; i++) {
                         newRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
                     }
                     if(checkNewRecord(newRow)) { zcsvFile.appendNewStringToFile(newRow); }
@@ -950,7 +981,7 @@ private static String FieldComments[] ={
                 return true;
             }
 
-            for (int i = 5; i < row.getNames().length; i++) {
+            for (int i = getCSVHeaderLength(); i < row.getNames().length; i++) {
                 String s1 = rowToCheck.get(i).toString();
                 String s2 = row.get(i).toString();
                 if (!s1.equals(s2)) {
@@ -964,9 +995,9 @@ private static String FieldComments[] ={
     private boolean checkForCorrectness(HttpServletRequest request) throws Exception {
         String bufferParameter = new String();
         boolean answer = true;
-        for (Integer i = 5; i < namesMap.length; i++) {
+        for (Integer i = getCSVHeaderLength(); i < namesMap.length; i++) {
             bufferParameter = request.getParameter(REC_PREFIX + i);
-            if(i == 5)
+            if(i == getQRFieldIndex())
                 if(bufferParameter.startsWith(request.getParameter(PARAM_RANGE)));
                     answer = false;
         }
@@ -976,9 +1007,9 @@ private static String FieldComments[] ={
     private String genNewQr(String p_range) throws IOException, ZCSVException {
         long maxZOID = 0;
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
-            if(!zcsvFile.getRowObjectByIndex(i).get(5).equals("") & !zcsvFile.getRowObjectByIndex(i).get(5).equals(null))
-                if(Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()), 16) > maxZOID)
-                    maxZOID = Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(5).substring(p_range.length()),16);
+            if(!zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()).equals("") & !zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()).equals(null))
+                if(Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()).substring(p_range.length()), 16) > maxZOID)
+                    maxZOID = Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()).substring(p_range.length()),16);
         }
         maxZOID++;
         return String.format("%s%03X",p_range, maxZOID);
@@ -1003,6 +1034,7 @@ private static String FieldComments[] ={
 </div>
 <%
     set_request_hints(request, response);
+    //initJSPGlobals();
     long enter_time = System.currentTimeMillis();
     this.out = out;
     String CMD = getRequestParameter(request, PARAM_CMD, CMD_MEMBERS);
@@ -1071,7 +1103,7 @@ private static String FieldComments[] ={
                             newRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
                             newRow.setStringSpecificIndex(4, NEW_RECORD_STATUS);
 
-                            for (Integer i = 5; i < newRow.getNames().length; i++) {
+                            for (Integer i = getCSVHeaderLength(); i < newRow.getNames().length; i++) {
                                 newRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
                             }
                             if(checkNewRecord(newRow)) { zcsvFile.appendNewStringToFile(newRow); }
