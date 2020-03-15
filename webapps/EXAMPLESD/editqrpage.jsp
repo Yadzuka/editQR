@@ -112,6 +112,37 @@
     szDefaultCSVConf = makeDefaultQRCSVConf();
     return(szDefaultCSVConf);
     }
+//
+// Гвоздями-прибытое-состояние db/ranges/ranges3.csv на 31 декабря 2019
+// переделать на загрузку из файла
+//
+    private String[] NAILED_RANGE_DESC = { //!SIC прибивать гвоздями плохо, просто 31-го очень к столу успеть хотелось
+            "01000", "(Пример) - по каждому объекту (QR-коду) ведется отдельная страница",
+            "0100A", "(Пример) здесь будет пример информации защищенной паролем",
+            "0100F", "(Пример) здесь будет пример перенаправления на другие сайты",
+            "0100D", "(Пример) Примеры на основе первых проданных двигателей TDME",
+            "0100E", "(Пример) Отладочный пример, на основе данных Доминатор 01012 - реальные продажи TDME 2010-2017",
+            "01011", ":+:2019-11-18:DOMINATOR:list:Данные о продажах от начала работы до конца 2011 г",
+            "01012", "Доминатор - реальные продажи TDME 2010-2017 (Money_2)",
+            "01017", "DOMINATOR:list:Данные о продажах в 2017 г. (предложение к использованию)",
+            "01018", "DOMINATOR:list:Данные о продажах в 2018 г. (предложение к использованию)",
+            "01019", ":+:2019-11-24:DOMINATOR:list:Данные о продажах в 2019 г.",
+            "0101A", ":+:2019-11-24:DOMINATOR:list:Данные о продажах в 2020 г.",
+            "0101E", ":+:2019-11-27:DOMINATOR::Diesel Engines models",
+            "01020", ":+:2019-11-21:EUSTROSOFT::Various EustroSoft QR-info pages",
+            "01021", ":+:2019-12-22:EUSTROSOFT::EustroSoft's inventory-list",
+            "01030", ":-:2019-12-17:NS-RESERVED",
+            "01031", ":-:2019-12-17:MH-RESERVED",
+            "01032", ":-:2019-12-17:GL-RESERVED",
+            "01033", ":-:2019-12-17:MA-RESERVED",
+            "01034", ":-:2019-12-17:SN-RESERVED",
+            "01035", ":-:2019-12-22:LYRA-SNT",
+            "01036", "выделен 2019-12-22 для rubmaster.ru",
+            "01037", "выделен 2019-12-22 для boatswain.org",
+            "FFFF", ""
+    };
+
+
 // набор структур для описания структуры файла по-умолчанию, унаследованного от первой версии системы edit-qr
 // используется как подрузумеваемый, если нет специального файла *.tab
 //
@@ -240,10 +271,45 @@ private static String FieldComments[] ={
 //"20\twarend\ttext\tNUL\tДата окончания гарантии\n" +
 //"21\tcomment\ttext\tNUL\tКомментарий (для клиента)\n";
 //*/
+    public void loadZCSVFile4Range(String p_member, String p_range)
+    {
+        String rootPath = Members.getWayToDB() + p_member + "/" + p_range + "/"; //SIC! проверить параметры на shell-path injection
+        zcsvFile = setupZCSVPaths(rootPath, DB_FILENAME);
+        loadConfig4Range(p_member,p_range);
+    }
+    private ZCSVFile setupZCSVPaths(String rootPath, String fileName) {
+        ZCSVFile file = new ZCSVFile();
+        file.setRootPath(rootPath);
+        file.setFileName(fileName);
+        return file;
+    }
     public void loadConfig4Range(String p_member, String p_range)
     {
                 try { loadDataFromConfigFile(p_member, p_range); }
-                catch (Exception e){createDefaultConfig();}
+                catch (Exception e){}
+    }
+    private void loadDataFromConfigFile(String member, String range)
+     throws IOException, ZCSVException, Exception
+    {
+        String rootPath = Members.getWayToDB() + member + "/" + range + "/";
+        ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
+        nameMap = new ArrayList<>();
+        showNames = new ArrayList<>();
+        try {configFile.loadConfigureFile();}
+        catch(Exception e) {configFile.loadConfigFromString(getDefaultCSVConf());}
+            for (int i = 0; i < configFile.getFileRowsLength(); i++) {
+                ZCSVRow configRow = configFile.getRowObjectByIndex(i);
+                if (configRow.get(0).length() < 3) {
+                    nameMap.add(configRow.get(4));
+
+                    if (configRow.get(3).contains(SHOW_ATTRIBUTE)) { showNames.add(configRow.get(4)); }
+                    if(configRow.get(3).contains(QR_ATTRIBUTE)) { referencesIndex.add(configRow.get(4)); }
+                }
+            }
+            showedNames = new String[showNames.size()];
+            showNames.toArray(showedNames);
+            namesMap = new String[nameMap.size()];
+            nameMap.toArray(namesMap);
     }
     public String makeDefaultQRCSVConf()
     {
@@ -286,7 +352,7 @@ private static String FieldComments[] ={
                     throw new RuntimeException("Shell injection detected");
                 } // SIC!
                 break;
-            case PARAM_ACTION:
+            case PARAM_ACTION: // SIC! Это я такое сделал? переделать!
                 if (request.getParameter(ACTION_SAVE) != null) value = ACTION_SAVE;
                 if (request.getParameter(ACTION_REFRESH) != null) value = ACTION_REFRESH;
                 if (request.getParameter(ACTION_CANCEL) != null) value = ACTION_CANCEL;
@@ -298,7 +364,11 @@ private static String FieldComments[] ={
         }
         return (value);
     }
-    /// PAGES
+    //
+    //
+    // PAGES
+    //
+    // 
     private void setMembersPage() throws Exception {
         Members members = new Members();
         String[] allRegisteredMembers = members.getCompanyNames();
@@ -724,32 +794,7 @@ private static String FieldComments[] ={
     }
 
     /// END PAGES PART
-    private void createDefaultConfig() {
-    }
 
-    private void loadDataFromConfigFile(String member, String range)
-     throws IOException, ZCSVException, Exception
-    {
-        String rootPath = Members.getWayToDB() + member + "/" + range + "/";
-        ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
-        nameMap = new ArrayList<>();
-        showNames = new ArrayList<>();
-        try {configFile.loadConfigureFile();}
-        catch(Exception e) {configFile.loadConfigFromString(getDefaultCSVConf());}
-            for (int i = 0; i < configFile.getFileRowsLength(); i++) {
-                ZCSVRow configRow = configFile.getRowObjectByIndex(i);
-                if (configRow.get(0).length() < 3) {
-                    nameMap.add(configRow.get(4));
-
-                    if (configRow.get(3).contains(SHOW_ATTRIBUTE)) { showNames.add(configRow.get(4)); }
-                    if(configRow.get(3).contains(QR_ATTRIBUTE)) { referencesIndex.add(configRow.get(4)); }
-                }
-            }
-            showedNames = new String[showNames.size()];
-            showNames.toArray(showedNames);
-            namesMap = new String[nameMap.size()];
-            nameMap.toArray(namesMap);
-    }
 
     private String getParameterName(int index) {
         return REC_PREFIX + String.valueOf(index);
@@ -801,13 +846,6 @@ private static String FieldComments[] ={
 
     private void endForm() throws Exception {
         out.println("</form>");
-    }
-
-    private ZCSVFile setupZCSVPaths(String rootPath, String fileName) {
-        ZCSVFile file = new ZCSVFile();
-        file.setRootPath(rootPath);
-        file.setFileName(fileName);
-        return file;
     }
 
     private void printUpsideMenu(String[] menuItems, String[] menuReferences) throws IOException, Exception {
@@ -873,6 +911,10 @@ private static String FieldComments[] ={
         endTRow();
     }
 
+    //
+    // Tools/Utils section
+    //
+
     private String getRequestParamsURL(String... params) {
         if (params == null)
             return (null);
@@ -929,33 +971,6 @@ private static String FieldComments[] ={
 
     private void read_parameters_from_web_xml() { QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH"); }
 
-    private String[] NAILED_RANGE_DESC = { //!SIC прибивать гвоздями плохо, просто 31-го очень к столу успеть хотелось
-            "01000", "(Пример) - по каждому объекту (QR-коду) ведется отдельная страница",
-            "0100A", "(Пример) здесь будет пример информации защищенной паролем",
-            "0100F", "(Пример) здесь будет пример перенаправления на другие сайты",
-            "0100D", "(Пример) Примеры на основе первых проданных двигателей TDME",
-            "0100E", "(Пример) Отладочный пример, на основе данных Доминатор 01012 - реальные продажи TDME 2010-2017",
-            "01011", ":+:2019-11-18:DOMINATOR:list:Данные о продажах от начала работы до конца 2011 г",
-            "01012", "Доминатор - реальные продажи TDME 2010-2017 (Money_2)",
-            "01017", "DOMINATOR:list:Данные о продажах в 2017 г. (предложение к использованию)",
-            "01018", "DOMINATOR:list:Данные о продажах в 2018 г. (предложение к использованию)",
-            "01019", ":+:2019-11-24:DOMINATOR:list:Данные о продажах в 2019 г.",
-            "0101A", ":+:2019-11-24:DOMINATOR:list:Данные о продажах в 2020 г.",
-            "0101E", ":+:2019-11-27:DOMINATOR::Diesel Engines models",
-            "01020", ":+:2019-11-21:EUSTROSOFT::Various EustroSoft QR-info pages",
-            "01021", ":+:2019-12-22:EUSTROSOFT::EustroSoft's inventory-list",
-            "01030", ":-:2019-12-17:NS-RESERVED",
-            "01031", ":-:2019-12-17:MH-RESERVED",
-            "01032", ":-:2019-12-17:GL-RESERVED",
-            "01033", ":-:2019-12-17:MA-RESERVED",
-            "01034", ":-:2019-12-17:SN-RESERVED",
-            "01035", ":-:2019-12-22:LYRA-SNT",
-            "01036", "выделен 2019-12-22 для rubmaster.ru",
-            "01037", "выделен 2019-12-22 для boatswain.org",
-            "FFFF", ""
-    };
-
-
     public String getNailedRangDesc(String r, String desc) {
         int i = 0;
         String new_desc = desc;
@@ -969,13 +984,13 @@ private static String FieldComments[] ={
         return (new_desc);
     }
 
-    public void sendAllert(String msg) throws Exception {
+    public void sendAllert(String msg) throws Exception { // SIC! Ну не надо так!
         out.println("<script type=\"text/javascript\">");
         out.println("alert('" + msg + "');");
         out.println("</script>");
     }
 
-    private boolean checkNewRecord(ZCSVRow rowToCheck) throws Exception {
+    private boolean checkNewRecord(ZCSVRow rowToCheck) throws Exception { //SIC! не понял, вернуться позднее
         sendAllert(rowToCheck.get(0));
         int ZRID = Integer.parseInt(rowToCheck.get(0));
         ZCSVRow row;
@@ -997,7 +1012,7 @@ private static String FieldComments[] ={
         return false;
     }
 
-    private boolean checkForCorrectness(HttpServletRequest request) throws Exception {
+    private boolean checkForCorrectness(HttpServletRequest request) throws Exception { // SIC! это QC? это не так надо, не request
         String bufferParameter = new String();
         boolean answer = true;
         for (Integer i = getCSVHeaderLength(); i < namesMap.length; i++) {
@@ -1154,12 +1169,12 @@ private static String FieldComments[] ={
             out.println(ex.printError() + "Call the system administrator please.");
         else
             out.println("ZCSV unexpected error occered! Call the system administrator please.");
-    } catch (Exception ex) {
+    }/* catch (Exception ex) {
         if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
             out.print(ex.getMessage() + "Call the system administrator please.");
         else
             out.println("Unexpected error occured! Call the system administrator please.");
-    } finally {
+    }*/ finally {
         if(zcsvFile != null) zcsvFile.closeFile();
     }
 %>
