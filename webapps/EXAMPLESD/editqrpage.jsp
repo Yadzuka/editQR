@@ -20,7 +20,7 @@
     private final static String DELETED_RECORD_STATUS = "D";
     private final static String NEW_RECORD_STATUS = "N";
     private final static String OLD_RECORD_STATUS = "O";
-    private final static String QR_CODE_RECORD_STATUS = "QR код";
+    private final static String QR_CODE_RECORD_STATUS = "QR код"; // SIC! ну нельзя так! это не имя поля, это только заголовок, который можно переопределить
 
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
@@ -74,9 +74,10 @@
     private String QRDB_PATH = null;
     private JspWriter out;
     private String[] namesMap;
+    private String[] getNames(){return(namesMap);} //SIC! для транзита
     private String[] showedNames;
-    private ArrayList<String> nameMap = new ArrayList();
-    private ArrayList<String> showNames = new ArrayList();
+//    private ArrayList<String> nameMap = new ArrayList();
+//    private ArrayList<String> showNames = new ArrayList();
     private ArrayList<String> referencesIndex = new ArrayList();
     //
     private int csv_header_length=-1;
@@ -95,8 +96,8 @@
      out = null;
      namesMap = null;
      showedNames = null;
-     nameMap = new ArrayList();
-     showNames = new ArrayList();
+//     nameMap = new ArrayList();
+//     showNames = new ArrayList();
      referencesIndex = new ArrayList();
      //
      csv_header_length=-1;
@@ -275,6 +276,10 @@ private static String FieldComments[] ={
     {
         String rootPath = Members.getWayToDB() + p_member + "/" + p_range + "/"; //SIC! проверить параметры на shell-path injection
         zcsvFile = setupZCSVPaths(rootPath, DB_FILENAME);
+	try{
+        if (zcsvFile.tryOpenFile(1)) zcsvFile.loadFromFileValidVersions();
+	}
+	catch(Exception e){printex(e);}
         loadConfig4Range(p_member,p_range);
     }
     private ZCSVFile setupZCSVPaths(String rootPath, String fileName) {
@@ -286,15 +291,15 @@ private static String FieldComments[] ={
     public void loadConfig4Range(String p_member, String p_range)
     {
                 try { loadDataFromConfigFile(p_member, p_range); }
-                catch (Exception e){}
+                catch (Exception e){} //SIC! сделать лучше
     }
     private void loadDataFromConfigFile(String member, String range)
-     throws IOException, ZCSVException, Exception
+     throws  ZCSVException, Exception
     {
         String rootPath = Members.getWayToDB() + member + "/" + range + "/";
         ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
-        nameMap = new ArrayList<>();
-        showNames = new ArrayList<>();
+        ArrayList<String> nameMap = new ArrayList<>();
+        ArrayList<String> showNames = new ArrayList<>();
         try {configFile.loadConfigureFile();}
         catch(Exception e) {configFile.loadConfigFromString(getDefaultCSVConf());}
             for (int i = 0; i < configFile.getFileRowsLength(); i++) {
@@ -391,7 +396,7 @@ private static String FieldComments[] ={
 
         RangesController rController = new RangesController(member);
         String s = rController.getInfo();
-        out.println(s);
+        wln(s);
 
         String[] allItems = rController.getRanges();
         beginT();
@@ -462,7 +467,7 @@ private static String FieldComments[] ={
         if (Files.exists(Paths.get(zcsvFile.toString()))) { //SIC! if(!..) then err is better
             if (zcsvFile.tryOpenFile(1)) {
                 zcsvFile.loadFromFileValidVersions();
-                out.println("<table class='memberstable' border='1'>"); //SIC! println Evil, '1' is better \"1\"
+                wln("<table class='memberstable' border='1'>"); //SIC! println Evil, '1' is better \"1\"
                 printTableUpsideString(OPTIONAL_PRODUCTS_TABLE_PARAM, showedNames);
                 for (int i = zcsvFile.getFileRowsLength() - 1; i >= 0; i--) {
                     ZCSVRow eachRow = zcsvFile.getRowObjectByIndex(i);
@@ -485,9 +490,9 @@ private static String FieldComments[] ={
                         dec_money = MsgContract.str2dec(eachRow.get("Деньги по договору"));
                         allMoney = allMoney.add(dec_money);
 
-                        if (isDate(eachRow.get("Дата отправки клиенту"))) { allMoneySent = allMoneySent.add(dec_money); }
+                        if (isDate(eachRow.get("Дата отправки клиенту"))) { allMoneySent = allMoneySent.add(dec_money); } //SIC! так нельзя!
                         else { allMoneyWait = allMoneyWait.add(dec_money); }
-                    } catch (Exception ex) {/*out.println("Ошибка подсчета денег!");*/} // SIC!
+                    } catch (Exception ex) {/*wln("Ошибка подсчета денег!");*/} // SIC!
                 }
                 beginTRow();printCell("", showedNames.length - 1);printCell("Отгружено:");printCell(allMoneySent);endTRow();
                 beginTRow();printCell("", showedNames.length - 1);printCell("Ждём:");printCell(allMoneyWait);endTRow();
@@ -511,25 +516,44 @@ private static String FieldComments[] ={
                         getRequestParamsURL(CMD_UPDATE, member,range,ZRID, ACTION_DELETE)
                 });
 
-        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1);
+        ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1); //SIC! здесь что-то не так!
+        String[] Captions = getNames();
+        int count_captions = Captions.length;
+        int count_fields = row.getDataLength();
+        int max_fields_count=count_fields;
+        if(count_captions > max_fields_count) max_fields_count= count_captions;
 
-        beginT();beginTRow();printCell("QR картинка:");beginTCell();
-        setReferenceQRView(
-                getReference(row.get(QR_CODE_RECORD_STATUS)) ,
-                "<img src=\"qr?p_codingString=" + row.get(QR_CODE_RECORD_STATUS) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>"
+        beginT();
+	if(getQRFieldIndex() >= 0 )
+	{
+	beginTRow(); printCell("QR картинка:"); beginTCell();
+         setReferenceQRView(
+                getReference(row.get(getQRFieldIndex())) ,
+                "<img src=\"qr?p_codingString=" + row.get(getQRFieldIndex()) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>" //SIC! html-injection
         );
-        endTCell();beginTRow();
-        for (int i = getCSVHeaderLength(); i < row.getNames().length; i++) {
+        endTCell(); endTRow();
+	}
+
+        for (int i = getCSVHeaderLength(); i < max_fields_count; i++) {
+          String caption = i + ":"; String value = null;
+	  if(i< count_captions) caption = Captions[i];
+          if(i< count_fields) value = row.get(i);
             beginTRow();
-            printCell((row.getNames()[i] == null) ? "Не определенное имя" : row.getNames()[i]);
-            if(referencesIndex.contains(row.getNames()[i])) {
-                beginTCell();
-                setReferenceQRView((row.get(i) == null | SZ_NULL.equals(row.get(i))) ?
-                "" : getReference(MsgContract.csv2text(row.get(i))), MsgContract.csv2text(row.get(i)));
-                endTCell();
-            } else { printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : MsgContract.csv2text(row.get(i))); }
+              printCell(caption);
+              printCell(value);
+//            printCell((getNames()[i] == null) ? "Не определенное имя" : getNames()[i]);
+//            if(referencesIndex.contains(getNames()[i])) {
+//                beginTCell();
+//out.println(i + ":If");
+//                setReferenceQRView((row.get(i) == null | SZ_NULL.equals(row.get(i))) ?
+//                "" : getReference(MsgContract.csv2text(row.get(i))), MsgContract.csv2text(row.get(i)));
+//                endTCell();
+//            }
+//	    else {
+//	out.println("Else:" + i); printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : MsgContract.csv2text(row.get(i)));
+// }
             endTRow();
-        }
+        } //for
         endT();
     }
 
@@ -546,7 +570,7 @@ private static String FieldComments[] ={
         println();
 
         if(!ZRID.equals(SZ_NULL) & edittedRow == null)
-            edittedRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1).clone();
+            edittedRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1).clone(); //SIC! здесь мины!
         printEditForm(member, range, ZRID, action, namesMap, edittedRow);
     }
 ///*
@@ -805,14 +829,14 @@ private static String FieldComments[] ={
     }
 
     private void setReference(String reference, String insides) throws IOException {
-        out.print("<a href=\""+reference+"\">");
-        out.print(insides);
-        out.print("</a>");
+        w("<a href=\""+reference+"\">");
+        w(insides);
+        w("</a>");
     }
     private void setReferenceQRView(String reference, String insides) throws IOException {
-        out.print("<a href='"+reference+"' target='_qrview'>");
-        out.print(insides);
-        out.print("</a>");
+        w("<a href='"+reference+"' target='_qrview'>");
+        w(insides);
+        w("</a>");
     }
 
     private boolean isDate(String date) {
@@ -825,15 +849,15 @@ private static String FieldComments[] ={
     }
 
     private void printUpdatePageButtons() throws Exception {
-        out.print("<input type=\"submit\" name=\""+ACTION_CANCEL+"\" value=\"Отмена\"/>&nbsp;");
-        out.print("<input type=\"submit\" name=\""+ACTION_REFRESH+"\" value=\"Обновить\"/>&nbsp;");
-        out.print("<input type=\"submit\" name=\""+ACTION_SAVE+"\" value=\"Сохранить\"/>&nbsp;");
+        w("<input type=\"submit\" name=\""+ACTION_CANCEL+"\" value=\"Отмена\"/>&nbsp;");
+        w("<input type=\"submit\" name=\""+ACTION_REFRESH+"\" value=\"Обновить\"/>&nbsp;");
+        w("<input type=\"submit\" name=\""+ACTION_SAVE+"\" value=\"Сохранить\"/>&nbsp;");
     }
 
     private void printRedirectButton(String bName, String bValue, String bHref) throws Exception {
-        out.println("<a href=\"" + bHref + "/\">");
-        out.println("<input type=\"" + bName + "\" value=\"" + bValue + "\"/>");
-        out.println("</a>");
+        wln("<a href=\"" + bHref + "/\">");
+        wln("<input type=\"" + bName + "\" value=\"" + bValue + "\"/>");
+        wln("</a>");
     }
 ///*
 //    private void startCreateForm(String member, String range, String action) throws Exception {
@@ -841,21 +865,21 @@ private static String FieldComments[] ={
 //    }
 //*/
     private void startUpdateForm(String member, String range, String ZRID, String action) throws Exception {
-        out.println("<form action=\"" + getRequestParamsURL(CGI_NAME, CMD_UPDATE, member, range, ZRID, action) + "\" method=\"POST\">");
+        wln("<form action=\"" + getRequestParamsURL(CGI_NAME, CMD_UPDATE, member, range, ZRID, action) + "\" method=\"POST\">");
     }
 
     private void endForm() throws Exception {
-        out.println("</form>");
+        wln("</form>");
     }
 
     private void printUpsideMenu(String[] menuItems, String[] menuReferences) throws IOException, Exception {
-        out.println("<ul>");
+        wln("<ul>");
         for (int i = 0; i < menuItems.length; i++) {
-            out.print("<li>");
-            out.println("<a href=\'" + CGI_NAME + "?" + menuReferences[i] + "\'>" + menuItems[i] + "</a>");
-            out.print("</li>");
+            w("<li>");
+            wln("<a href=\'" + CGI_NAME + "?" + menuReferences[i] + "\'>" + menuItems[i] + "</a>");
+            w("</li>");
         }
-        out.println("</ul>");
+        wln("</ul>");
         println();
     }
 
@@ -873,21 +897,22 @@ private static String FieldComments[] ={
         endTRow();
     }
 
-    private void beginTCell() throws Exception { out.println("<td>"); }
+    private void beginTCell() throws IOException { wln("<td>"); }
 
-    private void endTCell() throws Exception { out.println("</td>"); }
+    private void endTCell() throws IOException { wln("</td>"); }
 
-    private void beginTRow() throws Exception { out.println("<tr>"); }
+    private void beginTRow() throws IOException { wln("<tr>"); }
 
-    private void endTRow() throws Exception { out.println("</tr>"); }
+    private void endTRow() throws IOException { wln("</tr>"); }
 
-    private void beginT() throws Exception { out.print("<table>"); }
+    private void beginT() throws IOException { w("<table>"); }
 
-    private void endT() throws Exception { out.println("</table>"); }
+    private void endT() throws IOException { wln("</table>"); }
 
-    private void printCell(Object tElement) throws IOException, Exception {
+    private void printCell(Object tElement) throws IOException, Exception {printCellRaw(tElement);}
+    private void printCellRaw(Object tElement) throws IOException {
         beginTCell();
-        out.println(obj2str(tElement));
+        wln(obj2str(tElement));
         endTCell();
     }
     public void printCellCardTools(String member, String range, Long ZRID) throws IOException, Exception
@@ -898,8 +923,8 @@ private static String FieldComments[] ={
     }
 
     private void printCell(Object tElement, int colspan) throws IOException, Exception {
-        out.println("<td colspan='" + colspan + "'>");
-        out.println(obj2str(tElement));
+        wln("<td colspan='" + colspan + "'>");
+        wln(obj2str(tElement));
         endTCell();
     }
 
@@ -914,6 +939,39 @@ private static String FieldComments[] ={
     //
     // Tools/Utils section
     //
+
+// imported from ConcepTIS ru.mave.ConcepTIS.WASkin
+//
+
+public static MsgContract WAMessages = null; // helpful for using ConcepTIS WAMessages static methods by imported methods
+public boolean is_error =false;
+public Exception last_exception = null;
+
+private void w(String s)
+{
+ is_error=false;
+ try{out.print(s);}
+ catch(Exception e)
+  {is_error=true;last_exception=e;}
+} // w(String s)
+private void wln(String s){w(s);w("\n");}
+private void wln(){w("\n");}
+
+public void print(String s){w(t2h(s));}
+public void println(String s){w(t2h(s));wln("<br>");}
+public void println(){wln("<br>");}
+/** obj2html */
+private static String t2h(String s){return(WAMessages.obj2html(s));}
+/** obj2value */
+private static String o2v(Object o){return(WAMessages.obj2value(o));}
+/** obj2urlvalue (WARNING: must be rewritten) */
+private static String o2uv(Object o){return(WAMessages.obj2value(o));}
+/** obj2text */
+private static String o2t(Object o){return(WAMessages.obj2text(o));}
+/** obj2string */
+private static String o2s(Object o){return(WAMessages.obj2string(o));}
+
+
 
     private String getRequestParamsURL(String... params) {
         if (params == null)
@@ -950,9 +1008,10 @@ private static String FieldComments[] ={
         return obj.toString();
     }
 
-    public void println() throws Exception { out.println("<br/>"); }
+//    public void println() throws Exception { out.println("<br/>"); }
+    public void printex(Exception e){System.out.println("Exception!");} //SIC! потом переделать это и ниже
 
-    public void printerr(String msg) throws Exception { out.print("<b>" + msg + "</b>"); }
+    public void printerr(String msg) throws Exception { w("<b>" + msg + "</b>"); }
 
     public void printerrln(String msg) throws Exception {
         printerr(msg);
@@ -985,9 +1044,9 @@ private static String FieldComments[] ={
     }
 
     public void sendAllert(String msg) throws Exception { // SIC! Ну не надо так!
-        out.println("<script type=\"text/javascript\">");
-        out.println("alert('" + msg + "');");
-        out.println("</script>");
+        wln("<script type=\"text/javascript\">");
+        wln("alert('" + msg + "');");
+        wln("</script>");
     }
 
     private boolean checkNewRecord(ZCSVRow rowToCheck) throws Exception { //SIC! не понял, вернуться позднее
@@ -1025,14 +1084,19 @@ private static String FieldComments[] ={
     }
 
     private String genNewQr(String p_range) throws IOException, ZCSVException {
-        long maxZOID = 0;
+        long maxQR = 0;
+	if(getQRFieldIndex()<0) return(""); // if no QR-code field
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
-            if(!zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()).equals("") & !zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()).equals(null))
-                if(Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()).substring(p_range.length()), 16) > maxZOID)
-                    maxZOID = Long.parseLong(zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()).substring(p_range.length()),16);
+           String QR = zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()); // get QR-code
+	   // if(QR not in range) continue; // check for range
+	   if(QR==null) continue;
+	   if(QR.equals("")) continue;
+	   long lQR=0;
+	   try{lQR=Long.parseLong(QR.substring(p_range.length()), 16);}catch (NumberFormatException nfe){} // ignore NFE
+           if(lQR > maxQR) maxQR = lQR;
         }
-        maxZOID++;
-        return String.format("%s%03X",p_range, maxZOID);
+        maxQR++;
+        return String.format("%s%03X",p_range, maxQR);
     }
 %>
 <html>
@@ -1088,9 +1152,11 @@ private static String FieldComments[] ={
 		 setChangeConfigPage(p_member, p_range); break;
             case CMD_PRODVIEW:
                 //loadDataFromConfigFile(p_member, p_range);
+		loadZCSVFile4Range(p_member,p_range);
 		 setProdViewPage(p_member, p_range, p_ZRID); break;
             case CMD_UPDATE:
                 //loadDataFromConfigFile(p_member,p_range);
+		loadZCSVFile4Range(p_member,p_range);
                 setActions(p_member, p_range, p_ZRID, p_action, request, response);
 //                /*switch (p_action) {
 //                    case ACTION_EDIT:
@@ -1149,31 +1215,31 @@ private static String FieldComments[] ={
 //                }*/
                 break;
             case CMD_TEST:
-                out.println("Hello test page!<br>");
+                wln("Hello test page!<br>");
             case CMD_TESTTAB:
-                out.println("<pre>");
-                out.print(makeDefaultQRCSVConf());
-                out.println("</pre>");
+                wln("<pre>");
+                w(makeDefaultQRCSVConf());
+                wln("</pre>");
                 break;
             default:
-                response.sendRedirect("editqrpage.jsp"); //SIC! я кажется это уже помечал...
+                response.sendRedirect(CGI_NAME);
                 break;
         }
     } catch (IOException ex) {
         if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
-            out.println(ex.getMessage() + "Call the system administrator please.");
+            wln(ex.getMessage() + "Call the system administrator please.");
         else
-            out.println("IO unexpected error occered! Call the system administrator please.");
+            wln("IO unexpected error occered! Call the system administrator please.");
     } catch (ZCSVException ex) {
         if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
-            out.println(ex.printError() + "Call the system administrator please.");
+            wln(ex.printError() + "Call the system administrator please.");
         else
-            out.println("ZCSV unexpected error occered! Call the system administrator please.");
+            wln("ZCSV unexpected error occered! Call the system administrator please.");
     }/* catch (Exception ex) {
         if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
-            out.print(ex.getMessage() + "Call the system administrator please.");
+            w(ex.getMessage() + "Call the system administrator please.");
         else
-            out.println("Unexpected error occured! Call the system administrator please.");
+            wln("Unexpected error occured! Call the system administrator please.");
     }*/ finally {
         if(zcsvFile != null) zcsvFile.closeFile();
     }
