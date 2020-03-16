@@ -537,9 +537,10 @@ private static String FieldComments[] ={
         for (int i = getCSVHeaderLength(); i < max_fields_count; i++) {
           String caption = i + ":"; String value = null;
 	  if(i< count_captions) caption = Captions[i];
-          if(i< count_fields) value = row.get(i);
+          if(i< count_fields) value = o2t(row.get(i)); //SIC! было MsgContract.csv2text(row.get(i)),но оно должно быть в ZCSVFile 
             beginTRow();
               printCell(caption);
+              if(i==getQRFieldIndex() && value.length() > 0 ){beginTCell();setReferenceQRView(getReference(value),value);endTCell();} else //SIC! улучшить
               printCell(value);
 //            printCell((getNames()[i] == null) ? "Не определенное имя" : getNames()[i]);
 //            if(referencesIndex.contains(getNames()[i])) {
