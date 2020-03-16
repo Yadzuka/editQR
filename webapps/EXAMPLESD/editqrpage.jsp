@@ -932,7 +932,7 @@ private static String FieldComments[] ={
     private void printTRow(Object[] data) throws Exception {
         beginTRow();
         for (int i = 0; i < data.length; i++) {
-            printCell(data[i]);
+            printCellRaw(data[i]);
         }
         endTRow();
     }
@@ -1084,11 +1084,12 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
         return answer;
     }
 
-    private String genNewQr(String p_range) throws ZCSVException {
+    private String genNewQr(String p_range)  {
         long maxQR = 0;
 	if(getQRFieldIndex()<0) return(""); // if no QR-code field
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
-           String QR = zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()); // get QR-code
+           String QR = "";
+           try{QR= zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()); }catch (ZCSVException e){} //SIC! get QR-code
 	   // if(QR not in range) continue; // check for range
 	   if(QR==null) continue;
 	   if(QR.equals("")) continue;
