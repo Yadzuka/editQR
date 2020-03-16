@@ -380,7 +380,7 @@ private static String FieldComments[] ={
         beginT();
         for (int i = 0; i < allRegisteredMembers.length; i++) {
             beginTRow();
-            printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_RANGES, allRegisteredMembers[i]) + "\'>" + allRegisteredMembers[i] + "</a>");
+            printCellRaw("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_RANGES, allRegisteredMembers[i]) + "\'>" + allRegisteredMembers[i] + "</a>");
             endTRow();
         }
         endT();
@@ -404,7 +404,7 @@ private static String FieldComments[] ={
         for (int i = 0; i < allItems.length; i++) {
             String range = allItems[i];
             beginTRow();
-            printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, member, range) + "\'>" + range + "</a>");
+            printCellRaw("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, member, range) + "\'>" + range + "</a>");
             printCell(getNailedRangDesc(range, "Диапазон: " + range));
             endTRow();
         }
@@ -909,7 +909,7 @@ private static String FieldComments[] ={
 
     private void endT() { wln("</table>"); }
 
-    private void printCell(Object tElement) {printCellRaw(tElement);}
+    private void printCell(Object tElement) {printCellRaw(t2h(o2t(tElement)));}
     private void printCellRaw(Object tElement) {
         beginTCell();
         wln(obj2str(tElement));
@@ -917,7 +917,7 @@ private static String FieldComments[] ={
     }
     public void printCellCardTools(String member, String range, Long ZRID) 
     {
-      printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, ZRID.toString()) + "\'>" +
+      printCellRaw("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, ZRID.toString()) + "\'>" +
                             "&lt;карточка&gt;" + "</a>"); //SIC! а вообще, надо делать немного по-другому
 	// +"<br/>"+ "<input type=\"button\"value=\"Удалить\" onclick=\"allertToDeleteRecord()\">");
     }
