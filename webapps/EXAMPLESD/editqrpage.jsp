@@ -828,12 +828,12 @@ private static String FieldComments[] ={
         return ADDITION_TO_REFERENCE + code;
     }
 
-    private void setReference(String reference, String insides) throws IOException {
+    private void setReference(String reference, String insides) {
         w("<a href=\""+reference+"\">");
         w(insides);
         w("</a>");
     }
-    private void setReferenceQRView(String reference, String insides) throws IOException {
+    private void setReferenceQRView(String reference, String insides) {
         w("<a href='"+reference+"' target='_qrview'>");
         w(insides);
         w("</a>");
@@ -872,7 +872,7 @@ private static String FieldComments[] ={
         wln("</form>");
     }
 
-    private void printUpsideMenu(String[] menuItems, String[] menuReferences) throws IOException, Exception {
+    private void printUpsideMenu(String[] menuItems, String[] menuReferences) throws Exception {
         wln("<ul>");
         for (int i = 0; i < menuItems.length; i++) {
             w("<li>");
@@ -897,32 +897,32 @@ private static String FieldComments[] ={
         endTRow();
     }
 
-    private void beginTCell() throws IOException { wln("<td>"); }
+    private void beginTCell() { wln("<td>"); }
 
-    private void endTCell() throws IOException { wln("</td>"); }
+    private void endTCell() { wln("</td>"); }
 
-    private void beginTRow() throws IOException { wln("<tr>"); }
+    private void beginTRow() { wln("<tr>"); }
 
-    private void endTRow() throws IOException { wln("</tr>"); }
+    private void endTRow() { wln("</tr>"); }
 
-    private void beginT() throws IOException { w("<table>"); }
+    private void beginT() { w("<table>"); }
 
-    private void endT() throws IOException { wln("</table>"); }
+    private void endT() { wln("</table>"); }
 
-    private void printCell(Object tElement) throws IOException, Exception {printCellRaw(tElement);}
-    private void printCellRaw(Object tElement) throws IOException {
+    private void printCell(Object tElement) {printCellRaw(tElement);}
+    private void printCellRaw(Object tElement) {
         beginTCell();
         wln(obj2str(tElement));
         endTCell();
     }
-    public void printCellCardTools(String member, String range, Long ZRID) throws IOException, Exception
+    public void printCellCardTools(String member, String range, Long ZRID) 
     {
       printCell("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, ZRID.toString()) + "\'>" +
                             "&lt;карточка&gt;" + "</a>"); //SIC! а вообще, надо делать немного по-другому
 	// +"<br/>"+ "<input type=\"button\"value=\"Удалить\" onclick=\"allertToDeleteRecord()\">");
     }
 
-    private void printCell(Object tElement, int colspan) throws IOException, Exception {
+    private void printCell(Object tElement, int colspan) {
         wln("<td colspan='" + colspan + "'>");
         wln(obj2str(tElement));
         endTCell();
@@ -1083,7 +1083,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
         return answer;
     }
 
-    private String genNewQr(String p_range) throws IOException, ZCSVException {
+    private String genNewQr(String p_range) throws ZCSVException {
         long maxQR = 0;
 	if(getQRFieldIndex()<0) return(""); // if no QR-code field
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
@@ -1227,7 +1227,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
         }
     } catch (IOException ex) {
         if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
-            wln(ex.getMessage() + "Call the system administrator please.");
+            System.err.println("IOException:" + ex.getMessage() + "Call the system administrator please.");
         else
             wln("IO unexpected error occered! Call the system administrator please.");
     } catch (ZCSVException ex) {
