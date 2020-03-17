@@ -44,6 +44,7 @@ public class ZCSVRow {
                 dataInRow.add("");
             }
         }
+        str = MsgContract.value2csv(str);
         if(i >= dataInRow.size()){
             dataInRow.add(str);
         }else {
@@ -67,7 +68,7 @@ public class ZCSVRow {
             if ((i >= dataInRow.size() || i < 0))
                 throw new ZCSVException("Индекс задан неправильно!"); //SIC!
 
-            return (String) dataInRow.get(i);
+            return MsgContract.csv2text((String) dataInRow.get(i));
         }
 
     public String get (String name) throws ZCSVException { return get(name2column(name)); }
@@ -121,8 +122,6 @@ public class ZCSVRow {
     private void splitString (String str){
         dataInRow = new ArrayList();Collections.addAll(dataInRow, str.split(DELIMITER));
     }
-
-
 
     // Constructors section
 

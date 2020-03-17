@@ -477,7 +477,7 @@ private static String FieldComments[] ={
                     beginTRow();
                     printCellCardTools(member,range,new Long(i+1));
                     for (int j = 0; j < showedNames.length; j++) {
-                        String wroteString = MsgContract.csv2text(eachRow.get(showedNames[j]));
+                        String wroteString = eachRow.get(showedNames[j]);
                         if(referencesIndex.contains(showedNames[j])){
                             beginTCell();setReferenceQRView(getReference(wroteString), wroteString);endTCell();
                         } else {
@@ -744,7 +744,7 @@ private static String FieldComments[] ={
                 break;
             case ACTION_REFRESH:
                 for(Integer i = getCSVHeaderLength(); i < edittedRow.getNames().length; i++) {
-                    edittedRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
+                    edittedRow.setStringSpecificIndex(i, request.getParameter(getParameterName(i)));
                 }
                 setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
                 //setActions(p_member, p_range, p_ZRID, ACTION_EDIT, request, response);
@@ -768,7 +768,7 @@ private static String FieldComments[] ={
                     newRow.setStringSpecificIndex(4, NEW_RECORD_STATUS);
 
                     for (Integer i = getCSVHeaderLength(); i < newRow.getNames().length; i++) {
-                        newRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
+                        newRow.setStringSpecificIndex(i, request.getParameter(getParameterName(i)));
                     }
                     if(checkNewRecord(newRow)) { zcsvFile.appendNewStringToFile(newRow); }
                     response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
@@ -811,7 +811,7 @@ private static String FieldComments[] ={
             if(row.getNames() == null)
                 row.setNames(namesMap);
             for(int i =0;i < row.getNames().length;i++)
-                printCell(MsgContract.csv2text(row.get(i)));
+                printCell(row.get(i));
             endTRow();
             row = row.getPrevious();
         }
