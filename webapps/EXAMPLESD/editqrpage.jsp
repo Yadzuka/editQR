@@ -289,8 +289,8 @@ private static String FieldComments[] ={
     }
     public void loadConfig4Range(String p_member, String p_range)
     {
-                try { loadDataFromConfigFile(p_member, p_range); }
-                catch (Exception e){} //SIC! сделать лучше
+        try { loadDataFromConfigFile(p_member, p_range); }
+        catch (Exception e){} //SIC! сделать лучше
     }
     private void loadDataFromConfigFile(String member, String range)
      throws  ZCSVException, Exception
@@ -634,7 +634,6 @@ private static String FieldComments[] ={
     private void setActions(String p_member, String p_range, String p_ZRID, String p_action, HttpServletRequest request, HttpServletResponse response) throws Exception {
         switch (p_action){
             case ACTION_EDIT:
-                edittedRow = null;
                 setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
                 break;
             case ACTION_NEWRECORD:
@@ -648,11 +647,14 @@ private static String FieldComments[] ={
                     response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, p_member, p_range,p_ZRID));
                 break;
             case ACTION_REFRESH:
+                if(edittedRow == null) {
+                    edittedRow = new ZCSVRow();
+                    edittedRow.setNames(namesMap);
+                }
                 for(Integer i = getCSVHeaderLength(); i < edittedRow.getNames().length; i++) {
                     edittedRow.setStringSpecificIndex(i, request.getParameter(getParameterName(i)));
                 }
                 setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
-                //setActions(p_member, p_range, p_ZRID, ACTION_EDIT, request, response);
                 break;
             case ACTION_SAVE:
                 try {
