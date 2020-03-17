@@ -83,8 +83,7 @@
     private int csv_header_length=-1;
     private int csv_QRfield_index=-1;
     private String szDefaultCSVConf=null;
-   /* public void initJSPGlobals() // it's constructor-like method, use it before process any request
-    {
+    public void initJSPGlobals() { // it's constructor-like method, use it before process any request
     // Money counters
      allMoney = BigDecimal.ZERO;
      allMoneySent = BigDecimal.ZERO;
@@ -103,7 +102,7 @@
      csv_header_length=-1;
      csv_QRfield_index=-1;
      szDefaultCSVConf=null;
-    } // initJSPGlobals*/
+    } // initJSPGlobals
 
     public int getCSVHeaderLength(){if(csv_header_length<0) return(STD_QRHEANOR_FIELDS_NUM); return(csv_header_length);}
     public int getQRFieldIndex(){if(csv_header_length<0 && csv_QRfield_index<0)return(getCSVHeaderLength());return(csv_QRfield_index);}
@@ -602,24 +601,24 @@ private static String FieldComments[] ={
             beginT();
             for(int i = getCSVHeaderLength(); i < namesMap.length; i++) {
                 parameterBuffer = getParameterName(i);
-                if (edittedRow.getNames()[i].equals(QR_CODE_RECORD_STATUS)) {
+                if (config[i].equals(QR_CODE_RECORD_STATUS)) {
                     if(edittedRow.get(i).equals(SZ_EMPTY))
                         edittedRow.setStringSpecificIndex(i, newqr);
                     printTRow(new Object[]{
-                            edittedRow.getNames()[i],
+                            config[i],
                             printInput("text", "qrcode", parameterBuffer, edittedRow.get(i)),
                             String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>", newqr),
                             FieldComments[i],
                     });
-                } else if (edittedRow.getNames()[i].toLowerCase().contains("комментарий")) { //SIC! так не надо! см опции поля!
+                } else if (config[i].toLowerCase().contains("комментарий")) { //SIC! так не надо! см опции поля!
                     printTRow(new Object[]{
-                            edittedRow.getNames()[i],
+                            config[i],
                             "<textarea name='" + parameterBuffer + "' " + "rows='5' cols='40'>" + edittedRow.get(i) + "</textarea>",
                             FieldComments[i],
                     });
                 } else {
                     printTRow(new Object[]{
-                            edittedRow.getNames()[i],
+                            config[i],
                             printInput("text", "", parameterBuffer, edittedRow.get(i)),
                             FieldComments[i],
                     });
@@ -1031,15 +1030,14 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
 </div>
 <%
     set_request_hints(request, response);
-    //initJSPGlobals();
+    initJSPGlobals();
     long enter_time = System.currentTimeMillis();
     this.out = out;
-    String CMD = getRequestParameter(request, PARAM_CMD, CMD_MEMBERS);
 
+    String CMD = getRequestParameter(request, PARAM_CMD, CMD_MEMBERS);
     allMoney = BigDecimal.ZERO;
     allMoneyWait = BigDecimal.ZERO;
     allMoneySent = BigDecimal.ZERO;
-
     namesMap = null;
     showedNames = null;
 
@@ -1058,85 +1056,13 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
         switch (CMD) {
             case CMD_MEMBERS: setMembersPage(); break;
             case CMD_RANGES: setRangesPage(p_member); break;
-            case CMD_PRODTABLE:
-                setProductsPage(p_member, p_range);  break;
-            case CMD_CHANGE_CONFIG:
-                //loadDataFromConfigFile(p_member, p_range);
-		 setChangeConfigPage(p_member, p_range); break;
-            case CMD_PRODVIEW:
-                //loadDataFromConfigFile(p_member, p_range);
-		loadZCSVFile4Range(p_member,p_range);
-		 setProdViewPage(p_member, p_range, p_ZRID); break;
-            case CMD_UPDATE:
-                //loadDataFromConfigFile(p_member,p_range);
-		loadDataFromConfigFile(p_member,p_range);
-                setActions(p_member, p_range, p_ZRID, p_action, request, response);
-//                /*switch (p_action) {
-//                    case ACTION_EDIT:
-//                        setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
-//                        break;
-//                    case ACTION_NEWRECORD:
-//                        setNewRecordPage(p_member, p_range, p_action);
-//                        break;
-//                    case ACTION_CANCEL:
-//                        sendAllert("Hello");
-//                        response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, p_member, p_range,p_ZRID)); //SIC! возможна атака
-//                        break;
-//                    case ACTION_REFRESH:
-//                        setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
-//                        break;
-//                    case ACTION_SAVE:
-//                        try {
-//                            ZCSVRow newRow;
-//                            if (p_ZRID == null || SZ_NULL.equals(p_ZRID)) {
-//                                Integer zrdsLength = zcsvFile.getFileRowsLength();
-//                                newRow = new ZCSVRow();
-//                                newRow.setNames(namesMap);
-//                                newRow.setStringSpecificIndex(0, String.valueOf(zrdsLength + 1));
-//                                newRow.setStringSpecificIndex(1, "1");
-//                            } else {
-//                                newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1).clone();
-//                                Integer newVerion = Integer.parseInt(newRow.get(1)) + 1;
-//                                newRow.setStringSpecificIndex(1, newVerion.toString());
-//                            }
-//                            newRow.setStringSpecificIndex(2, getCurrentDate4ZDATE());
-//                            newRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
-//                            newRow.setStringSpecificIndex(4, NEW_RECORD_STATUS);
-//
-//                            for (Integer i = getCSVHeaderLength(); i < newRow.getNames().length; i++) {
-//                                newRow.setStringSpecificIndex(i, MsgContract.value2csv(request.getParameter(getParameterName(i))));
-//                            }
-//                            if(checkNewRecord(newRow)) { zcsvFile.appendNewStringToFile(newRow); }
-//                            response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
-//                        } catch (Exception ex) { ex.printStackTrace(response.getWriter()); }
-//                        break;
-//                    case ACTION_SEEHISTORY: setHistoryPage(p_member,p_range,p_ZRID,p_action); break;
-//                    case ACTION_DELETE:
-//                        try {
-//                            ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);
-//                            Integer newVersion = Integer.parseInt(row.get(1)) + 1;
-//                            row.setStringSpecificIndex(1, newVersion.toString());
-//                            row.setStringSpecificIndex(2, getCurrentDate4ZDATE());
-//                            row.setStringSpecificIndex(3, getRequestUser4ZUID(request));
-//                            row.setStringSpecificIndex(4, "D");
-//                            zcsvFile.appendNewStringToFile(row);
-//                            response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
-//                        }catch (Exception ex){
-//                            sendAllert("Error with deleting! Please call the system admitistrator!");
-//                        }
-//                        break;
-//                }*/
-                break;
-            case CMD_TEST:
-                wln("Hello test page!<br>");
-            case CMD_TESTTAB:
-                wln("<pre>");
-                w(makeDefaultQRCSVConf());
-                wln("</pre>");
-                break;
-            default:
-                response.sendRedirect(CGI_NAME);
-                break;
+            case CMD_PRODTABLE: setProductsPage(p_member, p_range);  break;
+            case CMD_CHANGE_CONFIG: setChangeConfigPage(p_member, p_range); break;
+            case CMD_PRODVIEW: loadZCSVFile4Range(p_member,p_range); setProdViewPage(p_member, p_range, p_ZRID); break;
+            case CMD_UPDATE: loadZCSVFile4Range(p_member,p_range); setActions(p_member, p_range, p_ZRID, p_action, request, response); break;
+            case CMD_TEST: wln("Hello test page!<br>");
+            case CMD_TESTTAB: wln("<pre>"); w(makeDefaultQRCSVConf()); wln("</pre>"); break;
+            default: response.sendRedirect(CGI_NAME); break;
         }
     } catch (IOException ex) {
         if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
@@ -1148,12 +1074,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
             wln(ex.printError() + "Call the system administrator please.");
         else
             wln("ZCSV unexpected error occered! Call the system administrator please.");
-    }/* catch (Exception ex) {
-        if (ex.getMessage() != null && !(SZ_NULL.equals(ex.getMessage())))
-            w(ex.getMessage() + "Call the system administrator please.");
-        else
-            wln("Unexpected error occured! Call the system administrator please.");
-    }*/ finally {
+    } finally {
         if(zcsvFile != null) zcsvFile.closeFile();
     }
 %>
