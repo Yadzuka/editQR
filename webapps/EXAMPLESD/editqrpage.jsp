@@ -83,7 +83,7 @@
     private int csv_header_length=-1;
     private int csv_QRfield_index=-1;
     private String szDefaultCSVConf=null;
-    public void initJSPGlobals() // it's constructor-like method, use it before process any request
+   /* public void initJSPGlobals() // it's constructor-like method, use it before process any request
     {
     // Money counters
      allMoney = BigDecimal.ZERO;
@@ -103,7 +103,7 @@
      csv_header_length=-1;
      csv_QRfield_index=-1;
      szDefaultCSVConf=null;
-    } // initJSPGlobals
+    } // initJSPGlobals*/
 
     public int getCSVHeaderLength(){if(csv_header_length<0) return(STD_QRHEANOR_FIELDS_NUM); return(csv_header_length);}
     public int getQRFieldIndex(){if(csv_header_length<0 && csv_QRfield_index<0)return(getCSVHeaderLength());return(csv_QRfield_index);}
@@ -522,7 +522,6 @@ private static String FieldComments[] ={
         int count_fields = row.getDataLength();
         int max_fields_count=count_fields;
         if(count_captions > max_fields_count) max_fields_count= count_captions;
-
         beginT();
 	if(getQRFieldIndex() >= 0 )
 	{
@@ -535,9 +534,9 @@ private static String FieldComments[] ={
 	}
 
         for (int i = getCSVHeaderLength(); i < max_fields_count; i++) {
-          String caption = i + ":"; String value = null;
-	  if(i< count_captions) caption = Captions[i];
-          if(i< count_fields) value = o2t(row.get(i)); //SIC! было MsgContract.csv2text(row.get(i)),но оно должно быть в ZCSVFile 
+          String caption = i + ":"; String value = "";
+	    if(i< count_captions) caption = Captions[i];
+          if(i< count_fields) value = row.get(i);
             beginTRow();
               printCell(caption);
               if(i==getQRFieldIndex() && value.length() > 0 ){beginTCell();setReferenceQRView(getReference(value),value);endTCell();} else //SIC! улучшить
@@ -574,98 +573,6 @@ private static String FieldComments[] ={
             edittedRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1).clone(); //SIC! здесь мины!
         printEditForm(member, range, ZRID, action, namesMap, edittedRow);
     }
-///*
-//    private void setNewRecordPage(String member, String range, String action) throws Exception {
-//        printUpsideMenu(
-//                new String[]{
-//                        "Назад",
-//                        "change name map(Experimental)",
-//                }, new String[]{
-//                        getRequestParamsURL(CMD_PRODTABLE, member, range),
-//                        getRequestParamsURL(CMD_UPDATE, member, range, null, ACTION_CHANGENAMEMAP),
-//                });
-//        println();
-//        printEditForm(member, range, "", namesMap, edittedRow);
-//    }
-//    private void printEditForm(String member, String range, String ZRID, String action) throws Exception {
-//        String parameterBuffer;
-//        String newqr = genNewQr(range);
-//        if (ZRID == null || SZ_NULL.equals(ZRID)) {
-//            try {
-//                startCreateForm(member, range, action);
-//                printUpdatePageButtons();
-//                if (namesMap == null)
-//                    out.println("null");
-//                beginT();
-//                for (int i = getCSVHeaderLength(); i < namesMap.length; i++) {
-//                    parameterBuffer = getParameterName(i);
-//                    if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
-//                        printTRow(new Object[]{
-//                                namesMap[i],
-//                                "<input type='text' id='qrcode' name='" + parameterBuffer + "'>",
-//                                String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>",newqr),
-//                                FieldComments[i],
-//                        });
-//                    }else if (namesMap[i].toLowerCase().contains("комментарий")) { //SIC! так не надо! см опции поля!
-//                        printTRow(new Object[]{
-//                                namesMap[i],
-//                                "<textarea name='" + parameterBuffer + "' " + "rows='5' cols='40'> </textarea>",
-//                                FieldComments[i],
-//                        });
-//                    } else {
-//                        printTRow(new Object[]{
-//                                namesMap[i],
-//                                "<input type='text' name='" + parameterBuffer + "'>",
-//                                FieldComments[i],
-//                        });
-//                    }
-//                }
-//                endT();
-//                endForm();
-//            } catch (Exception ex) {
-//                out.println("An error");
-//            }
-//        } else {
-//            Integer numberOfRow = Integer.parseInt(ZRID) - 1;
-//            ZCSVRow edittedRow = zcsvFile.getRowObjectByIndex(numberOfRow);
-//
-//            if (edittedRow != null) {
-//                if (edittedRow.getNames() != null) {
-//                    startUpdateForm(member, range, ZRID, action);
-//                    printUpdatePageButtons();
-//                    beginT();
-//                    for (int i = getCSVHeaderLength(); i < edittedRow.getNames().length; i++) {
-//                        parameterBuffer = getParameterName(i);
-//                        String showingParameter = MsgContract.text2value(MsgContract.csv2text(edittedRow.get(i))); // SIC!!!!!
-//                        if(namesMap[i].equals(QR_CODE_RECORD_STATUS)) {
-//                            printTRow(new Object[]{
-//                                    namesMap[i],
-//                                    "<input type='text' id='qrcode' name='" + parameterBuffer + "' value='"+showingParameter+"'>",
-//                                    String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>",newqr),
-//                                    FieldComments[i],
-//                            });
-//                        } else if(edittedRow.getNames()[i].toLowerCase().contains("комментарий")) { //SIC! не надо так! см опции поля!
-//                            printTRow(new Object[]{
-//                                    edittedRow.getNames()[i],
-//                                    "<textarea name=" + parameterBuffer + " " + "rows=\"5\" cols='40'>" + showingParameter + "</textarea>",
-//                                    FieldComments[i],
-//                            });
-//                        } else{
-//                            printTRow(new Object[]{
-//                                    edittedRow.getNames()[i],
-//                                    "<input type=\"text\" " + "name=" + parameterBuffer + " value='" + showingParameter + "'>",
-//                                    FieldComments[i],
-//                            });
-//                        }
-//                    }
-//                    endT();
-//                    endForm();
-//                } else
-//                    throw new ZCSVException("Names didn't set! Call the system administramtor!");
-//            } else
-//                throw new Exception("Unknown exception");
-//        }
-//    }*///printEditForm()
     // printEditForm() - получает _снаружи_ все данные, необходимые для отображения формы редактирования
     // 			ни в какие файлы оно уже не лазает, ни в какие глобальные переменные тоже,
     //                  оно просто рисует форму, и ему _абсолютно_ все-равно, это новая запись, запись прочитанная из файла,
@@ -686,7 +593,6 @@ private static String FieldComments[] ={
             if (edittedRow.getNames() == null) {
                 edittedRow.setNames(config);
             }
-
 
             startUpdateForm(member, range, ZRID, ACTION_EDIT);
             String newqr = genNewQr(range);
@@ -760,6 +666,8 @@ private static String FieldComments[] ={
                         newRow.setStringSpecificIndex(1, "1");
                     } else {
                         newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1).clone();
+                        if(newRow.getNames() == null)
+                            newRow.setNames(namesMap);
                         Integer newVerion = Integer.parseInt(newRow.get(1)) + 1;
                         newRow.setStringSpecificIndex(1, newVerion.toString());
                     }
@@ -770,7 +678,9 @@ private static String FieldComments[] ={
                     for (Integer i = getCSVHeaderLength(); i < newRow.getNames().length; i++) {
                         newRow.setStringSpecificIndex(i, request.getParameter(getParameterName(i)));
                     }
-                    if(checkNewRecord(newRow)) { zcsvFile.appendNewStringToFile(newRow); }
+                    if(checkNewRecord(newRow)) {
+                        zcsvFile.appendNewStringToFile(newRow);
+                    }
                     response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
                 } catch (Exception ex) { ex.printStackTrace(response.getWriter()); }
                 break;
@@ -932,7 +842,7 @@ private static String FieldComments[] ={
     private void printTRow(Object[] data) throws Exception {
         beginTRow();
         for (int i = 0; i < data.length; i++) {
-            printCellRaw(data[i]);
+            printCellRaw(data[i]); // SIC! Raw
         }
         endTRow();
     }
@@ -1051,12 +961,13 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
     }
 
     private boolean checkNewRecord(ZCSVRow rowToCheck) throws Exception { //SIC! не понял, вернуться позднее
-        sendAllert(rowToCheck.get(0));
         int ZRID = Integer.parseInt(rowToCheck.get(0));
         ZCSVRow row;
         if(zcsvFile != null) {
             try {
                 row = zcsvFile.getRowObjectByIndex(ZRID - 1);
+                if(row.getNames() == null)
+                    row.setNames(namesMap);
             } catch (IndexOutOfBoundsException | NullPointerException ex) {
                 return true;
             }
@@ -1086,7 +997,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
 
     private String genNewQr(String p_range)  {
         long maxQR = 0;
-	if(getQRFieldIndex()<0) return(""); // if no QR-code field
+	    if(getQRFieldIndex()<0) return(""); // if no QR-code field
         for(int i = 0;i<zcsvFile.getFileRowsLength();i++){
            String QR = "";
            try{QR= zcsvFile.getRowObjectByIndex(i).get(getQRFieldIndex()); }catch (ZCSVException e){} //SIC! get QR-code
@@ -1120,7 +1031,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
 </div>
 <%
     set_request_hints(request, response);
-    initJSPGlobals();
+    //initJSPGlobals();
     long enter_time = System.currentTimeMillis();
     this.out = out;
     String CMD = getRequestParameter(request, PARAM_CMD, CMD_MEMBERS);
@@ -1158,7 +1069,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
 		 setProdViewPage(p_member, p_range, p_ZRID); break;
             case CMD_UPDATE:
                 //loadDataFromConfigFile(p_member,p_range);
-		loadZCSVFile4Range(p_member,p_range);
+		loadDataFromConfigFile(p_member,p_range);
                 setActions(p_member, p_range, p_ZRID, p_action, request, response);
 //                /*switch (p_action) {
 //                    case ACTION_EDIT:

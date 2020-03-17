@@ -68,6 +68,9 @@ public class ZCSVRow {
             if ((i >= dataInRow.size() || i < 0))
                 throw new ZCSVException("Индекс задан неправильно!"); //SIC!
 
+            if(dataInRow.get(i).equals("null") | dataInRow.get(i) == null)
+                return "";
+
             return MsgContract.csv2text((String) dataInRow.get(i));
         }
 
