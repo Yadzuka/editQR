@@ -27,6 +27,9 @@ private final static String CGI_TITLE = "edit-qr.qxyz.ru - средство ре
 private final static String DBSERVER_URL = "jdbc:postgresql:conceptisdb";
 private final static String JSP_VERSION = "$Id$";
 
+private final static String PARAM_MEMBER = "member";
+private final static String PARAM_RANGES = "range";
+
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
 private final static String SZ_UNKNOWN = "<<UNKNOWN>>";
@@ -39,6 +42,7 @@ private final static String CMD_ITEM_VIEW = "iv";
 private final static String CMD_ITEM_EDIT = "ie";
 private final static String CMD_TEST = "test";
 private final static String CMD_DEFAULT = CMD_MEMBER_LIST;
+private final static String BANNED_SYMBOL = "..";
 
 private JspWriter out;
 
@@ -118,6 +122,15 @@ private String QRDB_PATH=null;
   return(sb.toString());
  } // translate_tokens
 
+    private void checkForInjection(HttpServletRequest request, String parameter) {
+        if(request.getParameter(parameter) != null) {
+        String value = request.getParameter(parameter);
+            if (value.contains(BANNED_SYMBOL)) {
+                throw new RuntimeException();
+            }
+        }
+    }
+
 
    /** print message to stdout. TISExmlDB.java legacy where have been wrapper to System.out.print */
    public  void printmsg(String msg) throws java.io.IOException {out.print(msg);}
@@ -175,6 +188,11 @@ private String QRDB_PATH=null;
       out.flush();
       request.setAttribute("attr_dispatch_canary","Hello! i'am attribute attr_dispatch_canary for test.jsp!");
       request.setAttribute("CGI_NAME",CGI_NAME);
+
+
+      checkForInjection(request, PARAM_MEMBER);
+      checkForInjection(request, PARAM_RANGES);
+
       switch(cmd){
         case CMD_MEMBER_LIST :
            request.getRequestDispatcher("members.jsp").include(request, response);
