@@ -689,11 +689,15 @@ private static String FieldComments[] ={
             case ACTION_DELETE:
                 try {
                     ZCSVRow row = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1);
+                    if(row.getNames() == null)
+                        row.setNames(namesMap);
                     Integer newVersion = Integer.parseInt(row.get(1)) + 1;
                     row.setStringSpecificIndex(1, newVersion.toString());
                     row.setStringSpecificIndex(2, getCurrentDate4ZDATE());
                     row.setStringSpecificIndex(3, getRequestUser4ZUID(request));
                     row.setStringSpecificIndex(4, "D");
+                    for(int i = getCSVHeaderLength(); i < row.getNames().length; i++)
+                        row.setStringSpecificIndex(i, "");
                     zcsvFile.appendNewStringToFile(row);
                     response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
                 }catch (Exception ex){
