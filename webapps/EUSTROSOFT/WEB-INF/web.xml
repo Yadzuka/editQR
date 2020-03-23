@@ -6,7 +6,7 @@
            version="4.0">
     <context-param>
      <param-name>QRDB_PATH</param-name>
-     <param-value>/s/qrdb/EUSTROSOFT/</param-value>
+     <param-value>/s/qrdb/EUSTROSOFT/members/</param-value>
     </context-param>
     <security-constraint>
       <web-resource-collection>
@@ -31,6 +31,7 @@
     <display-name>EUSTROSOFT.QR.QXYZ member data edit interface</display-name>
 
     <welcome-file-list>
+        <welcome-file>editqrpage.jsp</welcome-file>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
@@ -40,7 +41,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>qrServlet</servlet-name>
-        <url-pattern>/engine/qr</url-pattern>
+        <url-pattern>/qr</url-pattern>
     </servlet-mapping>
     <login-config>
       <auth-method>BASIC</auth-method>

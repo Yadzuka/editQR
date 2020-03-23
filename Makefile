@@ -39,14 +39,24 @@ all:
 	cd jars/src/main/java/ && make all
 	cp ${WORK_PATH}/${PKG_FILENAME}.jar webapps/EXAMPLESD/WEB-INF/lib/
 	cp contrib/*jar webapps/EXAMPLESD/WEB-INF/lib/
-	mkdir -p  ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/lib
 	#DOMINATOR
+	mkdir -p  ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/lib
 	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/DOMINATOR
 	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/css/
-	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/lib/
+	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/js/
 	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/DOMINATOR/css/
+	cp -r webapps/EXAMPLESD/js/*js ${WORK_PATH}/webapps/DOMINATOR/js/
 	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/lib/
 	${INSTALL} webapps/DOMINATOR/WEB-INF/web.xml ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/
+	#EUSTROSOFT
+	mkdir -p  ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/lib
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/EUSTROSOFT
+	mkdir -p ${WORK_PATH}/webapps/EUSTROSOFT/css/
+	mkdir -p ${WORK_PATH}/webapps/EUSTROSOFT/js/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/EUSTROSOFT/css/
+	cp -r webapps/EXAMPLESD/js/*js ${WORK_PATH}/webapps/EUSTROSOFT/js/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/lib/
+	${INSTALL} webapps/EUSTROSOFT/WEB-INF/web.xml ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/
 mvn: maven
 maven:
 	cd jars && mvn package
