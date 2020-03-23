@@ -587,14 +587,14 @@ private static String FieldComments[] ={
     //			к нам и говорит - "поправте", мы правим и говорим "повторяй" он повторяет - и все должно работать!
     //private void printEditForm(String member, String range, String ZRID, zCSVFile config, zCSVRow rec) throws Exception {
     private void printEditForm(String member, String range, String ZRID, String action, String [] config, ZCSVRow rec) throws Exception {
-        try {
+        //try {
             edittedRow = rec;
             if (edittedRow.getNames() == null) {
                 edittedRow.setNames(config);
             }
 
             startUpdateForm(member, range, ZRID, ACTION_EDIT);
-            String newqr = genNewQr(range);
+            String newqr = ""; try{newqr= genNewQr(range); } catch(Exception e){sendAllert("genNewQr() опять сломался!");} //SIC! криво, но я уже 3-й раз правлю грабли там
             String parameterBuffer;
             printUpdatePageButtons();
 
@@ -626,9 +626,7 @@ private static String FieldComments[] ={
             }
             endT();
             endForm();
-        } catch (Exception ex) {
-            sendAllert("An error occured");
-        }
+        //} catch (Exception ex) { sendAllert("An error occured"); } //SIC! remove sendAllert()
     }
 
     private void setActions(String p_member, String p_range, String p_ZRID, String p_action, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -705,7 +703,7 @@ private static String FieldComments[] ={
                 }
                 break;
         }
-    }
+    } //setActions()
 
     private void setHistoryPage(String member, String range, String ZRID, String action) throws Exception {
         printUpsideMenu(
@@ -925,14 +923,15 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
     }
 
 //    public void println() throws Exception { out.println("<br/>"); }
-    public void printex(Exception e){System.out.println("Exception!");} //SIC! потом переделать это и ниже
-
-    public void printerr(String msg) throws Exception { w("<b>" + msg + "</b>"); }
-
-    public void printerrln(String msg) throws Exception {
-        printerr(msg);
-        println();
+    public void debug_log(String msg, Exception e)
+    {
+     System.err.println(msg); //SIC! собрать побольше инфы о текущем контексте
+     if(e!=null) { System.err.println(e.toString()); } //SIC! потом улучшить (стек вызовов можно распечатать
     }
+    public void debug_log(String msg) { debug_log(msg,null); }
+    public void printex(Exception e){String msg= "Exception!" + e.toString(); debug_log(msg); printerr(msg);} //SIC! потом переделать это и ниже
+    public void printerr(String msg) { w("<b>" + t2h(msg) + "</b>"); }
+    public void printerrln(String msg) throws Exception { printerr(msg); println(); }
 
     public void set_request_hints(HttpServletRequest request, HttpServletResponse response)
             throws IOException { //SIC! этому куску кода уже 15 лет, надо разобраться как сделать лучше, он еще для NN 4.x
@@ -960,6 +959,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
     }
 
     public void sendAllert(String msg) throws Exception { // SIC! Ну не надо так!
+       
         wln("<script type=\"text/javascript\">");
         wln("alert('" + msg + "');");
         wln("</script>");
@@ -1010,7 +1010,9 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
 	   if(QR==null) continue;
 	   if(QR.equals("")) continue;
 	   long lQR=0;
+           if(QR.length()>p_range.length()){ //SIC! иначе java.lang.StringIndexOutOfBoundsException: String index out of range: -1
 	   try{lQR=Long.parseLong(QR.substring(p_range.length()), 16);}catch (NumberFormatException nfe){} // ignore NFE
+           }
            if(lQR > maxQR) maxQR = lQR;
         }
         maxQR++;
