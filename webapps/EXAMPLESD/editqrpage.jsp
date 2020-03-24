@@ -76,6 +76,22 @@
     private String[] namesMap;
     private String[] getNames(){return(namesMap);} //SIC! для транзита
     private String[] showedNames;
+    // new set of stores for CSVConf
+    private int num_of_csvconf_fields = -1;
+    private String[] csvconf_FCodes=null;
+    private String[] csvconf_FNames=null;
+    private String[] csvconf_FTypes=null;
+    private Set<String>[] csvconf_FOptions=null;
+    private String[] csvconf_FCaptions=null;
+    private String[] csvconf_FComments=null;
+    private Object get_csvconf_field_attribute(int i,Object[] attr_column)
+    {if(i<0 || i>num_of_csvconf_fields)return(null);if(attr_column==null)return(null); if(i>=attr_column.length) return(null);return(attr_column[i]);}
+    private String getFCode(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FCodes)); }
+    private String getFType(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FTypes)); }
+    private String getFName(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FNames)); }
+    private Set<String> getFOption(int i){ return((Set<String>)get_csvconf_field_attribute(i,csvconf_FOptions)); }
+    private String getFCaption(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FCaptions)); }
+    private String getFComment(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FComments)); }
 //    private ArrayList<String> nameMap = new ArrayList();
 //    private ArrayList<String> showNames = new ArrayList();
     private ArrayList<String> referencesIndex = new ArrayList();
@@ -102,6 +118,14 @@
      csv_header_length=-1;
      csv_QRfield_index=-1;
      szDefaultCSVConf=null;
+    // new set of stores for CSVConf
+    num_of_csvconf_fields = -1;
+    csvconf_FCodes=null;
+    csvconf_FNames=null;
+    csvconf_FTypes=null;
+    csvconf_FOptions=null;
+    csvconf_FCaptions=null;
+    csvconf_FComments=null;
     } // initJSPGlobals
 
     public int getCSVHeaderLength(){if(csv_header_length<0) return(STD_QRHEANOR_FIELDS_NUM); return(csv_header_length);}
@@ -299,13 +323,15 @@ private static String FieldComments[] ={
         ZCSVFile configFile = setupZCSVPaths(rootPath, DB_CONFIG_FILENAME);
         ArrayList<String> nameMap = new ArrayList<>();
         ArrayList<String> showNames = new ArrayList<>();
+        int i=0;
         try {configFile.loadConfigureFile();}
         catch(Exception e) {configFile.loadConfigFromString(getDefaultCSVConf());}
-            for (int i = 0; i < configFile.getFileRowsLength(); i++) {
+         List<ZCSVRow> field_rows = new ArrayList<>();
+            for (i = 0; i < configFile.getFileRowsLength(); i++) { //SIC! это цикл нужно убрать, все что в нем - упразднить
                 ZCSVRow configRow = configFile.getRowObjectByIndex(i);
-                if (configRow.get(0).length() < 3) {
+                if (configRow.get(0).length() == 2) { // it is field "0X name...."
+                    field_rows.add(configRow);
                     nameMap.add(configRow.get(4));
-
                     if (configRow.get(3).contains(SHOW_ATTRIBUTE)) { showNames.add(configRow.get(4)); }
                     if(configRow.get(3).contains(QR_ATTRIBUTE)) { referencesIndex.add(configRow.get(4)); }
                 }
@@ -314,6 +340,49 @@ private static String FieldComments[] ={
             showNames.toArray(showedNames);
             namesMap = new String[nameMap.size()];
             nameMap.toArray(namesMap);
+     // new set of stores for CSVConf
+     num_of_csvconf_fields = field_rows.size();
+     csvconf_FCodes= new String[num_of_csvconf_fields];
+     csvconf_FNames=new String[num_of_csvconf_fields];
+     csvconf_FTypes=new String[num_of_csvconf_fields];
+     csvconf_FOptions=new HashSet[num_of_csvconf_fields];
+     csvconf_FCaptions=new String[num_of_csvconf_fields];
+     csvconf_FComments=new String[num_of_csvconf_fields];
+     for (i = 0; i < num_of_csvconf_fields; i++)
+     {
+      ZCSVRow row = field_rows.get(i);
+      csvconf_FCodes[i]= get_index_value_form_ZCSVRow(row,0);
+      csvconf_FNames[i]=get_index_value_form_ZCSVRow(row,1);
+      csvconf_FTypes[i]=get_index_value_form_ZCSVRow(row,2);
+      csvconf_FOptions[i]=extractFOptionSet(get_index_value_form_ZCSVRow(row,3));
+      csvconf_FCaptions[i]=get_index_value_form_ZCSVRow(row,4);
+      csvconf_FComments[i]=get_index_value_form_ZCSVRow(row,5);
+     }
+    } //loadDataFromConfigFile
+    String get_index_value_form_ZCSVRow(ZCSVRow row, int index) // это вспомогательная функция, всегда получить значение и не развалиться
+    {
+     String v="";
+     try{ v= row.get(index); }
+     catch(Exception e){nodebug_log("get_index_value_form_ZCSVRow",e);} //SIC! да криво, но KISS
+     return(v);
+    }
+    Set<String> extractFOptionSet(String options) // это вспомогательная функция, преобразовать строку "o1,o2,.." в набор { "o1","o2",... }
+    {
+     HashSet<String> hs = new HashSet<>(); if(options==null)options="";
+     String[] opts = options.split(",");
+     int i=0;
+     for(i=0;i<opts.length;i++){String o=opts[i].trim();if(o.length()>0)hs.add(o);nodebug_log("'" + o + "'");}
+     return(hs);
+    }
+    boolean checkFOptions(int i, String options) // true, если для поля установлены _все_ перечисленные опции
+    {
+     if(csvconf_FOptions==null) return(false);
+     if(csvconf_FOptions.length<=i) return(false);
+     Set<String> fopts = csvconf_FOptions[i];
+     if(fopts==null) return(false);
+     Set<String> hs = extractFOptionSet(options);
+     boolean result = fopts.containsAll(hs);
+     return(result);
     }
     public String makeDefaultQRCSVConf()
     {
@@ -554,7 +623,7 @@ private static String FieldComments[] ={
             endTRow();
         } //for
         endT();
-    }
+    } //setProdViewPage()
 
     private void setUpdateProductPage(String member, String range, String ZRID, String action) throws Exception {
         printUpsideMenu(
@@ -586,9 +655,16 @@ private static String FieldComments[] ={
     //			сейчас этого НЕ ДОЛЖНО БЫТЬ. Пользователь редактирует форму, она не проходит потомучтоошибкавjsp, он поворачивается
     //			к нам и говорит - "поправте", мы правим и говорим "повторяй" он повторяет - и все должно работать!
     //private void printEditForm(String member, String range, String ZRID, zCSVFile config, zCSVRow rec) throws Exception {
-    private void printEditForm(String member, String range, String ZRID, String action, String [] config, ZCSVRow rec) throws Exception {
+    private void printEditForm(String member, String range, String ZRID, String action, String [] config, ZCSVRow row) throws Exception {
         //try {
-            edittedRow = rec;
+            ZCSVRow edittedRow = row;
+        String[] Captions = getNames();
+        String[] Comments = FieldComments;
+        int count_captions = Captions.length;
+        int count_comments = Comments.length;
+        int count_fields = row.getDataLength();
+        int max_fields_count=count_fields;
+        if(count_captions > max_fields_count) max_fields_count= count_captions;
             if (edittedRow.getNames() == null) {
                 edittedRow.setNames(config);
             }
@@ -599,35 +675,70 @@ private static String FieldComments[] ={
             printUpdatePageButtons();
 
             beginT();
-            for(int i = getCSVHeaderLength(); i < namesMap.length; i++) {
-                parameterBuffer = getParameterName(i);
-                if (config[i].equals(QR_CODE_RECORD_STATUS)) {
-                    if(edittedRow.get(i).equals(SZ_EMPTY))
-                        edittedRow.setStringSpecificIndex(i, newqr);
-                    printTRow(new Object[]{
-                            config[i],
-                            printInput("text", "qrcode", parameterBuffer, edittedRow.get(i)),
-                            String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>", newqr),
-                            FieldComments[i],
-                    });
-                } else if (config[i].toLowerCase().contains("комментарий")) { //SIC! так не надо! см опции поля!
-                    printTRow(new Object[]{
-                            config[i],
-                            "<textarea name='" + parameterBuffer + "' " + "rows='5' cols='40'>" + edittedRow.get(i) + "</textarea>",
-                            FieldComments[i],
-                    });
-                } else {
-                    printTRow(new Object[]{
-                            config[i],
-                            printInput("text", "", parameterBuffer, edittedRow.get(i)),
-                            FieldComments[i],
-                    });
-                }
+            for (int i = getCSVHeaderLength(); i < max_fields_count; i++) {
+              String caption = i + ":"; String value = ""; String comment = "";
+              String input_field_raw = "";
+	      if(i< count_captions) caption = getFCaption(i);
+              if(i< count_fields) value = row.get(i);
+              if(i< count_comments) comment = getFComment(i);
+
+              if(checkFOptions(i,"TEXTAREA"))
+              {
+              beginTRow();
+               printCell(caption);
+               printCell(comment,2);
+              endTRow();
+              beginTRow();
+               beginTCell(3);
+               printInputTextarea(mkFName(i),6,72,value);
+               endTCell();
+              endTRow();
+               continue;
+              }
+              input_field_raw = mkFieldInputText(mkFName(i), value, 30, 0);
+              if(i==getQRFieldIndex()){
+                 input_field_raw = mkFieldInputText(mkFName(i), value, 16, 16);
+                 input_field_raw = "<table><tr><td>" + input_field_raw + "</td><td>" +
+                    String.format("<input type=\"button\" onclick=\"setQR('%s','%s')\" value=\"новый QR\"/>",mkFName(i), newqr) +
+                    "</td>" + "</tr></table>";
+              }
+              beginTRow();
+               printCell(caption);
+               printCellRaw(input_field_raw);
+               printCell(comment);
+              endTRow();
             }
             endT();
+//            beginT();
+//            for(int i = getCSVHeaderLength(); i < namesMap.length; i++) {
+//                parameterBuffer = getParameterName(i);
+//                if (config[i].equals(QR_CODE_RECORD_STATUS)) {
+//                    if(edittedRow.get(i).equals(SZ_EMPTY))
+//                        edittedRow.setStringSpecificIndex(i, newqr);
+//                    printTRow(new Object[]{
+//                            config[i],
+//                            printInput("text", "qrcode", parameterBuffer, edittedRow.get(i)),
+//                            String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>", newqr),
+//                            FieldComments[i],
+//                    });
+//                } else if (config[i].toLowerCase().contains("комментарий")) { //SIC! так не надо! см опции поля!
+//                    printTRow(new Object[]{
+//                            config[i],
+//                            "<textarea name='" + parameterBuffer + "' " + "rows='5' cols='40'>" + edittedRow.get(i) + "</textarea>",
+//                            FieldComments[i],
+//                    });
+//                } else {
+//                    printTRow(new Object[]{
+//                            config[i],
+//                            printInput("text", "", parameterBuffer, edittedRow.get(i)),
+//                            FieldComments[i],
+//                    });
+//                }
+//            }
+//            endT();
             endForm();
         //} catch (Exception ex) { sendAllert("An error occured"); } //SIC! remove sendAllert()
-    }
+    } //printEditForm()
 
     private void setActions(String p_member, String p_range, String p_ZRID, String p_action, HttpServletRequest request, HttpServletResponse response) throws Exception {
         switch (p_action){
@@ -800,6 +911,106 @@ private static String FieldComments[] ={
     private String printInput(String type, String id,String name, String value) throws Exception {
         return new String("<input type='" + type + "' id='" + id + "' name='" + name + "' value='" + value + "'/>");
     }
+    private String mkInput(String type, String id,String name, String value) throws Exception {
+        return new String("<input type='" + type + "' id='" + id + "' name='" + name + "' value='" + value + "'/>");
+    }
+ // input fields construction
+ // imported from ConcepTIS...WASkin.java
+public void printInputTextarea(String name, int rows, int cols, String value)
+{
+ w("<textarea name='");
+ w(mkFName(name));
+ w("' rows='");
+ w("" + rows);
+ w("' cols='");
+ w("" + cols);
+ w("' >");
+ w(encodeFieldValue(value));
+ wln("</textarea>");
+}
+
+private String mkFName(String name){ // changed for edit.qr
+return(o2v(name));
+}
+private String mkFName(int i){ // written for edit.qr
+return(mkFName(getParameterName(i)));
+}
+
+/** this string value (null) could be used to encode SQL NULL into String." */
+public static final String SZ_NULL_AS_SQLNULL="null";
+/** this string value ("null") must be used instead of SZ_NULL_AS_SQLNULL." */
+public static final String SZ_NULL_AS_STRING="\"null\"";
+
+/** encode value for using it in some kind of input field.
+ * this encoding must take into consideration some special cases
+ * like SQL NULL values and so on. Works together with decodeFieldValue.
+ * null value will be encoded as string null and 4-characters string null
+ * will be encoded as 6 characters string "null" (which can't be properly
+ * encoded yet).
+ *
+ * @see #decodeFieldValue()
+ */
+public String encodeFieldValue(Object value)
+{
+if(value == null) return(SZ_NULL_AS_SQLNULL);
+String v = o2t(value);
+if(SZ_NULL_AS_SQLNULL.equals(v)) v = SZ_NULL_AS_STRING;
+return(o2v(v));
+}
+
+/** decode value come from  some kind of input field.
+ * this function must take into consideration some special cases
+ * like SQL NULL values and so on. Works together with encodeFieldValue.
+ *
+ * @see #encodeFieldValue()
+ */
+public String decodeFieldValue(String value)
+{
+if(value == null) return(null);
+if(SZ_NULL_AS_SQLNULL.equals(value)) return(null);
+if(SZ_NULL_AS_STRING.equals(value)) return(SZ_NULL_AS_SQLNULL);
+return(wam.translate_tokens(value,new String[]{"\r"},new String[]{""}));
+}
+
+
+public String mkFieldInputHidden(String fname, String fvalue)
+{
+ StringBuffer sb = new StringBuffer();
+ sb.append("<input type='hidden'");
+ sb.append(" name='"); sb.append(mkFName(fname)); sb.append("'");
+ sb.append(" value='"); sb.append(encodeFieldValue(fvalue)); sb.append("'");
+ sb.append(">");
+ return(sb.toString());
+} // mkFieldInputHidden(String fname, String fvalue)
+
+public String mkFieldInputCheckbox(String fname, boolean fvalue)
+{
+ StringBuffer sb = new StringBuffer();
+ sb.append("<input type='checkbox'");
+ sb.append(" name='"); sb.append(mkFName(fname)); sb.append("'");
+ sb.append(" value='Y'");
+ if(fvalue) sb.append(" CHECKED ");
+ sb.append(">");
+ return(sb.toString());
+} // mkFieldInputHidden(String fname, String fvalue)
+
+public String mkFieldInputText(String fname, String fvalue, int size, int maxlength)
+{
+ StringBuffer sb = new StringBuffer();
+ if(size<=0 || size>72) size=72;
+ if(maxlength<size && maxlength > 0) size=maxlength;
+ if(maxlength<4 && maxlength>0) maxlength=4; // this is for SQL NULL encoding as null
+ if(maxlength<6 && maxlength>=4) maxlength=6; // ... for encoding null as "null"
+ sb.append("<input type='text'");
+ sb.append(" size='" + size + "'");
+ if(maxlength > 0) sb.append(" maxmaxlength='" + maxlength + "'");
+ sb.append(" name='"); sb.append(mkFName(fname)); sb.append("'");
+ sb.append(" id='"); sb.append(mkFName(fname)); sb.append("'"); //SIC! добавлено для edit-qr
+ sb.append(" value='"); sb.append(encodeFieldValue(fvalue)); sb.append("'");
+ sb.append(">");
+ return(sb.toString());
+} // mkFieldInputText(String fname, String fvalue, int size, int maxlength)
+
 
     private void printTableUpsideString(String optionalParam, Object... outputString) throws Exception {
         beginTRow();
@@ -811,7 +1022,8 @@ private static String FieldComments[] ={
         endTRow();
     }
 
-    private void beginTCell() { wln("<td>"); }
+    private void beginTCell() { beginTCell(0);}
+    private void beginTCell( int colspan) { if(colspan<=0) wln("<td>"); else {wln("<td colspan='" + colspan + "'>");} }
 
     private void endTCell() { wln("</td>"); }
 
@@ -824,8 +1036,10 @@ private static String FieldComments[] ={
     private void endT() { wln("</table>"); }
 
     private void printCell(Object tElement) {printCellRaw(t2h(o2t(tElement)));}
-    private void printCellRaw(Object tElement) {
-        beginTCell();
+    private void printCell(Object tElement,int colspan) {printCellRaw(t2h(o2t(tElement)),colspan);}
+    private void printCellRaw(Object tElement) { printCellRaw(tElement,0);}
+    private void printCellRaw(Object tElement,int colspan) {
+        beginTCell(colspan);
         wln(obj2str(tElement));
         endTCell();
     }
@@ -834,12 +1048,6 @@ private static String FieldComments[] ={
       printCellRaw("<a href=\'" + getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, member, range, ZRID.toString()) + "\'>" +
                             "&lt;карточка&gt;" + "</a>"); //SIC! а вообще, надо делать немного по-другому
 	// +"<br/>"+ "<input type=\"button\"value=\"Удалить\" onclick=\"allertToDeleteRecord()\">");
-    }
-
-    private void printCell(Object tElement, int colspan) {
-        wln("<td colspan='" + colspan + "'>");
-        wln(obj2str(tElement));
-        endTCell();
     }
 
     private void printTRow(Object[] data) throws Exception {
@@ -858,6 +1066,7 @@ private static String FieldComments[] ={
 //
 
 public static MsgContract WAMessages = null; // helpful for using ConcepTIS WAMessages static methods by imported methods
+public static MsgContract wam = null; // helpful for using ConcepTIS WAMessages static methods by imported methods
 public boolean is_error =false;
 public Exception last_exception = null;
 
@@ -923,11 +1132,14 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
     }
 
 //    public void println() throws Exception { out.println("<br/>"); }
+    private boolean nodebug_enabled=false;
+    public void nodebug_log(String msg, Exception e) {if(nodebug_enabled) debug_log(msg,e);} // SIC! заглушка, но можно сделать включаемо, сделал
     public void debug_log(String msg, Exception e)
     {
      System.err.println(msg); //SIC! собрать побольше инфы о текущем контексте
      if(e!=null) { System.err.println(e.toString()); } //SIC! потом улучшить (стек вызовов можно распечатать
     }
+    public void nodebug_log(String msg) { if(nodebug_enabled) debug_log(msg,null); }
     public void debug_log(String msg) { debug_log(msg,null); }
     public void printex(Exception e){String msg= "Exception!" + e.toString(); debug_log(msg); printerr(msg);} //SIC! потом переделать это и ниже
     public void printerr(String msg) { w("<b>" + t2h(msg) + "</b>"); }
