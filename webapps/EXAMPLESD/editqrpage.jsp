@@ -37,7 +37,6 @@
     private final String QR_ATTRIBUTE = "QR,";
     // All possible actions on update page
     public final String ACTION_EDIT = "edit"; // Simple state for updating product/contract page
-    public final String ACTION_CREATE = "create"; // Action for creating new state of product/contract
     public final String ACTION_NEWRECORD = "new"; // State for new product/contract page
     public final String ACTION_SAVE = "save"; // Saving updates
     public final String ACTION_REFRESH = "refresh"; // Refresh data in table into starting position
@@ -92,8 +91,6 @@
     private Set<String> getFOption(int i){ return((Set<String>)get_csvconf_field_attribute(i,csvconf_FOptions)); }
     private String getFCaption(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FCaptions)); }
     private String getFComment(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FComments)); }
-//    private ArrayList<String> nameMap = new ArrayList();
-//    private ArrayList<String> showNames = new ArrayList();
     private ArrayList<String> referencesIndex = new ArrayList();
     //
     private int csv_header_length=-1;
@@ -111,8 +108,6 @@
      out = null;
      namesMap = null;
      showedNames = null;
-//     nameMap = new ArrayList();
-//     showNames = new ArrayList();
      referencesIndex = new ArrayList();
      //
      csv_header_length=-1;
@@ -609,17 +604,6 @@ private static String FieldComments[] ={
               printCell(caption);
               if(i==getQRFieldIndex() && value.length() > 0 ){beginTCell();setReferenceQRView(getReference(value),value);endTCell();} else //SIC! улучшить
               printCell(value);
-//            printCell((getNames()[i] == null) ? "Не определенное имя" : getNames()[i]);
-//            if(referencesIndex.contains(getNames()[i])) {
-//                beginTCell();
-//out.println(i + ":If");
-//                setReferenceQRView((row.get(i) == null | SZ_NULL.equals(row.get(i))) ?
-//                "" : getReference(MsgContract.csv2text(row.get(i))), MsgContract.csv2text(row.get(i)));
-//                endTCell();
-//            }
-//	    else {
-//	out.println("Else:" + i); printCell((row.get(i) == null | SZ_NULL.equals(row.get(i))) ? "" : MsgContract.csv2text(row.get(i)));
-// }
             endTRow();
         } //for
         endT();
@@ -709,35 +693,7 @@ private static String FieldComments[] ={
               endTRow();
             }
             endT();
-//            beginT();
-//            for(int i = getCSVHeaderLength(); i < namesMap.length; i++) {
-//                parameterBuffer = getParameterName(i);
-//                if (config[i].equals(QR_CODE_RECORD_STATUS)) {
-//                    if(edittedRow.get(i).equals(SZ_EMPTY))
-//                        edittedRow.setStringSpecificIndex(i, newqr);
-//                    printTRow(new Object[]{
-//                            config[i],
-//                            printInput("text", "qrcode", parameterBuffer, edittedRow.get(i)),
-//                            String.format("<input type=\"button\" onclick=\"newQR('%s')\" value=\"Новый qr код\"/>", newqr),
-//                            FieldComments[i],
-//                    });
-//                } else if (config[i].toLowerCase().contains("комментарий")) { //SIC! так не надо! см опции поля!
-//                    printTRow(new Object[]{
-//                            config[i],
-//                            "<textarea name='" + parameterBuffer + "' " + "rows='5' cols='40'>" + edittedRow.get(i) + "</textarea>",
-//                            FieldComments[i],
-//                    });
-//                } else {
-//                    printTRow(new Object[]{
-//                            config[i],
-//                            printInput("text", "", parameterBuffer, edittedRow.get(i)),
-//                            FieldComments[i],
-//                    });
-//                }
-//            }
-//            endT();
             endForm();
-        //} catch (Exception ex) { sendAllert("An error occured"); } //SIC! remove sendAllert()
     } //printEditForm()
 
     private void setActions(String p_member, String p_range, String p_ZRID, String p_action, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -884,11 +840,7 @@ private static String FieldComments[] ={
         wln("<input type=\"" + bName + "\" value=\"" + bValue + "\"/>");
         wln("</a>");
     }
-///*
-//    private void startCreateForm(String member, String range, String action) throws Exception {
-//        out.println("<form action=\"" + getRequestParamsURL(CGI_NAME, CMD_UPDATE, member, range, null, action) + "\" method=\"POST\">");
-//    }
-//*/
+
     private void startUpdateForm(String member, String range, String ZRID, String action) throws Exception {
         wln("<form action=\"" + getRequestParamsURL(CGI_NAME, CMD_UPDATE, member, range, ZRID, action) + "\" method=\"POST\">");
     }
