@@ -749,6 +749,8 @@ private static String FieldComments[] ={
                             if (checkNewRecord(edittedRow)) {
                                 zcsvFile.appendNewStringToFile(edittedRow);
                                 println(SAVING_DONE_MESSAGE);
+                            } else {
+                                println("Такая же запись уже существует!");
                             }
                             if(list_errors.isEmpty())
                                 response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
