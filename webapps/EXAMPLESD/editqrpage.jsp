@@ -842,14 +842,14 @@ private static String FieldComments[] ={
         for (int i = getCSVHeaderLength(); i < max_fields_count; i++) {
             if (i == getQRFieldIndex()) {
                 String regexForHex = "^[0-9A-F]{8}$";
-                if (!row.get(i).matches(regexForHex)) {
+                if (!row.get(i).trim().matches(regexForHex)) {
                     list_errors.add(ERROR_STATUS + "QR код не в 16-ричном формате и содержит не 8 разрядов!");
                     isOK = false;
                 }
             }
             if (checkFOptions(i, "EN")) {
                 String regexForSN = "^\\s*[0-9a-zA-Z]+$";
-                if (!row.get(i).matches(regexForSN)) {
+                if (!row.get(i).trim().matches(regexForSN)) {
                     list_errors.add(WARNING_STATUS + "SN некорректен!!");
                 }
             }
@@ -865,7 +865,7 @@ private static String FieldComments[] ={
                 qrprodtype = row.get(i);
             }
         }
-        if (!(qrprodmodel.equals(SZ_EMPTY) && qrprodtype.equals(SZ_EMPTY))) {
+        if (qrprodmodel.trim().equals(SZ_EMPTY) | qrprodtype.trim().equals(SZ_EMPTY)) {
             list_errors.add(WARNING_STATUS + "ВИКТОР!!! НЕОБХОДИМО ЗАПОЛНИТЬ ОБА ПОЛЯ! МОДЕЛЬ И ТИП ПРОДУКТА!");
         }
 
