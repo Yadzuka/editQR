@@ -22,6 +22,11 @@
     private final static String OLD_RECORD_STATUS = "O";
     private final static String QR_CODE_RECORD_STATUS = "QR код"; // SIC! ну нельзя так! это не имя поля, это только заголовок, который можно переопределить
 
+    // Statuses
+    private final static String WARNING_STATUS = "WARNING! ";
+    private final static String ERROR_STATUS = "ERROR!!! ";
+    private final static String SAVING_DONE_MESSAGE = "Мы, конечно, сохранили вашу запись, но убедитесь в том, что у вас есть ошибки в записях:";
+    private final static String SAVING_UNDONE_MESSAGE = "Мы не сохранили вашу запись, потому что ей соответствуют ошибки, приведенные ниже:";
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий"; // Upper page info
@@ -77,6 +82,7 @@
     private String[] showedNames;
     // new set of stores for CSVConf
     private int num_of_csvconf_fields = -1;
+    private Collection<String> list_errors;
     private String[] csvconf_FCodes=null;
     private String[] csvconf_FNames=null;
     private String[] csvconf_FTypes=null;
@@ -109,6 +115,7 @@
      namesMap = null;
      showedNames = null;
      referencesIndex = new ArrayList();
+     list_errors = new ArrayList<String>();
      //
      csv_header_length=-1;
      csv_QRfield_index=-1;
@@ -610,17 +617,6 @@ private static String FieldComments[] ={
     } //setProdViewPage()
 
     private void setUpdateProductPage(String member, String range, String ZRID, String action) throws Exception {
-        printUpsideMenu(
-                new String[]{
-                        "Назад",
-                        "change name map(Experimental)",
-                }, new String[] {
-                        !ZRID.equals(SZ_NULL) ? getRequestParamsURL(CMD_PRODVIEW, member, range, ZRID)
-                        : getRequestParamsURL(CMD_PRODTABLE, member, range),
-                        getRequestParamsURL(CMD_UPDATE, member, range, ZRID, ACTION_CHANGENAMEMAP),
-                });
-        println();
-
         if(!ZRID.equals(SZ_NULL) & edittedRow == null)
             edittedRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(ZRID) - 1).clone(); //SIC! здесь мины!
         printEditForm(member, range, ZRID, action, namesMap, edittedRow);
@@ -697,6 +693,16 @@ private static String FieldComments[] ={
     } //printEditForm()
 
     private void setActions(String p_member, String p_range, String p_ZRID, String p_action, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        printUpsideMenu(
+                new String[]{
+                        "Назад",
+                        "change name map(Experimental)",
+                }, new String[] {
+                        !p_ZRID.equals(SZ_NULL) ? getRequestParamsURL(CMD_PRODVIEW, p_member, p_range, p_ZRID)
+                                : getRequestParamsURL(CMD_PRODTABLE, p_member, p_range),
+                        getRequestParamsURL(CMD_UPDATE, p_member, p_range, p_ZRID, ACTION_CHANGENAMEMAP),
+                });
+        wln();
         switch (p_action){
             case ACTION_EDIT:
                 setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
@@ -712,42 +718,53 @@ private static String FieldComments[] ={
                     response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODVIEW, p_member, p_range,p_ZRID));
                 break;
             case ACTION_REFRESH:
-                if(edittedRow == null) {
-                    edittedRow = new ZCSVRow();
-                    edittedRow.setNames(namesMap);
-                }
-                for(Integer i = getCSVHeaderLength(); i < edittedRow.getNames().length; i++) {
-                    edittedRow.setStringSpecificIndex(i, request.getParameter(getParameterName(i)));
-                }
-                setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
-                break;
             case ACTION_SAVE:
                 try {
-                    ZCSVRow newRow;
-                    if (p_ZRID == null || SZ_NULL.equals(p_ZRID)) {
-                        Integer zrdsLength = zcsvFile.getFileRowsLength();
-                        newRow = new ZCSVRow();
-                        newRow.setNames(namesMap);
-                        newRow.setStringSpecificIndex(0, String.valueOf(zrdsLength + 1));
-                        newRow.setStringSpecificIndex(1, "1");
-                    } else {
-                        newRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1).clone();
-                        if(newRow.getNames() == null)
-                            newRow.setNames(namesMap);
-                        Integer newVerion = Integer.parseInt(newRow.get(1)) + 1;
-                        newRow.setStringSpecificIndex(1, newVerion.toString());
+                    if(edittedRow == null) {
+                        if (p_ZRID == null || SZ_NULL.equals(p_ZRID)) {
+                            Integer zrdsLength = zcsvFile.getFileRowsLength();
+                            edittedRow = new ZCSVRow();
+                            edittedRow.setNames(namesMap);
+                            edittedRow.setStringSpecificIndex(0, String.valueOf(zrdsLength + 1));
+                            edittedRow.setStringSpecificIndex(1, "1");
+                        } else {
+                            edittedRow = zcsvFile.getRowObjectByIndex(Integer.parseInt(p_ZRID) - 1).clone();
+                            if(edittedRow.getNames() == null)
+                                edittedRow.setNames(namesMap);
+                            Integer newVerion = Integer.parseInt(edittedRow.get(1)) + 1;
+                            edittedRow.setStringSpecificIndex(1, newVerion.toString());
+                        }
                     }
-                    newRow.setStringSpecificIndex(2, getCurrentDate4ZDATE());
-                    newRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
-                    newRow.setStringSpecificIndex(4, NEW_RECORD_STATUS);
 
-                    for (Integer i = getCSVHeaderLength(); i < newRow.getNames().length; i++) {
-                        newRow.setStringSpecificIndex(i, request.getParameter(getParameterName(i)));
+
+                    for (Integer i = getCSVHeaderLength(); i < edittedRow.getNames().length; i++) {
+                        edittedRow.setStringSpecificIndex(i, request.getParameter(getParameterName(i)));
                     }
-                    if(checkNewRecord(newRow)) {
-                        zcsvFile.appendNewStringToFile(newRow);
+                    edittedRow.setStringSpecificIndex(2, getCurrentDate4ZDATE());
+                    edittedRow.setStringSpecificIndex(3, getRequestUser4ZUID(request));
+                    edittedRow.setStringSpecificIndex(4, NEW_RECORD_STATUS);
+                    boolean QC = doQC(edittedRow, list_errors);
+                    if(p_action.equals(ACTION_SAVE)) {
+                        if(QC) {
+                            if (checkNewRecord(edittedRow)) {
+                                zcsvFile.appendNewStringToFile(edittedRow);
+                                println(SAVING_DONE_MESSAGE);
+                            }
+                            if(list_errors.isEmpty())
+                                response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
+                            else {
+                                printErrorList(list_errors);
+                                setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
+                            }
+                        }else {
+                            println(SAVING_UNDONE_MESSAGE);
+                            printErrorList(list_errors);
+                            setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
+                        }
+                    } else if(p_action.equals(ACTION_REFRESH)) {
+                        printErrorList(list_errors);
+                        setUpdateProductPage(p_member, p_range, p_ZRID, p_action);
                     }
-                    response.sendRedirect(getRequestParamsURL(CGI_NAME, CMD_PRODTABLE, p_member, p_range));
                 } catch (Exception ex) { ex.printStackTrace(response.getWriter()); }
                 break;
             case ACTION_SEEHISTORY: setHistoryPage(p_member,p_range,p_ZRID,p_action); break;
@@ -771,6 +788,14 @@ private static String FieldComments[] ={
                 break;
         }
     } //setActions()
+
+    private void printErrorList(Collection error_list) throws Exception {
+        if (error_list.isEmpty()){ return; }
+
+        for (int i = 0; i < list_errors.size(); i++) {
+            println(list_errors.toArray()[i].toString());
+        }
+    }
 
     private void setHistoryPage(String member, String range, String ZRID, String action) throws Exception {
         printUpsideMenu(
@@ -800,6 +825,50 @@ private static String FieldComments[] ={
 
     /// END PAGES PART
 
+    private boolean doQC(ZCSVRow row, Collection<String> list_errors) throws ZCSVException {
+        boolean isOK = true;
+        // [A-F]+ - only latin
+        // {n} n count
+        // \d - only digits
+        // \D - only not digints
+        String[] Captions = getNames();
+        String[] Comments = FieldComments;
+        int count_fields = row.getDataLength();
+        int max_fields_count=count_fields;
+        String qrprodtype = "", qrprodmodel = "";
+
+        for (int i = getCSVHeaderLength(); i < max_fields_count; i++) {
+            if (i == getQRFieldIndex()) {
+                String regexForHex = "^[0-9A-F]{8}$";
+                if (!row.get(i).matches(regexForHex)) {
+                    list_errors.add(ERROR_STATUS + "QR код не в 16-ричном формате и содержит не 8 разрядов!");
+                    isOK = false;
+                }
+            }
+            if (checkFOptions(i, "EN")) {
+                String regexForSN = "^\\s*[0-9a-zA-Z]+$";
+                if (!row.get(i).matches(regexForSN)) {
+                    list_errors.add(WARNING_STATUS + "SN некорректен!!");
+                }
+            }
+            if (checkFOptions(i, "QRPRODMODEL")) {
+                qrprodmodel = row.get(i);
+            }
+            if (checkFOptions(i, "QRMONEY")) {
+                BigDecimal money = MsgContract.str2dec(row.get(i));
+                if (money.equals(SZ_EMPTY) | money.equals(SZ_NULL) | money.equals(java.math.BigDecimal.ZERO))
+                    list_errors.add(WARNING_STATUS + "Деньги не распознаны!");
+            }
+            if (checkFOptions(i, "QRPRODTYPE")) {
+                qrprodtype = row.get(i);
+            }
+        }
+        if (!(qrprodmodel.equals(SZ_EMPTY) && qrprodtype.equals(SZ_EMPTY))) {
+            list_errors.add(WARNING_STATUS + "ВИКТОР!!! НЕОБХОДИМО ЗАПОЛНИТЬ ОБА ПОЛЯ! МОДЕЛЬ И ТИП ПРОДУКТА!");
+        }
+
+        return isOK;
+    }
 
     private String getParameterName(int index) {
         return REC_PREFIX + String.valueOf(index);
