@@ -1288,7 +1288,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
         read_parameters_from_web_xml();
         if (QRDB_PATH == null)
             throw new ZCSVException("Не задан параметр пути к базе данных.");
-        Members.setWayToDB(QRDB_PATH);
+        Members.setWayToDB(QRDB_PATH + "/members/");
 
         String p_member = getRequestParameter(request, PARAM_MEMBER); // Check to SI
         String p_range = getRequestParameter(request, PARAM_RANGE); // Check to SI

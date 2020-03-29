@@ -6,7 +6,7 @@
            version="4.0">
     <context-param>
      <param-name>QRDB_PATH</param-name>
-     <param-value>/s/qrdb/DOMINATOR/members/</param-value>
+     <param-value>/s/qrdb/DOMINATOR/</param-value>
     </context-param>
     <security-constraint>
       <web-resource-collection>
