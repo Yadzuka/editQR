@@ -33,7 +33,8 @@
     private final static String JSP_VERSION = "$id$"; // Id for jsp version
     // Other constants
     private final String DB_FILENAME = "master.list.csv"; // Database name
-    private final String DB_CONFIG_FILENAME = "csv.tab"; // Config name
+    private final String DB_CONFIG_FILENAME_EXT = ".tab"; // Config name extention
+    private final String DB_CONFIG_FILENAME = DB_FILENAME + DB_CONFIG_FILENAME_EXT; // Config name
     private final String SZ_NULL = "null"; // Just null parameter
     private final String REC_PREFIX = "param_pref_"; // Prefix for updateform parameters
     private final String SZ_EMPTY = ""; // Empty string
@@ -482,7 +483,7 @@ private static String FieldComments[] ={
     }
 
     // Under working
-    private void setChangeConfigPage(String member, String range) throws Exception {
+    private void setChangeConfigPage(String member, String range) throws Exception { // SIC! кажется этот код мертв-не-родившись
         String goBackUrl;
         if (range == null)
             goBackUrl = getRequestParamsURL(CMD_RANGES, member);
@@ -498,13 +499,13 @@ private static String FieldComments[] ={
 
         if (range == null) {
             ZCSVFile configureFile = new ZCSVFile();
-            configureFile.setFileName("csv.tab");
+            configureFile.setFileName(DB_CONFIG_FILENAME);
             if (configureFile.loadConfigureFile()) {
 
             }
         } else {
             ZCSVFile configureFile = new ZCSVFile();
-            configureFile.setFileName("csv.tab");
+            configureFile.setFileName(DB_CONFIG_FILENAME);
             configureFile.setRootPath(Members.getWayToDB() + member + "/" + range + "/");
             if (configureFile.loadConfigureFile()) {
                 ZCSVRow configureString = new ZCSVRow();
