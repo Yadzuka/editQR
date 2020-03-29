@@ -1265,6 +1265,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
 	   // if(QR not in range) continue; // check for range
 	   if(QR==null) continue;
 	   if(QR.equals("")) continue;
+           QR=QR.trim(); //SIC! исправил как мог, очень хочется спать 2020-03-30 0:17 MSK, потом пересмотреть
 	   long lQR=0;
            if(QR.length()>p_range.length()){ //SIC! иначе java.lang.StringIndexOutOfBoundsException: String index out of range: -1
 	   try{lQR=Long.parseLong(QR.substring(p_range.length()), 16);}catch (NumberFormatException nfe){} // ignore NFE
