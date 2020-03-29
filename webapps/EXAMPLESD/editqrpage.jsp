@@ -25,12 +25,12 @@
     // Statuses
     private final static String WARNING_STATUS = "WARNING! ";
     private final static String ERROR_STATUS = "ERROR!!! ";
-    private final static String SAVING_DONE_MESSAGE = "Мы, конечно, сохранили вашу запись, но убедитесь в том, что у вас есть ошибки в записях:";
-    private final static String SAVING_UNDONE_MESSAGE = "Мы не сохранили вашу запись, потому что ей соответствуют ошибки, приведенные ниже:";
+    private final static String SAVING_DONE_MESSAGE = "Ваша запись сохранена успешно. НО проверьте ее еще раз, есть предупреждения:";
+    private final static String SAVING_UNDONE_MESSAGE = "ОШИБКА! ЗАПИСЬ НЕ СОХРАНЕНА! проверьте список ошибок, устраните их и повторите сохранение:";
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий"; // Upper page info
-    private final static String JSP_VERSION = "$id$"; // Id for jsp version
+    private final static String JSP_VERSION = "$ver: 0.99.0$"; // Id for jsp version
     // Other constants
     private final String DB_FILENAME = "master.list.csv"; // Database name
     private final String DB_CONFIG_FILENAME_EXT = ".tab"; // Config name extention
@@ -100,6 +100,9 @@
     private String getFComment(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FComments)); }
     private ArrayList<String> referencesIndex = new ArrayList();
     //
+    private String current_member=null;
+    private String current_range=null;
+    //
     private int csv_header_length=-1;
     private int csv_QRfield_index=-1;
     private String szDefaultCSVConf=null;
@@ -117,6 +120,9 @@
      showedNames = null;
      referencesIndex = new ArrayList();
      list_errors = new ArrayList<String>();
+     //
+     current_member=null;
+     current_range=null;
      //
      csv_header_length=-1;
      csv_QRfield_index=-1;
@@ -181,21 +187,21 @@ private static String FieldNames[] ={
 "ZUID",
 "ZSTA",
 "QR",
-"CONTRACTNUM",
-"contractdate",
-"MONEY",
-"SUPPLIER",
-"CLIENT",
-"PRODTYPE",
-"MODEL",
-"SN",
+"cnum",
+"cdate",
+"cmoney",
+"supplier",
+"client",
+"prodtype",
+"prodmodel",
+"sn",
 "prodate",
-"shipdate",
-"SALEDATE",
-"DEPARTUREDATE",
-"WARRANTYSTART",
-"WARRANTYEND",
-"COMMENT"
+"GTD",
+"saledate",
+"sendate",
+"wstart",
+"wend",
+"comment"
 };
 private static String FieldOptions[] ={
 "NN", // "ZRID",
@@ -203,22 +209,22 @@ private static String FieldOptions[] ={
 "NUL", // "ZDATE",
 "NUL", // "ZUID",
 "NUL", // "ZSTA",
-"NUL,SHOW,HEX,QR,QRANGE_WARN", // "QR",
-"NUL,SHOW", // "CONTRACTNUM",
-"NUL", // "contractdate",
-"NUL,SHOW,QRMONEY", // "MONEY",
-"NUL", // "SUPPLIER",
-"NUL,SHOW", // "CLIENT",
-"NUL,SHOW,QRPRODTYPE", // "PRODTYPE",
-"NUL,SHOW,QRPRODMODEL", // "MODEL",
-"NUL,SHOW,EN", // "SN",
-"NUL", // "prodate",
-"NUL", // "shipdate",
-"NUL", // "SALEDATE",
-"NUL,QRMONEYGOT", // "DEPARTUREDATE",
-"NUL", // "WARRANTYSTART",
-"NUL", // "WARRANTYEND",
-"NUL,TEXTAREA" // "COMMENT"
+"PUB,NUL,SHOW,HEX,QR,QR_KEY,QRANGE_WARN", // "QR",
+"PUB,NUL,SHOW", // "cnum",
+"PUB,NUL", // "contractdate",
+"NUL,SHOW,QRMONEY", // "cmoney",
+"NUL,DIC", // "supplier",
+"NUL,SHOW", // "client",
+"PUB,NUL,DIC,SHOW,QRPRODTYPE", // "prodtype",
+"PUB,NUL,DIC,SHOW,QRPRODMODEL", // "prodmodel",
+"PUB,NUL,SHOW,EN", // "sn",
+"PUB,NUL", // "prodate",
+"NUL", // "GTD",
+"PUB,NUL", // "saledate",
+"PUB,NUL,QRMONEYGOT", // "sendate",
+"PUB,NUL", // "wstart",
+"PUB,NUL", // "wend",
+"PUB,NUL,TEXTAREA" // "comment"
 };
 private static String FieldCaptions[] ={
 "ZRID",
@@ -392,11 +398,11 @@ private static String FieldComments[] ={
     StringBuffer sb = new StringBuffer();
     sb.append("# Default master.list.csv.tab for edit.qr.qxyz.ru\n");
     sb.append("#Атрибут\tЗначение\tЗначение2/код\n");
-    sb.append("NAME\tQR_QXYZ.Item\tDW\n");
-    sb.append("OBJECT\tNone        D\n");
+    sb.append("NAME\tQR_QXYZ.Item\tQI\n");
+    sb.append("OBJECT\tNone\tQ\n");
     sb.append("HEADER\tSTD_PSPNHEANOR\n");
-    sb.append("PARENT\tnone  NN\n");
-    sb.append("CHILD\tnone NN\n");
+    sb.append("PARENT\tnone\tNN\n");
+    sb.append("CHILD\tnone\tNN\n");
     sb.append("#Код\tПоле\tТип\tАтрибуты\tНазвание\tОписание\n");
     int num_fields = FieldNames.length; 
     int i=0;
@@ -678,6 +684,8 @@ private static String FieldComments[] ={
               }
               input_field_raw = mkFieldInputText(mkFName(i), value, 30, 0);
               if(i==getQRFieldIndex()){
+		 if(value == null) value= newqr;
+		 else if(value.length() == 0) value= newqr;
                  input_field_raw = mkFieldInputText(mkFName(i), value, 16, 16);
                  input_field_raw = "<table><tr><td>" + input_field_raw + "</td><td>" +
                     String.format("<input type=\"button\" onclick=\"setQR('%s','%s')\" value=\"новый QR\"/>",mkFName(i), newqr) +
@@ -848,12 +856,17 @@ private static String FieldComments[] ={
                     isOK = false;
                 }
             }
+/* //SIC! потом разберемся
             if (checkFOptions(i, "EN")) {
-                String regexForSN = "^\\s*[0-9a-zA-Z]+$";
-                if (!row.get(i).trim().matches(regexForSN)) {
+		if(row.get(i).trim().length()>0)
+		{
+                final String regexForEN = "^\\s*[0-9a-zA-Z]+$"; //SIC! (1) EN не только для SN, (2) под это выражение не пройдет например "Hello! Pasha!"
+                if (!row.get(i).trim().matches(regexForEN)) {
                     list_errors.add(WARNING_STATUS + "SN некорректен!!");
                 }
+		}
             }
+*/
             if (checkFOptions(i, "QRPRODMODEL")) {
                 qrprodmodel = row.get(i);
             }
@@ -866,8 +879,15 @@ private static String FieldComments[] ={
                 qrprodtype = row.get(i);
             }
         }
-        if (qrprodmodel.trim().equals(SZ_EMPTY) | qrprodtype.trim().equals(SZ_EMPTY)) {
-            list_errors.add(WARNING_STATUS + "ВИКТОР!!! НЕОБХОДИМО ЗАПОЛНИТЬ ОБА ПОЛЯ! МОДЕЛЬ И ТИП ПРОДУКТА!");
+	qrprodmodel=qrprodmodel.trim(); qrprodtype=qrprodtype.trim();
+        if ((qrprodmodel.length()== 0 || qrprodtype.length()==0) && (qrprodmodel.length() + qrprodtype.length()) !=0 ) { //SIC! разница между "|" и "||"
+        //if ( (qrprodmodel.length() - qrprodtype.length()) !=0 ) { //SIC! а еще можно так, хотя это скорее запутывает
+	    if("DOMINATOR".equals(current_member)) {
+             list_errors.add(WARNING_STATUS + "ВИКТОР!!! НЕОБХОДИМО ЗАПОЛНИТЬ ОБА ПОЛЯ! МОДЕЛЬ И ТИП ПРОДУКТА!");
+            }else
+            {
+             list_errors.add(WARNING_STATUS + "Необходимо заполнить оба поля! модель и тип продукта!");
+            }
         }
 
         return isOK;
@@ -1293,6 +1313,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
 
         String p_member = getRequestParameter(request, PARAM_MEMBER); // Check to SI
         String p_range = getRequestParameter(request, PARAM_RANGE); // Check to SI
+	current_member=p_member; current_range=p_range; // SIC! глобально, но пока по-другому не придумал
         String p_ZRID = getRequestParameter(request, PARAM_ZRID);
         String p_action = getRequestParameter(request, PARAM_ACTION);
     	loadConfig4Range(p_member, p_range);
