@@ -31,6 +31,7 @@
     <display-name>DOMINATOR.QR.QXYZ member data edit interface</display-name>
 
     <welcome-file-list>
+        <welcome-file>editqrpage.jsp</welcome-file>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
@@ -40,8 +41,9 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>qrServlet</servlet-name>
-        <url-pattern>/engine/qr</url-pattern>
+        <url-pattern>/qr</url-pattern>
     </servlet-mapping>
+
     <login-config>
       <auth-method>BASIC</auth-method>
       <realm-name>DOMINATOR.QR.QXYZ member data edit interface</realm-name>

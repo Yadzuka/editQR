@@ -1,6 +1,6 @@
 *.jar
 *.class
 work/
-/.idea
+.idea
+/target
 *.iml
-/jars

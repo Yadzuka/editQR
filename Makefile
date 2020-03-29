@@ -34,7 +34,51 @@ usage:
 	@echo "  run - to run some testing code"
 	@echo "  clean - remove all constructed products"
 	@echo "  usage - for this message"
-all: depend build
+#all: depend build
+all:	
+	cd jars/src/main/java/ && make all
+	cp ${WORK_PATH}/${PKG_FILENAME}.jar webapps/EXAMPLESD/WEB-INF/lib/
+	cp contrib/*jar webapps/EXAMPLESD/WEB-INF/lib/
+	#DOMINATOR
+	mkdir -p  ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/lib
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/DOMINATOR
+	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/css/
+	mkdir -p ${WORK_PATH}/webapps/DOMINATOR/js/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/DOMINATOR/css/
+	cp -r webapps/EXAMPLESD/js/*js ${WORK_PATH}/webapps/DOMINATOR/js/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/lib/
+	${INSTALL} webapps/DOMINATOR/WEB-INF/web.xml ${WORK_PATH}/webapps/DOMINATOR/WEB-INF/
+	#EUSTROSOFT
+	mkdir -p  ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/lib
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/EUSTROSOFT
+	mkdir -p ${WORK_PATH}/webapps/EUSTROSOFT/css/
+	mkdir -p ${WORK_PATH}/webapps/EUSTROSOFT/js/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/EUSTROSOFT/css/
+	cp -r webapps/EXAMPLESD/js/*js ${WORK_PATH}/webapps/EUSTROSOFT/js/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/lib/
+	${INSTALL} webapps/EUSTROSOFT/WEB-INF/web.xml ${WORK_PATH}/webapps/EUSTROSOFT/WEB-INF/
+	#boatswain.org
+	mkdir -p  ${WORK_PATH}/webapps/boatswain.org/WEB-INF/lib
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/boatswain.org
+	mkdir -p ${WORK_PATH}/webapps/boatswain.org/css/
+	mkdir -p ${WORK_PATH}/webapps/boatswain.org/js/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/boatswain.org/css/
+	cp -r webapps/EXAMPLESD/js/*js ${WORK_PATH}/webapps/boatswain.org/js/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/boatswain.org/WEB-INF/lib/
+	${INSTALL} webapps/boatswain.org/WEB-INF/web.xml ${WORK_PATH}/webapps/boatswain.org/WEB-INF/
+	#rubmaster.ru
+	mkdir -p  ${WORK_PATH}/webapps/rubmaster.ru/WEB-INF/lib
+	cp webapps/EXAMPLESD/*jsp ${WORK_PATH}/webapps/rubmaster.ru
+	mkdir -p ${WORK_PATH}/webapps/rubmaster.ru/css/
+	mkdir -p ${WORK_PATH}/webapps/rubmaster.ru/js/
+	cp -r webapps/EXAMPLESD/css/*css ${WORK_PATH}/webapps/rubmaster.ru/css/
+	cp -r webapps/EXAMPLESD/js/*js ${WORK_PATH}/webapps/rubmaster.ru/js/
+	cp -r webapps/EXAMPLESD/WEB-INF/lib/*jar ${WORK_PATH}/webapps/rubmaster.ru/WEB-INF/lib/
+	${INSTALL} webapps/rubmaster.ru/WEB-INF/web.xml ${WORK_PATH}/webapps/rubmaster.ru/WEB-INF/
+mvn: maven
+maven:
+	cd jars && mvn package
+	cp jars/target/jars-1.0-SNAPSHOT.jar webapps/EXAMPLESD/WEB-INF/lib/
 build:
 	@echo "-- buildng web application and everything it's depend on"
 	mkdir -p ${WORK_PATH}
