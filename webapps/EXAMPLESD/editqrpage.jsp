@@ -603,9 +603,11 @@ private static String FieldComments[] ={
 	if(getQRFieldIndex() >= 0 )
 	{
 	beginTRow(); printCell("QR картинка:"); beginTCell();
+	 String qrcode=row.get(getQRFieldIndex());
+	 if(qrcode == null) qrcode=""; qrcode=qrcode.trim();
          setReferenceQRView(
                 getReference(row.get(getQRFieldIndex())) ,
-                "<img src=\"qr?p_codingString=" + row.get(getQRFieldIndex()) + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>" //SIC! html-injection
+                "<img src=\"qr?p_codingString=" + qrcode + "&p_imgFormat=GIF&p_imgSize=140&p_imgColor=0x000000\"/>" //SIC! html-injection
         );
         endTCell(); endTRow();
 	}
@@ -897,7 +899,8 @@ private static String FieldComments[] ={
         return REC_PREFIX + String.valueOf(index);
     }
 
-    private String getReference(String code){
+    private String getReference(String code){ //SIC! может удалить потом подумаю
+        if(code == null) code=""; code=code.trim();
         return ADDITION_TO_REFERENCE + code;
     }
 
@@ -958,6 +961,38 @@ private static String FieldComments[] ={
     private String mkInput(String type, String id,String name, String value) throws Exception {
         return new String("<input type='" + type + "' id='" + id + "' name='" + name + "' value='" + value + "'/>");
     }
+    public String mkQRHRef(String qrcode){return(mkQRHRef(null,qrcode,null,null,t2h(qrcode)));}
+    public String mkQRHRef(String host, String qrcode, String pin, String doc, String inner_html)
+    {
+     if(host == null) host="http://qr.qxyz.ru/";
+     if(qrcode == null) qrcode=o2v(qrcode.trim());
+     if(pin == null) pin=o2v(pin.trim());
+     if(doc == null) doc=o2v(doc.trim());
+     return(mkQRHRefRaw(host,qrcode,pin,doc,null,inner_html));
+    }
+//    private String  mkQRHRefRaw(String host, long qrcode, long pin, String doc, String tail, String inner_html)
+//    {
+//    return(mkQRHRefRaw(host,long2qr(qrcode),long2qr(pin),doc,tail,inner_html);
+//    }
+
+    private String  mkQRHRefRaw(String host, String qrcode, String pin, String doc, String tail, String inner_html) {
+      StringBuffer sb =new StringBuffer();
+        sb.append("<a href='");
+        sb.append(host);
+        sb.append("?q="); sb.append(qrcode);
+        if(pin != null) { sb.append("&p="); sb.append(pin); }
+        if(doc != null) { sb.append("&d="); sb.append(doc); }
+        if(tail != null) { sb.append("&"); sb.append(tail); }
+	sb.append("' target='_qrview'>");
+        sb.append(inner_html);
+        sb.append("</a>");
+     return(sb.toString());
+    }
+ // QR-Code convertion tools (qxyz)
+// public static String long2qr(long qr){String.format("%s%03X",p_range, maxQR);}
+// public static String long2qrange(long qr){}
+// public static long qr2long(long qr){}
+// public static long qrange2long(long qr){}
  // input fields construction
  // imported from ConcepTIS...WASkin.java
 public void printInputTextarea(String name, int rows, int cols, String value)
