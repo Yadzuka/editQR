@@ -15,7 +15,10 @@
     /// T - table
 
     private final String OPTIONAL_PRODUCTS_TABLE_PARAM = "Опции";
-    private final String ADDITION_TO_REFERENCE = "http://qr.qxyz.ru/?q=";
+    private String QR_HOST_URL = null;
+    private final static String QR_HOST_URL_DEFAULT = "http://qr.qxyz.ru/";
+    public String getQRHostURL(){ if(QR_HOST_URL!=null)return(QR_HOST_URL);return(QR_HOST_URL_DEFAULT); }
+    public String setQRHostURL(String host){ String v=QR_HOST_URL; QR_HOST_URL=host; return(v); }
 
     private final static String DELETED_RECORD_STATUS = "D";
     private final static String NEW_RECORD_STATUS = "N";
@@ -30,7 +33,7 @@
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий"; // Upper page info
-    private final static String JSP_VERSION = "$ver: 0.99.0$"; // Id for jsp version
+    private final static String JSP_VERSION = "$ver: 0.99.1$"; // Id for jsp version
     // Other constants
     private final String DB_FILENAME = "master.list.csv"; // Database name
     private final String DB_CONFIG_FILENAME_EXT = ".tab"; // Config name extention
@@ -107,6 +110,7 @@
     private int csv_QRfield_index=-1;
     private String szDefaultCSVConf=null;
     public void initJSPGlobals() { // it's constructor-like method, use it before process any request
+     QR_HOST_URL = null;
     // Money counters
      allMoney = BigDecimal.ZERO;
      allMoneySent = BigDecimal.ZERO;
@@ -901,7 +905,7 @@ private static String FieldComments[] ={
 
     private String getReference(String code){ //SIC! может удалить потом подумаю
         if(code == null) code=""; code=code.trim();
-        return ADDITION_TO_REFERENCE + code;
+        return getQRHostURL() + "?q=" + code;
     }
 
     private void setReference(String reference, String insides) {
@@ -1234,7 +1238,10 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
         request.setCharacterEncoding("UTF-8");
     }
 
-    private void read_parameters_from_web_xml() { QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH"); }
+    private void read_parameters_from_web_xml() {
+      QRDB_PATH = getServletContext().getInitParameter("QRDB_PATH");
+      setQRHostURL(getServletContext().getInitParameter("QR_HOST_URL"));
+    }
 
     public String getNailedRangDesc(String r, String desc) {
         int i = 0;

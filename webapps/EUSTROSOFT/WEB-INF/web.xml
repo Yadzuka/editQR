@@ -8,6 +8,10 @@
      <param-name>QRDB_PATH</param-name>
      <param-value>/s/qrdb/EUSTROSOFT/</param-value>
     </context-param>
+    <context-param>
+     <param-name>QR_HOST_URL</param-name>
+     <param-value>http://qr.eustrosoft.org/</param-value>
+    </context-param>
     <security-constraint>
       <web-resource-collection>
          <web-resource-name>EUSTROSOFT.QR.QXYZ member data edit interface</web-resource-name>
