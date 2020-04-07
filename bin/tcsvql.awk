@@ -36,8 +36,9 @@ STD_HEADER_OFFSET=7;
 #make_create_table(WDIR "/tables/" SHORT_NAME ".sql");
 make_csv_tab("/dev/stdout");
 } #/END
+/^#!CSV_DATA/{process_data(); next;} # process data rows
+/^#!CSV_TAB/{next;} # process csv.tab data rows
 /^[ \t]*#/{next;} # comments
-/^DATA/{process_data(); next;} # process data rows
 ($1=="NAME"){NAME=$2;CODE=$3;
 	n2=split(NAME,tmp_a,".");
 	SUBSYS=tmp_a[1];SHORT_NAME=tmp_a[2];
