@@ -4,7 +4,10 @@
 # *.list.csv processing tool
 # usage : tcsvql.awk -v QUERY=EXEC:QRQXYZ_MASTER2LIST -v TABOUT=/p/to/list.csv.tab -v CSVOUT=/p/to/list.csv
 # Supported queries:
-#	EXEC:QRQXYZ_MASTER2LIST - convert tcsv data to public list with leading QR field keeping PUB only fields
+#	EXEC:CAT - (default) read data stream, decode it and encode to output again (works like /bin/cat but with some QC)
+#	EXEC:INSERT_FIELD:NF - insert field to position NF
+#	EXEC:QRQXYZ_MASTER2QRLIST - convert tcsv data to public qrlist.tcsv with leading QR field keeping PUB only fields
+#	EXEC:QRQXYZ_MASTER2LIST2019 - convert tcsv data to legacy public list.csv with leading QR field keeping PUB only fields
 #	EXEC:QRQXYZ_QUERY_ROW:QRCODE - find row with given QRCODE and print it as csv row
 #	EXEC:QRQXYZ_QUERY_ROW_WIKI:QRCODE - find row with given QRCODE and print it as wiki (.tab file needed)
 #
@@ -24,19 +27,47 @@
 
 
 BEGIN{
-if(QUERY=="") QUERY="EXEC:QRQXYZ_MASTER2LIST";
+if(QUERY=="") QUERY="EXEC:CAT";
+parse_query(QUERY);
+TRUE=1;
+FALSE=0;
 #print QUERY;
 FS="\t";
 } #/BEGIN
+function parse_query(q)
+{
+if(q=="EXEC:CAT") return;
+if(q=="EXEC:QRQXYZ_MASTER2QRLIST") return;
+if(q=="EXEC:QRQXYZ_MASTER2LIST2019") return;
+do_abort("Query:" q " not implemented");
+}
 END{
 if(is_aborted)exit 1;
 is_begun=1; # used by do_abort
 WDIR="work/"
 STD_HEADER_OFFSET=7;
 #make_create_table(WDIR "/tables/" SHORT_NAME ".sql");
-make_csv_tab("/dev/stdout");
+#make_csv_tab("/dev/stdout");
 } #/END
-/^#!CSV_DATA/{process_data(); next;} # process data rows
+/^#!CSV_DATA/{ # process data rows
+ if(QUERY == "EXEC:CAT") {
+  make_csv_tab("/dev/stdout");
+  print "#!CSV_DATA" 
+  process_data_cat();
+ }
+ else if(QUERY == "EXEC:QRQXYZ_MASTER2QRLIST") {
+  make_csv_tab("/dev/stdout", TRUE);
+  print "#!CSV_DATA" 
+  process_data_pub();
+ }
+ else if(QUERY == "EXEC:QRQXYZ_MASTER2LIST2019") {
+  #make_csv_tab("/dev/stdout", TRUE);
+  print "#QR;PRODTYPE;MODEL;SN;prodate;SALEDATE;DEPARTUREDATE;CONTRACTNUM;contractdate;WARRANTYSTART;WARRANTYEND;COMMENT"
+  print "#!CSV_DATA" 
+  process_data_pub2019();
+ }
+ next;
+}
 /^#!CSV_TAB/{next;} # process csv.tab data rows
 /^[ \t]*#/{next;} # comments
 ($1=="NAME"){NAME=$2;CODE=$3;
@@ -86,6 +117,8 @@ make_csv_tab("/dev/stdout");
 	for(i=1;i<=n;i++){
 	 n2=split(tmp_attrib[i],tmp_a,"=");
          if(tmp_a[1]=="") continue;
+         if(tmp_a[1]=="QR"){f_QR[FIELDS_COUNT]=1; continue;}
+         if(tmp_a[1]=="QR_KEY"){ if(QR_KEY == "") { QR_KEY=FIELDS_COUNT; } continue;} # use only first QR_KEY SIC!
          if(is_value_in(tmp_a[1],"QR","QR_KEY","QRMONEY","QRMONEYGOT")){continue;} # ignore QR attr
          if(is_value_in(tmp_a[1],"QRPRODMODEL","QRPRODTYPE","QRANGE_WARN")){continue;} # ignore QR attr
          if(is_value_in(tmp_a[1],"SHOW","QR","TEXTAREA")){continue;} # ignore visua attr
@@ -129,26 +162,70 @@ make_csv_tab("/dev/stdout");
 	}
 	next;
  } # FIELD
-function process_data(status)
+function process_data_cat(status) #CAT
 {
  FS=";";
  status=getline;
  while(status)
  {
-  print_qr_row_pub();
+  #print_qr_row_pub();
   print;
   status=getline;
  }
 } #//process_data()
-function print_qr_row_pub(i,row)
+function process_data_pub(status) #PUB
+{
+ FS=";";
+ status=getline;
+ while(status)
+ {
+  print_row_pub();
+  #print;
+  status=getline;
+ }
+} #//process_data()
+function process_data_pub2019(status) #PUB2019 list.csv (legacy)
+{
+ FS=";";
+ status=getline;
+ while(status)
+ {
+  print_row_pub2019();
+  status=getline;
+ }
+} #//process_data()
+function print_row_pub2019(i,row)
+{
+ OFS=";";
+ row=""
+ if(QR_KEY != "" && QR_KEY > 0 && QR_KEY <= NF)
+ {
+  row=strip_qr($QR_KEY) ";";
+ }
+ else {row="FFF;";}
+  if(f_PUB[12]) row=row $12; row = row ";";
+  if(f_PUB[13]) row=row $13; row = row ";";
+  if(f_PUB[14]) row=row $14; row = row ";";
+  if(f_PUB[15]) row=row $15; row = row ";";
+  if(f_PUB[17]) row=row $17; row = row ";";
+  if(f_PUB[18]) row=row $18; row = row ";";
+  if(f_PUB[7]) row=row $7; row = row ";";
+  if(f_PUB[8]) row=row $8; row = row ";";
+  if(f_PUB[19]) row=row $19; row = row ";";
+  if(f_PUB[20]) row=row $20; row = row ";";
+  if(f_PUB[21]) row=row $21;
+  #print strip_qr($QR_KEY),$12,$13,$14,$15,$17,$18,$7,$8,$19,$20,$21;
+  print row;
+} #//print_row_pub2019
+function print_row_pub(i,row)
 {
  row="";
  for(i=1;i<=NF;i++)
  {
-  if(f_PUB[i]) row=row FS $i;
+  if(f_PUB[i]) if(length(row)==0){row=$i;}else{row=row FS $i; }
  }
  print row;
-}#//process_data()
+}#//print_row_pub
 #//{print ;}
 //{do_abort("Invalid start token: " $1); }
 function do_warn(msg)
@@ -166,6 +243,15 @@ else
  print "PROCESSING ERROR: " msg > "/dev/stderr";
 is_aborted=1;
 exit 1;
+}
+
+function strip_qr(qr)
+{
+ if(length(qr)>3)
+ {
+ qr=substr(qr,length(qr)-2);
+ };
+ return(qr);
 }
 
 function do_abort_unallowed_attr(attr)
@@ -189,9 +275,11 @@ function make_qrqxyz_list_csv_tab()
 {
 }
 # create table
-function make_csv_tab(f,	i)
+function make_csv_tab(f,is_pub,	i,print_field)
 {
+ if(is_pub == "") is_pub=0;
  #printf("DROP TABLE IF EXISTS %s CASCADE;\n",NAME) >>f;
+ printf("#!CSV_TAB\n") >>f;
  printf("#Атрибут\tЗначение\tЗначение2-код\n") >>f;
  printf("NAME\t%s\t%s\n",NAME,CODE) >>f;
  printf("OBJECT\t%s\t%s\n",OBJECT_NAME,OBJECT_CODE) >>f;
@@ -207,9 +295,12 @@ function make_csv_tab(f,	i)
  #else{ do_abort("HEADER=" HEADER " unimplemented (TABLE)"); }
  for(i=1;i<=FIELDS_COUNT;i++)
  {
-  NUL="NULL"; if(f_NN[i]) NUL="NOT " NUL;
+ print_field = !is_pub;
+ if(f_PUB[i]) print_field = 1;
+ if(print_field){
+  #NUL="NULL"; if(f_NN[i]) NUL="NOT " NUL;
   printf("%s\t%s\t%s\t%s\t%s\t%s\n",f_no[i],f_name[i],f_type[i],f_attrib[i],f_caption[i],f_desc[i]) >>f;
+ }
  }
 } # /make_create_table(f)
 # END OF codegen.awk
-
