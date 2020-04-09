@@ -23,6 +23,8 @@ AWK=/usr/bin/awk
 QRDB_PATH_MEMBERS=${QRDB_PATH}/members/
 QRDB_PATH_LOG_FILE=${QRDB_PATH}/log/run.log
 STDERR=/dev/stderr
+STDOUT=/dev/stdout
+STDLOG=$STDOUT
 # your can redefine any config vars here:
 #. /etc/qrdb.conf
 #. /usr/local/etc/qrdb.conf
@@ -31,6 +33,10 @@ STDERR=/dev/stderr
 usage()
 {
 	echo "use: make all|pub" #SIC! wrong
+}
+do_log()
+{
+#echo $* >$STDLOG
 }
 do_errlog()
 {
@@ -99,27 +105,28 @@ make_master_file()
  RESULT_FILE="$MASTER_FILE_DIR/"`get_result_file4master $MASTER_FILE`
  RESULT_FILE_COMPAT2019=`get_result_file4master_compat2019 $MASTER_FILE`
  RESULT_FILE_COMPAT2019_FULL="$MASTER_FILE_DIR/${RESULT_FILE_COMPAT2019}"
- echo "    master_file: " $MASTER_FILE "tab_file:" $MASTER_FILE_TAB "result_file:" $RESULT_FILE
+ do_log "    master_file: " $MASTER_FILE "tab_file:" $MASTER_FILE_TAB "result_file:" $RESULT_FILE
  if [ ! -r $RESULT_FILE ]; then
   touch $RESULT_FILE
  fi
  $CMD_PSPN_CI $RESULT_FILE
  #cat $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSV_GET_CURRENT | $CMD_TCSVQL # SIC! do NOT ENABLE
- #print_master_file_bundle $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSVQL
+ print_master_file_bundle $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSVQL -vQUERY=EXEC:QRQXYZ_MASTER2QRLIST
  if [ "${RESULT_FILE_COMPAT2019}x" != "x" ]; then
   if [ ! -r $RESULT_FILE_COMPAT2019_FULL ]; then
    touch $RESULT_FILE_COMPAT2019_FULL
   fi
   $CMD_PSPN_CI $RESULT_FILE_COMPAT2019_FULL
+  print_master_file_bundle $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSVQL -vQUERY=EXEC:QRQXYZ_MASTER2LIST2019
  fi
 }
 make_all_range_master_files()
 {
 D=${1}
-echo $DIR
+do_log $DIR
 FILE_LIST=`get_list_of_master_files $D`
 for F in $FILE_LIST; do
- echo "  file : " $F
+ do_log "  file : " $F
  make_master_file $D$F
 done 
 }
@@ -127,9 +134,9 @@ make_all_member_ranges()
 {
 DIR=$1
 RANGES_LIST=`get_list_of_ranges $DIR `
-echo "ranges: " $RANGES_LIST
+do_log "ranges: " $RANGES_LIST
 for R in $RANGES_LIST; do
- echo " range : " $R
+ do_log " range : " $R
  make_all_range_master_files ${DIR}${R}
 done 
 }
@@ -137,9 +144,9 @@ make_all_members()
 {
 check_tools
 MEMBERS_LIST=`get_list_of_members $QRDB_PATH_MEMBERS`
-echo "members: " $MEMBERS_LIST
+do_log "members: " $MEMBERS_LIST
 for M in $MEMBERS_LIST; do
- echo "member : " $M
+ do_log "member : " $M
  make_all_member_ranges $QRDB_PATH_MEMBERS$M
 done 
 }
@@ -148,7 +155,7 @@ print_master_file_bundle()
 {
 FILE_CSV_TAB=$1
 FILE_CSV=$2
-#echo $FILE_CSV_TAB $FILE_CSV
+#do_log $FILE_CSV_TAB $FILE_CSV
 
 echo "#!CSV_TAB"
 if [ -r $FILE_CSV_TAB ]; then
@@ -199,7 +206,7 @@ EOF
 }
 hello()
 {
-echo hello
+do_log hello
 }
 #make_all_pub.sh
 #!/bin/sh
