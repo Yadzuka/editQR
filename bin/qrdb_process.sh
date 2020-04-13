@@ -211,6 +211,7 @@ PARENT	none	NN
 CHILD	none	NN
 #Код	Поле	Тип	Атрибуты	Название	Описание
 01	ZRID	text	NN,	ZRID	ZRID - идентификатор объекта (записи) в файле, записи с одинаковым ZRID - разные версии одной записи
+#!+:EN	ZRID	.	.	.	ZRID - id of object (record) in the file. records with the same ZRID are different versions of the same record
 02	ZVER	text	NUL,	ZVER	ZVER - номер версии записи 
 03	ZDATE	text	NUL,	ZDATE	ZDATE - дата порождения данной версии
 04	ZUID	text	NUL,	ZUID	ZUID - пользователь, записавший версию
