@@ -194,28 +194,34 @@ function process_data_pub2019(status) #PUB2019 list.csv (legacy)
   status=getline;
  }
 } #//process_data()
-function print_row_pub2019(i,row)
+function print_row_pub2019(	i,k,row,pub_f)
 {
  OFS=";";
- row=""
+ row="";
+ k=1;
+ for(i=1;i<=NF;i++)
+ {
+  if(f_PUB[i]) pub_f[k++]=$i;
+ }
  if(QR_KEY != "" && QR_KEY > 0 && QR_KEY <= NF)
  {
   row=strip_qr($QR_KEY) ";";
  }
  else {row="FFF;";}
-  if(f_PUB[12]) row=row $12; row = row ";";
-  if(f_PUB[13]) row=row $13; row = row ";";
-  if(f_PUB[14]) row=row $14; row = row ";";
-  if(f_PUB[15]) row=row $15; row = row ";";
-  if(f_PUB[17]) row=row $17; row = row ";";
-  if(f_PUB[18]) row=row $18; row = row ";";
-  if(f_PUB[7]) row=row $7; row = row ";";
-  if(f_PUB[8]) row=row $8; row = row ";";
-  if(f_PUB[19]) row=row $19; row = row ";";
-  if(f_PUB[20]) row=row $20; row = row ";";
-  if(f_PUB[21]) row=row $21;
+#  if(f_PUB[12]) row=row $12; row = row ";";
+#  if(f_PUB[13]) row=row $13; row = row ";";
+#  if(f_PUB[14]) row=row $14; row = row ";";
+#  if(f_PUB[15]) row=row $15; row = row ";";
+#  if(f_PUB[17]) row=row $17; row = row ";";
+#  if(f_PUB[18]) row=row $18; row = row ";";
+#  if(f_PUB[7]) row=row $7; row = row ";";
+#  if(f_PUB[8]) row=row $8; row = row ";";
+#  if(f_PUB[19]) row=row $19; row = row ";";
+#  if(f_PUB[20]) row=row $20; row = row ";";
+#  if(f_PUB[21]) row=row $21;
   #print strip_qr($QR_KEY),$12,$13,$14,$15,$17,$18,$7,$8,$19,$20,$21;
-  print row;
+  print row pub_f[4],pub_f[5],pub_f[6],pub_f[7],pub_f[8],pub_f[9],pub_f[2],pub_f[3],pub_f[10],pub_f[11],pub_f[12];
+  #print row;
 } #//print_row_pub2019
 function print_row_pub(i,row)
 {
