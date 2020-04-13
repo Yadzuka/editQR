@@ -13,7 +13,8 @@
 QRDB_ROOT=/s/qrdb/
 QRDB_PATH=${QRDB_ROOT}/QR.QXYZ.RU/
 RSYNC_REMOTE_PATH=durin.qxyz.ru://s/qrdb/
-TCSV_TOOLS_BIN=/s/proj/yadzuka/edit.qr.qxyz.ru/bin/
+TCSV_TOOLS_BIN=/s/proj/edit.qr.qxyz.ru/bin/
+QRDB_TOOLS_BIN=$TCSV_TOOLS_BIN
 # tools
 CMD_TCSVQL=${TCSV_TOOLS_BIN}/tcsvql.awk
 CMD_TCSV_GET_CURRENT=${TCSV_TOOLS_BIN}/tcsv_get_current.awk
@@ -25,14 +26,42 @@ QRDB_PATH_LOG_FILE=${QRDB_PATH}/log/run.log
 STDERR=/dev/stderr
 STDOUT=/dev/stdout
 STDLOG=$STDOUT
-# your can redefine any config vars here:
-#. /etc/qrdb.conf
-#. /usr/local/etc/qrdb.conf
+# your can redefine any config vars above here:
+if [ -r /etc/qrdb.conf ]; then # load global config
+	. /etc/qrdb.conf
+fi
+if [ -r /usr/local/etc/qrdb.conf ]; then # load local config too
+	. /usr/local/etc/qrdb.conf
+fi
+if [ "${HOME}/etc/" != "/etc/" ]; then # load local user's config over all previous
+ if [ -r "${HOME}/etc/qrdb.conf" ]; then
+  . "${HOME}/etc/qrdb.conf"
+ fi
+fi
 
 #qrdb.mk
 usage()
 {
-	echo "use: make all|pub" #SIC! wrong
+	echo "$QRDB_TOOLS_BIN/qrdb_process.sh " #SIC! imperfect
+}
+print_qrdb_env()
+{
+echo QRDB_ROOT=${QRDB_ROOT}	"# /s/qrdb/"
+echo QRDB_PATH=${QRDB_PATH}	"# \${QRDB_ROOT}/QR.QXYZ.RU/"
+echo RSYNC_REMOTE_PATH=${RSYNC_REMOTE_PATH}	"# durin.qxyz.ru://s/qrdb/"
+echo TCSV_TOOLS_BIN=${TCSV_TOOLS_BIN}	"# /s/proj/edit.qr.qxyz.ru/bin/"
+echo QRDB_TOOLS_BIN=${QRDB_TOOLS_BIN}	"# \$TCSV_TOOLS_BIN"
+echo "# tools"
+echo CMD_TCSVQL=${CMD_TCSVQL}	"# ${TCSV_TOOLS_BIN}/tcsvql.awk"
+echo CMD_TCSV_GET_CURRENT=${CMD_TCSV_GET_CURRENT}	"# \${TCSV_TOOLS_BIN}/tcsv_get_current.awk"
+echo CMD_PSPN_CI=${CMD_PSPN_CI}	"# \${TCSV_TOOLS_BIN}/pspn_ci.sh"
+echo AWK=${AWK}	"# /usr/bin/awk"
+echo "#"
+echo QRDB_PATH_MEMBERS=${QRDB_PATH_MEMBERS}	"# \${QRDB_PATH}/members/"
+echo QRDB_PATH_LOG_FILE=${QRDB_PATH_LOG_FILE}	"# \${QRDB_PATH}/log/run.log"
+echo STDERR=${STDERR}	"# /dev/stderr"
+echo STDOUT=${STDOUT}	"# /dev/stdout"
+echo STDLOG=${STDLOG}	"# \$STDOUT"
 }
 do_log()
 {
@@ -111,13 +140,13 @@ make_master_file()
  fi
  $CMD_PSPN_CI $RESULT_FILE
  #cat $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSV_GET_CURRENT | $CMD_TCSVQL # SIC! do NOT ENABLE
- print_master_file_bundle $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSVQL -vQUERY=EXEC:QRQXYZ_MASTER2QRLIST
+ print_master_file_bundle $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSVQL -vQUERY=EXEC:QRQXYZ_MASTER2QRLIST > $RESULT_FILE
  if [ "${RESULT_FILE_COMPAT2019}x" != "x" ]; then
   if [ ! -r $RESULT_FILE_COMPAT2019_FULL ]; then
    touch $RESULT_FILE_COMPAT2019_FULL
   fi
   $CMD_PSPN_CI $RESULT_FILE_COMPAT2019_FULL
-  print_master_file_bundle $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSVQL -vQUERY=EXEC:QRQXYZ_MASTER2LIST2019
+  print_master_file_bundle $MASTER_FILE_TAB $MASTER_FILE | $CMD_TCSVQL -vQUERY=EXEC:QRQXYZ_MASTER2LIST2019 > $RESULT_FILE_COMPAT2019_FULL
  fi
 }
 make_all_range_master_files()
@@ -214,6 +243,7 @@ do_log hello
 #date >>  /s/qrdb/log/make_all_pub.log
 #cd /s/qrdb &&  make all pub >> /s/qrdb/log/make_all_pub.log
 
+print_qrdb_env
 make_all_members
 #print_default_master_tab
 
