@@ -26,6 +26,8 @@ QRDB_PATH_LOG_FILE=${QRDB_PATH}/log/run.log
 STDERR=/dev/stderr
 STDOUT=/dev/stdout
 STDLOG=$STDOUT
+#local variables
+IS_SOMETHING_CHANGED=none; # SIC! unimpelemented, use it if some files changed rebuilded so rsync remote is needed
 # your can redefine any config vars above here:
 if [ -r /etc/qrdb.conf ]; then # load global config
 	. /etc/qrdb.conf
@@ -246,5 +248,6 @@ do_log hello
 
 print_qrdb_env
 make_all_members
+rsync_remote
 #print_default_master_tab
 
