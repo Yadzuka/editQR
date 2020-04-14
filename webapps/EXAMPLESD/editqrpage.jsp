@@ -33,7 +33,7 @@
     // Page info
     private final static String CGI_NAME = "editqrpage.jsp"; // Page domain name
     private final static String CGI_TITLE = "EDIT-QR.qxyz.ru - средство редактирования БД диапазонов QR-кодов для проданных изделий"; // Upper page info
-    private final static String JSP_VERSION = "$ver: 0.99.1$"; // Id for jsp version
+    private final static String JSP_VERSION = "$ver: 0.99.2$"; // Id for jsp version
     // Other constants
     private final String DB_FILENAME = "master.list.csv"; // Database name
     private final String DB_CONFIG_FILENAME_EXT = ".tab"; // Config name extention
@@ -95,9 +95,11 @@
     private String[] csvconf_FComments=null;
     private Object get_csvconf_field_attribute(int i,Object[] attr_column)
     {if(i<0 || i>num_of_csvconf_fields)return(null);if(attr_column==null)return(null); if(i>=attr_column.length) return(null);return(attr_column[i]);}
+    private int getFCount(){return(num_of_csvconf_fields);}
     private String getFCode(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FCodes)); }
     private String getFType(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FTypes)); }
     private String getFName(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FNames)); }
+    private String[] getFNamesMap(){return(csvconf_FNames);}
     private Set<String> getFOption(int i){ return((Set<String>)get_csvconf_field_attribute(i,csvconf_FOptions)); }
     private String getFCaption(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FCaptions)); }
     private String getFComment(int i){ return((String)get_csvconf_field_attribute(i,csvconf_FComments)); }
@@ -214,7 +216,7 @@ private static String FieldOptions[] ={
 "NUL", // "ZUID",
 "NUL", // "ZSTA",
 "PUB,NUL,SHOW,HEX,QR,QR_KEY,QRANGE_WARN", // "QR",
-"PUB,NUL,SHOW", // "cnum",
+"PUB,NUL,SHOW,DECSEQ,", // "cnum",
 "PUB,NUL", // "contractdate",
 "NUL,SHOW,QRMONEY", // "cmoney",
 "NUL,DIC", // "supplier",
@@ -652,9 +654,9 @@ private static String FieldComments[] ={
         //try {
             ZCSVRow edittedRow = row;
         String[] Captions = getNames();
-        String[] Comments = FieldComments;
+        //String[] Comments = FieldComments;
         int count_captions = Captions.length;
-        int count_comments = Comments.length;
+        int count_comments = getFCount(); // Comments.length;
         int count_fields = row.getDataLength();
         int max_fields_count=count_fields;
         if(count_captions > max_fields_count) max_fields_count= count_captions;
@@ -664,6 +666,7 @@ private static String FieldComments[] ={
 
             startUpdateForm(member, range, ZRID, ACTION_EDIT);
             String newqr = ""; try{newqr= genNewQr(range); } catch(Exception e){sendAllert("genNewQr() опять сломался!");} //SIC! криво, но я уже 3-й раз правлю грабли там
+            ZCSVRow rowDefaults = genRowDefaults();
             String parameterBuffer;
             printUpdatePageButtons();
 
@@ -673,6 +676,9 @@ private static String FieldComments[] ={
               String input_field_raw = "";
 	      if(i< count_captions) caption = getFCaption(i);
               if(i< count_fields) value = row.get(i);
+              if(SZ_NULL.equals(ZRID)){ //SIC! тест на новую запись
+               if(checkFOptions(i,"DECSEQ")) if(value==null) value=""; if(value.length()==0) value=rowDefaults.get(i); // SIC! new row, use default
+              }
               if(i< count_comments) comment = getFComment(i);
 
               if(checkFOptions(i,"TEXTAREA"))
@@ -1317,6 +1323,59 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
         maxQR++;
         return String.format("%s%03X",p_range, maxQR);
     }
+    // find default values for fields of new row
+    private ZCSVRow genRowDefaults() {
+     ZCSVRow default_row=new ZCSVRow();
+     default_row.setNames(getFNamesMap()); //SIC! транзит, убрать после переработки ZCSVRow
+     int count_fields = getFCount();
+     // println("count_fields:" + count_fields);
+     //
+     int r=0; int k=0;
+     long f_maxvalue[]= new long[count_fields];
+     boolean f_isseq[]= new boolean[count_fields];
+     boolean f_ishex[]= new boolean[count_fields];
+     for(k=0;k<count_fields;k++){
+      f_maxvalue[k]=0;f_isseq[k]=false; f_ishex[k]=false;
+      if(checkFOptions(k,"DECSEQ")){f_isseq[k]=true;}
+      if(checkFOptions(k,"HEXSEQ")){f_isseq[k]=true; f_ishex[k]=true;}
+     }
+     for(r=0;r<zcsvFile.getFileRowsLength();r++)
+     {
+      ZCSVRow row=null;
+      String f_value=null;
+      long f_value_num=0;
+      try{
+       row=zcsvFile.getRowObjectByIndex(r);
+       row.setNames(getFNamesMap());
+       //
+     for(k=0;k<count_fields;k++){
+      if(!f_isseq[k]) continue;
+      f_value=row.get(k); f_value_num=0;
+      if(f_value==null) continue;
+      if(f_ishex[k]){
+        try{f_value_num=Long.parseLong(f_value.trim(),16);}catch (NumberFormatException nfe){} // ignore NFE
+      } //SIC! HEX must be parsed but... test it later
+      else{
+       try{f_value_num=Long.parseLong(f_value.trim());}catch (NumberFormatException nfe){} // ignore NFE
+       //println(f_value + " " + f_value_num);
+      }
+      if(f_value_num>f_maxvalue[k])f_maxvalue[k]=f_value_num;
+     }
+      }
+      catch(Exception e){debug_log("genRowDefaults()",e);} //SIC!
+      //finally(){r=r;} //SIC! не хулиганства ради, а отладки для (отключения catch);
+     }
+     for(k=0;k<count_fields;k++){
+      try{
+      default_row.set(k,"");
+      //println("k:" + k);
+      if(!f_isseq[k]) continue;
+      default_row.set(k,"" + (f_maxvalue[k] + 1));
+      }
+      catch(Exception e){debug_log("genRowDefaults()",e);} //SIC!
+     }
+     return(default_row);
+    } //genRowDefaults()
 %>
 <html>
 <head>
