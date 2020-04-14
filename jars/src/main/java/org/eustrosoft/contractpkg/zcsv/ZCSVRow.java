@@ -34,10 +34,14 @@ public class ZCSVRow {
 
     protected void resetDirty(){ is_dirty = false; }
 
+    public void set(int i, String value) throws ZCSVException {setStringSpecificIndex(i,value);}
     public void setStringSpecificIndex(int i, String str) throws ZCSVException {
+        //SIC!{ убрать к едрене фене!
         if (nameMap == null) throw new ZCSVException("NameMap не заполнен!"); //SIC! вынести сообщения в константы, не срочно
         if (i < 0 || i >= nameMap.length) throw new ZCSVException("Индекс указан неправильно!"); //SIC!
-        if (is_row) return;  is_dirty = true;
+        if (is_row) return; //SIC! и чтобы это значило?
+        //}SIC!
+        is_dirty = true;
 
         if(dataInRow.isEmpty()){
             for(int j = 0; j < nameMap.length; j++){
@@ -46,7 +50,7 @@ public class ZCSVRow {
         }
         str = MsgContract.value2csv(str);
         if(i >= dataInRow.size()){
-            dataInRow.add(str);
+            dataInRow.add(str); //SIC! т.е. не в позицию i, а абы-в-какую-следующую? ;)
         }else {
             dataInRow.set(i, str);
         }
@@ -96,7 +100,8 @@ public class ZCSVRow {
     public void setNames (String[]names){ nameMap = names; }
     public String[] getNames () { return nameMap; }
 
-    public int getDataLength () { return dataInRow.size(); }
+    public int size(){return(getDataLength());}
+    public int getDataLength () { return dataInRow.size(); } //SIC! удалить!
 
     @Override
     public String toString () {

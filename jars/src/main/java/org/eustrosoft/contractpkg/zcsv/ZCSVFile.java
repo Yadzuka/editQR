@@ -33,7 +33,7 @@ public class ZCSVFile {
 
     private String rootPath = null;
     private String sourceFileName = null;
-    private ArrayList fileRows = new ArrayList(65536);
+    private ArrayList fileRows = new ArrayList(65536); //SIC! это жесть!
 
     public void setRootPath(String rootPath) { this.rootPath = rootPath; }
     public void setFileName(String fileName) { sourceFileName = fileName; }
