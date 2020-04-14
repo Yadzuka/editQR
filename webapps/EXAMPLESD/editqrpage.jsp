@@ -1370,7 +1370,7 @@ private static String o2s(Object o){return(WAMessages.obj2string(o));}
       default_row.set(k,"");
       //println("k:" + k);
       if(!f_isseq[k]) continue;
-      default_row.set(k,"" + (f_maxvalue[k] + 1));
+      default_row.set(k,String.format("%03d",(f_maxvalue[k] + 1))); //SIC! потом переделать, использовать DECSEQ=%03d или DECSEQ=3
       }
       catch(Exception e){debug_log("genRowDefaults()",e);} //SIC!
      }
