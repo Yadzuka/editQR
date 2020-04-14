@@ -119,6 +119,7 @@ STD_HEADER_OFFSET=7;
          if(tmp_a[1]=="") continue;
          if(tmp_a[1]=="QR"){f_QR[FIELDS_COUNT]=1; continue;}
          if(tmp_a[1]=="QR_KEY"){ if(QR_KEY == "") { QR_KEY=FIELDS_COUNT; } continue;} # use only first QR_KEY SIC!
+         if(is_value_in(tmp_a[1],"DECSEQ","HEXSEQ","REF","OBJ_ID")){continue;} # ignore sequence&reference attr
          if(is_value_in(tmp_a[1],"QR","QR_KEY","QRMONEY","QRMONEYGOT")){continue;} # ignore QR attr
          if(is_value_in(tmp_a[1],"QRPRODMODEL","QRPRODTYPE","QRANGE_WARN")){continue;} # ignore QR attr
          if(is_value_in(tmp_a[1],"SHOW","QR","TEXTAREA")){continue;} # ignore visua attr
