@@ -28,17 +28,23 @@
 
 BEGIN{
 if(QUERY=="") QUERY="EXEC:CAT";
-parse_query(QUERY);
+parse_query(QUERY,QUERY_PARTS);
 TRUE=1;
 FALSE=0;
 #print QUERY;
 FS="\t";
 } #/BEGIN
-function parse_query(q)
+function parse_query(q,	qp,qp_count)
 {
+qp_count=split(q,qp,":");
 if(q=="EXEC:CAT") return;
 if(q=="EXEC:QRQXYZ_MASTER2QRLIST") return;
 if(q=="EXEC:QRQXYZ_MASTER2LIST2019") return;
+if(qp[1] == "EXEC")
+{
+ if(qp[2] == "QRQXYZ_QUERY_ROW") { return; }
+ if(qp[2] == "QRQXYZ_QUERY_ROW_WIKI") { return; }
+}
 do_abort("Query:" q " not implemented");
 }
 END{
@@ -65,6 +71,11 @@ STD_HEADER_OFFSET=7;
   print "#QR;PRODTYPE;MODEL;SN;prodate;SALEDATE;DEPARTUREDATE;CONTRACTNUM;contractdate;WARRANTYSTART;WARRANTYEND;COMMENT"
   print "#!CSV_DATA" 
   process_data_pub2019();
+ }
+ else if(QUERY_PARTS[1] == "EXEC") {
+  if(QUERY_PARTS[2] == "QRQXYZ_QUERY_ROW"){
+   process_data_query_qrrow();
+  }
  }
  next;
 }
@@ -182,6 +193,21 @@ function process_data_pub(status) #PUB
  {
   print_row_pub();
   #print;
+  status=getline;
+ }
+} #//process_data()
+function process_data_query_qrrow(status) #PUB
+{
+ FS=";";
+ status=getline;
+ while(status)
+ {
+  if(QR_KEY != "")
+  {
+   if("x" $QR_KEY == "x" QUERY_PARTS[3]){
+    print_row_pub();
+   }
+  }
   status=getline;
  }
 } #//process_data()
