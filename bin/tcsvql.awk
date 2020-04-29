@@ -76,6 +76,9 @@ STD_HEADER_OFFSET=7;
   if(QUERY_PARTS[2] == "QRQXYZ_QUERY_ROW"){
    process_data_query_qrrow();
   }
+  if(QUERY_PARTS[2] == "QRQXYZ_QUERY_ROW_WIKI"){
+   process_data_query_qrrow_wiki();
+  }
  }
  next;
 }
@@ -210,7 +213,22 @@ function process_data_query_qrrow(status) #PUB
   }
   status=getline;
  }
-} #//process_data()
+} #//process_data_query_qrrow()
+function process_data_query_qrrow_wiki(status) #PUB
+{
+ FS=";";
+ status=getline;
+ while(status)
+ {
+  if(QR_KEY != "")
+  {
+   if("x" $QR_KEY == "x" QUERY_PARTS[3]){
+    print_row_pub_wiki();
+   }
+  }
+  status=getline;
+ }
+} #//process_data_query_qrrow_wiki
 function process_data_pub2019(status) #PUB2019 list.csv (legacy)
 {
  FS=";";
@@ -259,6 +277,19 @@ function print_row_pub(i,row)
  }
  print row;
 }#//print_row_pub
+function print_row_pub_wiki(i,row)
+{
+ row="";
+ OFS=";"
+ for(i=1;i<=NF;i++)
+ {
+  if(f_PUB[i])
+  {
+   print ";",f_caption[i],$i;
+  }
+ }
+ #print row;
+}#//print_row_pub_wiki
 #//{print ;}
 //{do_abort("Invalid start token: " $1); }
 function do_warn(msg)
